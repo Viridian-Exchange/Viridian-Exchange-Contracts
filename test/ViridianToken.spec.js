@@ -27,7 +27,7 @@ contract('ViridianToken', (accounts) => {
     assert.strictEqual(symbol, tokenSymbol)
   })
 
-  it('creation: should succeed in creating over 2^256 - 1 (max) tokens', async () => {
+  it('creation: should succeed in creating over 100000000 - 1 (max) tokens', async () => {
     // 2^256 - 1
     const token2 = await ViridianToken.new()
     const totalSupply = await token2.totalSupply()
@@ -38,7 +38,7 @@ contract('ViridianToken', (accounts) => {
   // normal transfers without approvals
   it('transfers: ether transfer should be reversed.', async () => {
     const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balanceBefore.toNumber(), 10000)
+    assert.strictEqual(balanceBefore.toNumber(), 15000000)
 
     let threw = false
     try {
@@ -49,7 +49,7 @@ contract('ViridianToken', (accounts) => {
     assert.equal(threw, true)
 
     const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balanceAfter.toNumber(), 10000)
+    assert.strictEqual(balanceAfter.toNumber(), 15000000)
   })
 
   it('transfers: should transfer 10000 to accounts[1] with accounts[0] having 10000', async () => {
@@ -61,7 +61,7 @@ contract('ViridianToken', (accounts) => {
   it('transfers: should fail when trying to transfer 10001 to accounts[1] with accounts[0] having 10000', async () => {
     let threw = false
     try {
-      await token.transfer.call(accounts[ 1 ], 10001, { from: accounts[ 0 ] })
+      await token.transfer.call(accounts[ 1 ], 15000001, { from: accounts[ 0 ] })
     } catch (e) {
       threw = true
     }
@@ -85,7 +85,7 @@ contract('ViridianToken', (accounts) => {
   // bit overkill. But is for testing a bug
   it('approvals: msg.sender approves accounts[1] of 100 & withdraws 20 once.', async () => {
     const balance0 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance0.toNumber(), 10000)
+    assert.strictEqual(balance0.toNumber(), 15000000)
 
     await token.approve(accounts[ 1 ], 100, { from: accounts[ 0 ] }) // 100
     const balance2 = await token.balanceOf.call(accounts[ 2 ])
@@ -101,7 +101,7 @@ contract('ViridianToken', (accounts) => {
     assert.strictEqual(balance22.toNumber(), 20)
 
     const balance02 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance02.toNumber(), 9980)
+    assert.strictEqual(balance02.toNumber(), 15000000 - 20)
   })
 
   // should approve 100 of msg.sender & withdraw 50, twice. (should succeed)
@@ -118,7 +118,7 @@ contract('ViridianToken', (accounts) => {
     assert.strictEqual(balance2.toNumber(), 20)
 
     const balance0 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance0.toNumber(), 9980)
+    assert.strictEqual(balance0.toNumber(), 15000000 - 20)
 
     // FIRST tx done.
     // onto next.
@@ -130,7 +130,7 @@ contract('ViridianToken', (accounts) => {
     assert.strictEqual(balance22.toNumber(), 40)
 
     const balance02 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance02.toNumber(), 9960)
+    assert.strictEqual(balance02.toNumber(), 15000000 - 40)
   })
 
   // should approve 100 of msg.sender & withdraw 50 & 60 (should fail).
@@ -147,7 +147,7 @@ contract('ViridianToken', (accounts) => {
     assert.strictEqual(balance2.toNumber(), 50)
 
     const balance0 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance0.toNumber(), 9950)
+    assert.strictEqual(balance0.toNumber(), 15000000 - 50)
 
     // FIRST tx done.
     // onto next.
@@ -192,7 +192,7 @@ contract('ViridianToken', (accounts) => {
   // should approve max of msg.sender & withdraw 20 without changing allowance (should succeed).
   it('approvals: msg.sender approves accounts[1] of max (2^256 - 1) & withdraws 20', async () => {
     const balance0 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance0.toNumber(), 10000)
+    assert.strictEqual(balance0.toNumber(), 15000000)
 
     const max = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
     await token.approve(accounts[ 1 ], max, { from: accounts[ 0 ] })
@@ -207,7 +207,7 @@ contract('ViridianToken', (accounts) => {
     assert.strictEqual(balance22.toNumber(), 20)
 
     const balance02 = await token.balanceOf.call(accounts[ 0 ])
-    assert.strictEqual(balance02.toNumber(), 9980)
+    assert.strictEqual(balance02.toNumber(), 15000000 - 20)
   })
 
   /* eslint-disable no-underscore-dangle */

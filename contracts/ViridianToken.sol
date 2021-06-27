@@ -49,24 +49,25 @@ contract StandardToken is Token {
         //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
         //Replace the if with this one instead.
         //if (balances[msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
-        if (balances[msg.sender] >= _value && _value > 0) {
-            balances[msg.sender] -= _value;
-            balances[_to] += _value;
-            emit Transfer(msg.sender, _to, _value);
-            return true;
-        } else { return false; }
+        require(balances[msg.sender] >= _value);
+        balances[msg.sender] -= _value;
+        balances[_to] += _value;
+        emit Transfer(msg.sender, _to, _value); //solhint-disable-line indent, no-unused-vars
+        return true;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public override returns (bool success) {
         //same as above. Replace this line with the following if you want to protect against wrapping uints.
         //if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
-        if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && _value > 0) {
-            balances[_to] += _value;
-            balances[_from] -= _value;
+        uint256 allowance_ = allowed[_from][msg.sender];
+        require(balances[_from] >= _value && allowance_ >= _value);
+        balances[_to] += _value;
+        balances[_from] -= _value;
+        if (allowance_ < 2**256 - 1) {
             allowed[_from][msg.sender] -= _value;
-            emit Transfer(_from, _to, _value);
-            return true;
-        } else { return false; }
+        }
+        emit Transfer(_from, _to, _value); //solhint-disable-line indent, no-unused-vars
+        return true;
     }
 
     function balanceOf(address _owner) view public override returns (uint256 balance) {
@@ -110,11 +111,11 @@ contract ViridianToken is StandardToken {
     string public symbol;                 //An identifier: eg SBX
     string public version = 'H1.0';       //human 0.1 standard. Just an arbitrary versioning scheme.
 
-//
-// CHANGE THESE VALUES FOR YOUR TOKEN
-//
+    //
+    // CHANGE THESE VALUES FOR YOUR TOKEN
+    //
 
-//make sure this function name matches the contract name above. So if you're token is called TutorialToken, make sure the //contract name above is also TutorialToken instead of ERC20Token
+    //make sure this function name matches the contract name above. So if you're token is called TutorialToken, make sure the //contract name above is also TutorialToken instead of ERC20Token
 
     constructor() {
         balances[msg.sender] = 15000000;               // Give the creator all initial tokens (100000 for example)
