@@ -43,6 +43,7 @@ contract Token {
 
 
 contract StandardToken is Token {
+    uint256 whaleCooldown = 1 days;
 
     function transfer(address _to, uint256 _value) public override returns (bool success) {
         //Default assumes totalSupply can't be over max (2^256 - 1).
@@ -50,6 +51,11 @@ contract StandardToken is Token {
         //Replace the if with this one instead.
         //if (balances[msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
         require(balances[msg.sender] >= _value);
+        if (balances[msg.sender] >= 1000000) {
+            require(_value <= balances[msg.sender] / 4);
+            require(cooldowns[msg.sender] <= block.timestamp);
+            cooldowns[msg.sender] = block.timestamp + whaleCooldown;
+        }
         balances[msg.sender] -= _value;
         balances[_to] += _value;
         emit Transfer(msg.sender, _to, _value); //solhint-disable-line indent, no-unused-vars
@@ -61,6 +67,11 @@ contract StandardToken is Token {
         //if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
         uint256 allowance_ = allowed[_from][msg.sender];
         require(balances[_from] >= _value && allowance_ >= _value);
+        if (balances[_from] >= 1000000) {
+            require(_value <= balances[_from] / 4);
+            require(cooldowns[msg.sender] <= block.timestamp);
+            cooldowns[msg.sender] = block.timestamp + whaleCooldown;
+        }
         balances[_to] += _value;
         balances[_from] -= _value;
         if (allowance_ < 2**256 - 1) {
@@ -85,6 +96,7 @@ contract StandardToken is Token {
     }
 
     mapping (address => uint256) balances;
+    mapping (address => uint256) cooldowns;
     mapping (address => mapping (address => uint256)) allowed;
     uint256 public override totalSupply;
 }
@@ -123,6 +135,7 @@ contract ViridianToken is StandardToken {
         name = "Viridian Token";                                   // Set the name for display purposes
         decimals = 0;                            // Amount of decimals for display purposes
         symbol = "VEXT";                               // Set the symbol for display purposes
+        cooldowns[msg.sender] = 0;               // Set the cooldowns to 0 to start
     }
 
     /* Approves and then calls the receiving contract */
