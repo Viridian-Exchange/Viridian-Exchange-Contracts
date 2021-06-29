@@ -15,4 +15,12 @@ contract ViridianExchange {
     }
 
     ViridianNFT[] public nfts;
+
+    function putUpForSale() public {
+
+    }
+
+    function pullFromSale() public {
+
+    }
 }
