@@ -41,7 +41,6 @@ contract Token {
 }
 
 
-
 contract StandardToken is Token {
     uint256 whaleCooldown = 1 days;
 

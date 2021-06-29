@@ -12,9 +12,22 @@ contract ViridianExchange {
         uint vextAmt;
         address _to;
         address _from;
+        bool pending;
+    }
+
+    struct Listing {
+        uint256 tokenId;
+        address tokenAddress;
+        address owner;
+        uint256 price;
+        bool purchased;
+        bool royalty;
+        bool auction;
+        uint256 endTime;
     }
 
     ViridianNFT[] public nfts;
+    ViridianNFT[] public displayCase;
 
     function putUpForSale() public {
 
