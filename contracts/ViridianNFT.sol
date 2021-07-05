@@ -10,7 +10,7 @@ contract ViridianNFT is ERC721, Ownable {
     Counters.Counter private _tokenIds;
     mapping(string => uint8) hashes;
     
-    constructor() ERC721("ViridianNFT", "VNFT") {}
+    constructor() ERC721("Viridian NFT", "VNFT") {}
 
     using Strings for uint256;
     
