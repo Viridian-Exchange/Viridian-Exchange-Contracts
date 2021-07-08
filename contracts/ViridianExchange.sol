@@ -26,7 +26,13 @@ contract ViridianExchange {
         bool pending;
     }
 
+    using Counters for Counters.Counter;
+    Counters.Counter private _listingIds;
+
+    ViridianNFT vNFTContract;
+    
     struct Listing {
+        uint256 listingId;
         uint256 tokenId;
         address owner;
         uint256 price;
@@ -38,20 +44,38 @@ contract ViridianExchange {
 
     struct Collection {
         string description;
-        ViridianNFT[] collectionNFTs;
+        uint256[] collectionNFTs;
     }
 
-    string[] public nftIds;
+    //string[] public nftIds;
     mapping (address => Collection) displayCases;
     mapping (address => Listing[]) userListings;
     User[] public users;
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime) public {
-        Listing memory saleListing = Listing(_nftId, msg.sender, _price, false, _royalty, _isAuction, _endTime);
+        require(vNFTContract.ownerOf(_nftId) == msg.sender);
+        _listingIds.increment();
+        uint256 _listingId = _listingIds.current();
+        Listing memory saleListing = Listing(_listingId, _nftId, msg.sender, _price, false, _royalty, _isAuction, _endTime);
         userListings[msg.sender].push(saleListing);
     }
 
-    function pullFromSale() public {
+    function pullFromSale(Listing memory _listing) public {
+        require(_listing.owner == msg.sender);
+        Listing[] storage curUserListings = userListings[msg.sender];
+        for (uint i = 0; i < curUserListings.length; i++) {
+            Listing memory listing = curUserListings[i];
+            if (listing.listingId == _listing.listingId) {
+                curUserListings[i] = curUserListings[curUserListings.length - 1];
+                userListings[msg.sender] = curUserListings;
+                userListings[msg.sender].pop();
+                break;
+            }
+        }
+    }
 
+    function withdrawNFT() public {
+        //Burn NFT
+        //Send message to prompt front-end email sending
     }
 }
