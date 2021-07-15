@@ -13,9 +13,16 @@ contract ViridianNFT is ERC721, Ownable {
     constructor() ERC721("Viridian NFT", "VNFT") {}
 
     using Strings for uint256;
+
+    struct NFT {
+        uint256 id;
+        string uri;
+    }
     
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
+
+    mapping (address => NFT[]) private _ownedNFTs;
 
     // Base URI
     string private _baseURIextended;
@@ -50,6 +57,12 @@ contract ViridianNFT is ERC721, Ownable {
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
     }
+
+    function getOwnedNFTs() public view virtual returns (NFT[] memory) {
+        NFT[] memory _tokens = _ownedNFTs[msg.sender];
+        
+        return _tokens;
+    }
     
 
     function mint(
@@ -58,6 +71,7 @@ contract ViridianNFT is ERC721, Ownable {
         string memory tokenURI_
     ) external onlyOwner() {
         _mint(_to, _tokenId);
+        _ownedNFTs[_to].push(NFT(_tokenId, tokenURI_));
         _setTokenURI(_tokenId, tokenURI_);
     }
 
