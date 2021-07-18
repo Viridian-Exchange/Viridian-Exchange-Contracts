@@ -29,7 +29,7 @@ contract ViridianExchange {
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
 
-    ViridianNFT vNFTContract;
+    //address vNFTContract = 
     
     struct Listing {
         uint256 listingId;
@@ -50,14 +50,28 @@ contract ViridianExchange {
     //string[] public nftIds;
     mapping (address => Collection) displayCases;
     mapping (address => Listing[]) userListings;
+    Listing[] private listings;
     User[] public users;
 
-    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime) public {
-        require(vNFTContract.ownerOf(_nftId) == msg.sender);
+    function getListings() public view returns (Listing[] memory) {
+        return listings;
+    }
+
+    // function getNftOwner(address vnftAddr, uint256 _nftId) public payable returns (bytes memory) {
+    //     (bool success, bytes memory data) = vnftAddr.call{value: msg.value, gas: 100000}(
+    //             abi.encodeWithSignature("ownerOf(uint256)", _nftId));
+        
+    //     return data;
+    // }
+
+    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, address vnftAddr) public payable {
+        //require(nftOwner == msg.sender);
+        // Figure out a way to get this require to work
         _listingIds.increment();
         uint256 _listingId = _listingIds.current();
         Listing memory saleListing = Listing(_listingId, _nftId, msg.sender, _price, false, _royalty, _isAuction, _endTime);
         userListings[msg.sender].push(saleListing);
+        listings.push(saleListing);
     }
 
     function pullFromSale(Listing memory _listing) public {
