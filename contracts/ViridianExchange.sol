@@ -57,15 +57,15 @@ contract ViridianExchange {
         return listings;
     }
 
-    // function getNftOwner(address vnftAddr, uint256 _nftId) public payable returns (bytes memory) {
-    //     (bool success, bytes memory data) = vnftAddr.call{value: msg.value, gas: 100000}(
-    //             abi.encodeWithSignature("ownerOf(uint256)", _nftId));
+    function getNftOwner(address vnftAddr, uint256 _nftId) public payable returns (bool) {
+        (bool success, bytes memory data) = vnftAddr.call{value: msg.value, gas: 100000}(
+                abi.encodeWithSignature("ownerOf(uint256)", _nftId));
         
-    //     return data;
-    // }
+        return true;
+    }
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, address vnftAddr) public payable {
-        //require(nftOwner == msg.sender);
+        //require(getNftOwner == msg.sender);
         // Figure out a way to get this require to work
         _listingIds.increment();
         uint256 _listingId = _listingIds.current();
