@@ -59,13 +59,20 @@ contract ViridianExchange is Ownable {
         return listings;
     }
 
-    function getNftOwner(address _vnftAddr, uint256 _nftId) public view returns (address) {
+    function getNftOwner(address vnftAddr, uint256 _nftId) public payable returns (bytes memory) {
+        (bool success, bytes memory data) = vnftAddr.call{value: msg.value, gas: 100000}(
+                abi.encodeWithSignature("_ownerOf(uint256)", _nftId));
+        
+        return data;
+    } 
+
+    function testGetNftOwner(address _vnftAddr, uint256 _nftId) public view returns (address) {
         return IERC721(_vnftAddr).ownerOf(_nftId);
     }
 
-    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, address _vnftAddr) public payable {
-        require(getNftOwner(_vnftAddr, _nftId) == msg.sender);
-
+    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, address vnftAddr) public payable {
+        //require(IERC721(0xf05fb8663F85AeFC281bAC644B8e9e89e650d711).ownerOf(_nftId) == msg.sender);
+        // Figure out a way to get this require to work
         _listingIds.increment();
         uint256 _listingId = _listingIds.current();
         Listing memory saleListing = Listing(_listingId, _nftId, msg.sender, _price, false, _royalty, _isAuction, _endTime);
