@@ -21,11 +21,14 @@ contract ViridianExchange is Ownable {
         uint256[] likes;
     }
 
-    struct Trade {
-        uint256[] nftIds;
-        uint vextAmt;
-        address _to;
-        address _from;
+    struct Offer {
+        uint256[] toNftIds;
+        uint toAmt;
+        uint256[] fromNftIds;
+        uint fromAmt;
+        address to;
+        address from;
+        bool isVEXT;
         bool pending;
     }
 
@@ -33,6 +36,12 @@ contract ViridianExchange is Ownable {
     Counters.Counter private _listingIds;
 
     //address vNFTContract = 
+
+    struct Bid {
+        address owner;
+        uint256 amount;
+        bool isVEXT;
+    }
     
     struct Listing {
         uint256 listingId;
@@ -43,7 +52,10 @@ contract ViridianExchange is Ownable {
         uint256 royalty;
         bool isAuction;
         uint256 endTime;
+        Bid largestBid;
+        Bid[] bids;
         bool sold;
+        bool isVEXT;
     }
 
     struct Collection {
@@ -54,6 +66,7 @@ contract ViridianExchange is Ownable {
     //string[] public nftIds;
     mapping (address => Collection) displayCases;
     mapping (address => Listing[]) userListings;
+    mapping (address => Offer[]) userOffers;
     mapping (uint256 => Listing) listings;
     uint256[] private listingIds;
     User[] public users;
@@ -72,6 +85,10 @@ contract ViridianExchange is Ownable {
         viridianNFT = _viridianNFT;
     }
 
+    function getBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
     function getListings() public view returns (uint256[] memory) {
         return listingIds;
     }
@@ -84,55 +101,22 @@ contract ViridianExchange is Ownable {
         return IERC721(viridianNFT).ownerOf(_nftId);
     }
 
-    function sendEther(address payable _to, uint256 _amount) public payable {
+    function sendEther(address payable _to) public payable {
         // Call returns a boolean value indicating success or failure.
         // This is the current recommended method to use.
-        (bool sent, bytes memory data) = _to.call{value: _amount}("");
+        (bool sent, bytes memory data) = _to.call{value: msg.value}("");
         require(sent, "Failed to send Ether");
     }
 
-    receive() external payable {}
-
-    // Fallback function is called when msg.data is not empty
-    fallback() external payable {}
-
-    function getBalance() public view returns (uint) {
-        return address(this).balance;
-    }
-
-    function buyNFTWithETH(uint256 _listingId) public payable {
-        Listing memory curListing = listings[_listingId];
-
-        require(msg.sender.balance >= curListing.price, 'ViridianExchange: User does not have enough balance');
-        address payable ownerWallet = payable(curListing.owner);
-        sendEther(ownerWallet, curListing.price);
-        
-        IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
-    }
-
-    function buyNFTWithVEXT(uint256 _listingId) public payable {
-        Listing memory curListing = listings[_listingId];
-
-        require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
-        
-        IERC20(viridianToken).transferFrom(curListing.owner, msg.sender, curListing.price);
-        IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
-    }
-
-    function acceptOffer() public {
-        
-    }
-
-    function bidOnAuction() public {
-
-    }
-
-    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime) public payable {
+    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, bool _isVEXT) public payable {
         require(getNftOwner(_nftId) == msg.sender);
+
+        Bid[] storage emptyBids;
 
         _listingIds.increment();
         uint256 _listingId = _listingIds.current();
-        Listing memory saleListing = Listing(_listingId, _nftId, msg.sender, _price, false, _royalty, _isAuction, _endTime, false);
+        Listing memory saleListing = Listing(_listingId, _nftId, msg.sender, _price, false, 
+                                            _royalty, _isAuction, _endTime, Bid(msg.sender, 0, _isVEXT), emptyBids, false, _isVEXT);
         userListings[msg.sender].push(saleListing);
         listings[_listingId] = saleListing;
         listingIds.push(saleListing.listingId);
@@ -150,6 +134,72 @@ contract ViridianExchange is Ownable {
                 break;
             }
         }
+    }
+
+    function buyNFTWithETH(uint256 _listingId) public payable {
+        Listing memory curListing = listings[_listingId];
+
+        require(msg.sender.balance >= curListing.price, 'ViridianExchange: User does not have enough balance');
+        address payable ownerWallet = payable(curListing.owner);
+
+        require(msg.value == curListing.price, 'ViridianExchange: Incorrect amount paid to function');
+
+        sendEther(ownerWallet);
+        
+        IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
+    }
+
+    function buyNFTWithVEXT(uint256 _listingId) public payable {
+        Listing memory curListing = listings[_listingId];
+
+        require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
+
+        IERC20(viridianToken).transferFrom(curListing.owner, msg.sender, curListing.price);
+        IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
+    }
+
+    receive() external payable {}
+
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
+
+    function makeOffer(address _to, uint256[] memory _nftIds, uint256 _amount, uint256[] memory _recNftIds, uint256 _recAmount, bool isVEXT) public {
+        require(_to != msg.sender);
+        Offer memory newOffer = Offer(_nftIds, _amount, _recNftIds, _recAmount, _to, msg.sender, isVEXT, true);
+        
+        userOffers[_to].push(newOffer);
+    }
+
+    function acceptOfferWithETH(uint256 _offerId) public payable {
+        
+    }
+
+    function acceptOfferWithVEXT(uint256 _offerId) public {
+        
+    }
+
+    function bidOnAuctionWithVEXT(uint256 _listingId, uint256 _amount) public {
+        Listing storage curListing = listings[_listingId];
+
+        require(curListing.isAuction, 'ViridianExchange: Cannot bid, current listing is not auction');
+        require(curListing.largestBid.amount < _amount, 'ViridianExchagne: Bid must be larger than current largest bid');
+
+        Bid memory newBid = Bid(msg.sender, _amount, true);
+
+        curListing.bids.push(newBid);
+        curListing.largestBid = newBid;
+    }
+
+    function bidOnAuctionWithETH(uint256 _listingId, uint256 _amount) public {
+        Listing storage curListing = listings[_listingId];
+
+        require(curListing.isAuction, 'ViridianExchange: Cannot bid, current listing is not auction');
+        require(curListing.largestBid.amount < _amount, 'ViridianExchagne: Bid must be larger than current largest bid');
+
+        Bid memory newBid = Bid(msg.sender, _amount, false);
+
+        curListing.bids.push(newBid);
+        curListing.largestBid = newBid;
     }
 
     function withdrawNFT() public {
