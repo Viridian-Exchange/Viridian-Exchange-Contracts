@@ -22,6 +22,7 @@ contract ViridianExchange is Ownable {
     }
 
     struct Offer {
+        uint256 offerId;
         uint256[] toNftIds;
         uint toAmt;
         uint256[] fromNftIds;
@@ -34,6 +35,7 @@ contract ViridianExchange is Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
+    Counters.Counter private _offerIds;
 
     //address vNFTContract = 
 
@@ -67,8 +69,10 @@ contract ViridianExchange is Ownable {
     mapping (address => Collection) displayCases;
     mapping (address => Listing[]) userListings;
     mapping (address => Offer[]) userOffers;
+    mapping (uint256 => Offer) offers;
     mapping (uint256 => Listing) listings;
     uint256[] private listingIds;
+    uint256[] private offerIds;
     User[] public users;
 
     address public viridianNFT;
@@ -122,12 +126,13 @@ contract ViridianExchange is Ownable {
         listingIds.push(saleListing.listingId);
     }
 
-    function pullFromSale(Listing memory _listing) public {
-        require(_listing.owner == msg.sender);
+    function pullFromSale(uint256 _listingId) public {
+        Listing memory curListing = listings[_listingId];
+        require(curListing.owner == msg.sender);
         Listing[] storage curUserListings = userListings[msg.sender];
         for (uint i = 0; i < curUserListings.length; i++) {
             Listing memory listing = curUserListings[i];
-            if (listing.listingId == _listing.listingId) {
+            if (listing.listingId == curListing.listingId) {
                 curUserListings[i] = curUserListings[curUserListings.length - 1];
                 userListings[msg.sender] = curUserListings;
                 userListings[msg.sender].pop();
@@ -165,16 +170,45 @@ contract ViridianExchange is Ownable {
 
     function makeOffer(address _to, uint256[] memory _nftIds, uint256 _amount, uint256[] memory _recNftIds, uint256 _recAmount, bool isVEXT) public {
         require(_to != msg.sender);
-        Offer memory newOffer = Offer(_nftIds, _amount, _recNftIds, _recAmount, _to, msg.sender, isVEXT, true);
+
+        _offerIds.increment();
+        uint256 _offerId = _offerIds.current();
+
+        Offer memory newOffer = Offer(_offerId, _nftIds, _amount, _recNftIds, _recAmount, _to, msg.sender, isVEXT, true);
         
         userOffers[_to].push(newOffer);
+        offers[_offerId] = newOffer;
+    }
+
+    function pullOffer(uint256 _offerId) public {
+        Offer storage curOffer = offers[_offerId];
+        require(curOffer.from == msg.sender);
+        Offer[] storage curUserOffers = userOffers[msg.sender];
+        for (uint i = 0; i < curUserOffers.length; i++) {
+            Offer memory offer = curUserOffers[i];
+            if (offer.offerId == curOffer.offerId) {
+                curUserOffers[i] = curUserOffers[curUserOffers.length - 1];
+                userOffers[msg.sender] = curUserOffers;
+                userOffers[msg.sender].pop();
+                break;
+            }
+        }
     }
 
     function acceptOfferWithETH(uint256 _offerId) public payable {
-        
+        Offer storage curOffer = offers[_offerId];
+
+        address payable ownerWallet = payable(curOffer.from);
+
+        sendEther(ownerWallet);
     }
 
     function acceptOfferWithVEXT(uint256 _offerId) public {
+        Offer storage curOffer = offers[_offerId];
+
+        IERC20(viridianToken).transferFrom(curOffer.from, msg.sender, curOffer.fromAmt);
+
+        IERC20(viridianToken).transferFrom(msg.sender, curOffer.from, curOffer.toAmt);
         
     }
 
@@ -202,8 +236,11 @@ contract ViridianExchange is Ownable {
         curListing.largestBid = newBid;
     }
 
-    function withdrawNFT() public {
-        //Burn NFT
-        //Send message to prompt front-end email sending
-    }
+    // Probably should just call this straight from the NFT contract
+    // function withdrawNFT(uint256 _nftId) public payable returns(string memory) {
+    //     //Burn NFT
+    //     IERC721(viridianNFT).burn(_nftId);
+    //     //Send message to prompt front-end email sending
+
+    // }
 }
