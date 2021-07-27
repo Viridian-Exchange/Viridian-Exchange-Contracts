@@ -180,21 +180,22 @@ contract ViridianExchange is Ownable {
         offers[_offerId] = newOffer;
     }
 
-    function pullOffer(uint256 _offerId) public {
+    function cancelOffer(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
-        require(curOffer.from == msg.sender);
-        Offer[] storage curUserOffers = userOffers[msg.sender];
+        require(curOffer.from == msg.sender || curOffer.to == msg.sender);
+        Offer[] storage curUserOffers = userOffers[curOffer.to];
         for (uint i = 0; i < curUserOffers.length; i++) {
             Offer memory offer = curUserOffers[i];
             if (offer.offerId == curOffer.offerId) {
                 curUserOffers[i] = curUserOffers[curUserOffers.length - 1];
-                userOffers[msg.sender] = curUserOffers;
-                userOffers[msg.sender].pop();
+                userOffers[curOffer.to] = curUserOffers;
+                userOffers[curOffer.to].pop();
                 break;
             }
         }
     }
 
+    //TODO: Figure out how to send eth from "from" wallet to "to" wallet.
     function acceptOfferWithETH(uint256 _offerId) public payable {
         Offer storage curOffer = offers[_offerId];
 
