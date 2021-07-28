@@ -1,4 +1,4 @@
-var ViridianToken = artifacts.require("ViridianTokenOldImpl");
+var ViridianToken = artifacts.require("ViridianToken");
 var ViridianNFT = artifacts.require("ViridianNFT");
 var ViridianExchange = artifacts.require("ViridianExchange");
 

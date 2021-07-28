@@ -14,6 +14,10 @@ contract ViridianNFT is ERC721, Ownable {
 
     using Strings for uint256;
 
+
+    //TODO: Maybe add restrictions to NFT usage when it is listed on the exchange, do not allow ownership transfer 
+    // while it is listed for sale or offer to avoid issues with invalid purchasing, or just protect from transactions going through
+    // on exchange, ask someone about this scenario.
     struct NFT {
         uint256 id;
         string uri;
@@ -22,7 +26,9 @@ contract ViridianNFT is ERC721, Ownable {
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
-    mapping (address => NFT[]) private _ownedNFTs;
+    mapping (uint256 => bool) private _tokensListed;
+
+    mapping (address => uint256[]) private _ownedNFTs;
 
     // Base URI
     string private _baseURIextended;
@@ -58,8 +64,8 @@ contract ViridianNFT is ERC721, Ownable {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
-    function getOwnedNFTs() public view virtual returns (NFT[] memory) {
-        NFT[] memory _tokens = _ownedNFTs[msg.sender];
+    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
+        uint256[] memory _tokens = _ownedNFTs[msg.sender];
         
         return _tokens;
     }
@@ -72,7 +78,8 @@ contract ViridianNFT is ERC721, Ownable {
         uint256 _tokenId = _tokenIds.current();
 
         _mint(_to, _tokenId);
-        _ownedNFTs[_to].push(NFT(_tokenId, tokenURI_));
+        _ownedNFTs[_to].push(_tokenId);
+        _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
 
@@ -89,5 +96,32 @@ contract ViridianNFT is ERC721, Ownable {
         _mint(recipient, newItemId);
         _setTokenURI(newItemId, metadata);
         return newItemId;
+    }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
+        require(!_tokensListed[tokenId]);
+        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+            if (ownedNFT == tokenId) {
+                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
+                _ownedNFTs[msg.sender].pop();
+            }
+        }
+        _ownedNFTs[to].push(tokenId);
+
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) public override {
+        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+            if (ownedNFT == tokenId) {
+                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
+                _ownedNFTs[msg.sender].pop();
+            }
+        }
+        _ownedNFTs[to].push(tokenId);
+
+        super.transferFrom(from, to, tokenId);
     }
 }

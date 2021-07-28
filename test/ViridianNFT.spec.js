@@ -30,7 +30,7 @@ contract('Testing ERC721 contract', function(accounts) {
     })
 
     it(' should be able to deploy and mint ERC721 token', async () => {
-        await token.mint(account1, tokenId1, tokenUri1, {from: accounts[0]})
+        await token.mint(account1, tokenUri1, {from: accounts[0]})
 
         expect(await token.symbol()).to.equal(symbol)
         expect(await token.name()).to.equal(name)
