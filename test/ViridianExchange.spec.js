@@ -31,9 +31,10 @@ contract('ViridianExchange', (accounts) => {
   // TRANSERS
   // normal transfers without approvals
   it('items: listing should be created from existing nft', async () => {
-    exchange.makeListing.call(accounts[0], );
+    exchange.makeListing.call();
     
-    let listings = exchange.getListings.call(accounts[0]);
+    let listings = exchange.getListings.call();
+    expect(await token.symbol()).to.equal(symbol)
     console.log(listings);
   })
 
