@@ -104,7 +104,7 @@ contract ViridianExchange is Ownable {
         return listingIds;
     }
 
-    function getListingsFromId(uint256 _listingId) public view returns (Listing memory) {
+    function getListingFromId(uint256 _listingId) public view returns (Listing memory) {
         return listings[_listingId];
     }
 
