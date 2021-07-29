@@ -108,6 +108,10 @@ contract ViridianExchange is Ownable {
         return listings[_listingId];
     }
 
+    function getListingsFromUser(address _userAddr) public view returns (Listing[] memory) {
+        return userListings[_userAddr];
+    }
+
     function getNftOwner(uint256 _nftId) public view returns (address) {
         return IERC721(viridianNFT).ownerOf(_nftId);
     }
