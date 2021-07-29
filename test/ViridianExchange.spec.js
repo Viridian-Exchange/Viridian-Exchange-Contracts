@@ -78,7 +78,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await exchange.putUpForSale("1", "100", "1", false, "0", true, {from: accounts[1]});
     let listings = await exchange.getListings.call({from: accounts[1]});
-    let userListings = await exchange.getListingsFromUser.call(accounts[1]);
+    let userListings = await exchange.getListingsFromUser(accounts[1]);
     expect(await listings.length).to.equal(1);
     expect(listings[0].toString()).to.equal('1');
     expect(await userListings.length).to.equal(1);
