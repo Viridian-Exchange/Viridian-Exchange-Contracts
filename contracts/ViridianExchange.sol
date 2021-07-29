@@ -4,11 +4,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./ViridianNFT.sol";
 
 contract ViridianExchange is Ownable {
+
+    using SafeMath for uint256;
+    using SafeMath for uint8;
 
     struct User {
         address wallet;
@@ -186,7 +191,7 @@ contract ViridianExchange is Ownable {
 
         require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
 
-        IERC20(viridianToken).transferFrom(curListing.owner, msg.sender, curListing.price);
+        IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
         IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
     }
 
