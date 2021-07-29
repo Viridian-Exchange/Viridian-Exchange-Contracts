@@ -104,8 +104,12 @@ contract ViridianExchange is Ownable {
         return listingIds;
     }
 
-    function getListingFromId(uint256 _listingId) public view returns (Listing memory) {
+    function getListingsFromId(uint256 _listingId) public view returns (Listing memory) {
         return listings[_listingId];
+    }
+
+    function getListingsFromUser(address _userAddr) public view returns (Listing[] memory) {
+        return userListings[_userAddr];
     }
 
     function getNftOwner(uint256 _nftId) public view returns (address) {
@@ -171,6 +175,16 @@ contract ViridianExchange is Ownable {
                 break;
             }
         }
+
+        for (uint256 i = 0; i < listingIds.length; i++) {
+            uint256 listingId = listingIds[i];
+            if (listingId == curListing.listingId) {
+                listingIds[i] = listingIds[listingIds.length - 1];
+                listingIds.pop();
+            }
+        }
+
+        delete listings[_listingId];
     }
 
     function buyNFTWithETH(uint256 _listingId) public payable {
@@ -216,6 +230,10 @@ contract ViridianExchange is Ownable {
         Offer storage curOffer = offers[_offerId];
         require(curOffer.from == msg.sender || curOffer.to == msg.sender);
         Offer[] storage curUserOffers = userOffers[curOffer.to];
+        
+        //TODO: Check who is cancelling and cancel that person's offers.
+
+        // Remove offer from current user's offers
         for (uint i = 0; i < curUserOffers.length; i++) {
             Offer memory offer = curUserOffers[i];
             if (offer.offerId == curOffer.offerId) {
@@ -224,7 +242,19 @@ contract ViridianExchange is Ownable {
                 userOffers[curOffer.to].pop();
                 break;
             }
+        } 
+
+        // Remove offer id from global list of offer ids
+        for (uint256 i = 0; i < offerIds.length; i++) {
+            uint256 offerId = offerIds[i];
+            if (offerId == curOffer.offerId) {
+                offerIds[i] = offerIds[offerIds.length - 1];
+                offerIds.pop();
+            }
         }
+
+        // Remove offer from global mapping of offers
+        delete offers[_offerId];
     }
 
     //TODO: Figure out how to send eth from "from" wallet to "to" wallet.
