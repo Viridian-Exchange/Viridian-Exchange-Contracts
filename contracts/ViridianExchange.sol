@@ -177,6 +177,7 @@ contract ViridianExchange is Ownable {
             if (listingId == curListing.listingId) {
                 listingIds[i] = listingIds[listingIds.length - 1];
                 listingIds.pop();
+                break;
             }
         }
 
@@ -246,6 +247,7 @@ contract ViridianExchange is Ownable {
             if (offerId == curOffer.offerId) {
                 offerIds[i] = offerIds[offerIds.length - 1];
                 offerIds.pop();
+                break;
             }
         }
 
