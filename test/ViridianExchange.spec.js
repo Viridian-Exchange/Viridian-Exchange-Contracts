@@ -1,3 +1,5 @@
+const web3 = require("web3");
+
 const { expect } = require("chai");
 
 let token
@@ -33,11 +35,19 @@ contract('ViridianExchange', (accounts) => {
 
     // Create nft with id 1
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    //await nft.setExchangeAddress(exchange.address);
+    await nft.setApprovalForAll(exchange.address, true, {from: accounts[0]});
+    await nft.setApprovalForAll(exchange.address, true, {from: accounts[1]});
+    await nft.setApprovalForAll(exchange.address, true, {from: accounts[2]});
+    //await web3.sendTransaction({to:exchange, from:accounts[3], value:web3.toWei("90", "ether")});
+    //console.log("APVL: " + JSON.stringify(await nft.isApprovedForAll(accounts[0], exchange.address)));
   })
   
   // TRANSERS
   // normal transfers without approvals
   it('items: listing should be created from existing nft', async () => {
+    //nft.approve(exchange.address, '1');
+    //nft.safeTransferFrom(accounts[0], exchange.address, '1');
     await exchange.putUpForSale("1", "1", "1", false, "0", true);
     
     let listings = await exchange.getListings.call();
@@ -69,7 +79,7 @@ contract('ViridianExchange', (accounts) => {
     expect(await userListings.length).to.equal(0);
   })
 
-
+  
   it('transaction: nft should be able to be purchased with ETH', async () => {
   })
 
@@ -85,20 +95,25 @@ contract('ViridianExchange', (accounts) => {
 
     const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
 
-    console.log("VEXT Balance: " + balanceBefore);
+    console.log("VEXT Balance bef: " + balanceBefore);
 
     let ownedNFTs = await nft.getOwnedNFTs()
-    console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
     expect(await ownedNFTs.length).to.equal(0);
 
-    console.log(userListings[0].price);
+    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
 
-    // await exchange.buyNFTWithVEXT("1");
+    await token.approve(exchange.address, 100);
+    await exchange.buyNFTWithVEXT(1);
 
-    // const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
+    const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
+    ownedNFTs = await nft.getOwnedNFTs()
 
-    // assert.strictEqual(balanceAfter, balanceBefore - 100);
-    // expect(await ownedNFTs.length).to.equal(1);
+    console.log("VEXT Balance aft: " + balanceAfter.toString());
+
+    assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
+    assert.strictEqual(balanceAfter.toString(), "99999999999999999999999900");
+    expect(await ownedNFTs.length).to.equal(1);
 
   })
 

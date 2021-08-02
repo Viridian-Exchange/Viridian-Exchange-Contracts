@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./ViridianNFT.sol";
@@ -82,7 +81,7 @@ contract ViridianExchange is Ownable {
     address public ETH;
     address public viridianToken;
 
-    constructor( address _viridianToken, address _viridianNFT) {
+    constructor(address _viridianToken, address _viridianNFT) {
         require(address(_viridianToken) != address(0)); 
         //require(address(_ETH) != address(0));
         require(address(_viridianNFT) != address(0));
@@ -119,21 +118,6 @@ contract ViridianExchange is Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    /*
-    uint256 listingId;
-        uint256 tokenId;
-        address owner;
-        uint256 price;
-        bool purchased;
-        uint256 royalty;
-        bool isAuction;
-        uint256 endTime;
-        Bid largestBid;
-        Bid[] bids;
-        bool sold;
-        bool isVEXT;
-    */
-
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, bool _isVEXT) public payable {
         require(getNftOwner(_nftId) == msg.sender);
 
@@ -156,11 +140,15 @@ contract ViridianExchange is Ownable {
         userListings[msg.sender].push(saleListing);
         listings[_listingId] = saleListing;
         listingIds.push(saleListing.listingId);
-    }
 
-    function pullFromSale(uint256 _listingId) public {
+        //IERC721(viridianNFT).approve(address(this), _nftId);
+        //IERC721(viridianNFT).safeTransferFrom(msg.sender, address(this), _nftId);
+    }
+    
+    function pullFromSale(uint256 _listingId) public payable {
         Listing memory curListing = listings[_listingId];
         require(curListing.owner == msg.sender);
+        //IERC721(viridianNFT).safeTransferFrom(address(this), msg.sender, curListing.tokenId);
         Listing[] storage curUserListings = userListings[msg.sender];
         for (uint i = 0; i < curUserListings.length; i++) {
             Listing memory listing = curUserListings[i];
@@ -202,7 +190,26 @@ contract ViridianExchange is Ownable {
 
         require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
 
+        // TODO: See if this implementation is preferrable
+        // // Approve and transfer VEXT from sender to contract
+        //IERC20(viridianToken).approve(msg.sender, curListing.price);
+        //IERC20(viridianToken).transferFrom(msg.sender, address(this), curListing.price);
+
+        // Approve and transfer VEXT from contract to listing owner
+        //IERC20(viridianToken).approve(address(this), curListing.price);
+        //IERC20(viridianToken).transfer(curListing.owner, curListing.price);
+
+        // Approve and transfer NFT from sender to contract
+        //IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
+
+        // Approve and transfer NFT from contract to listing owner
+        //IERC721(viridianNFT).approve(address(this), curListing.tokenId);
+        //IERC721(viridianNFT).safeTransferFrom(address(this), msg.sender, curListing.tokenId);
+
+        //IERC20(viridianToken).approve(msg.sender, curListing.price);
         IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
+
+        IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
         IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
     }
 
@@ -269,7 +276,7 @@ contract ViridianExchange is Ownable {
 
         IERC20(viridianToken).transferFrom(curOffer.from, msg.sender, curOffer.fromAmt);
 
-        IERC20(viridianToken).transferFrom(msg.sender, curOffer.from, curOffer.toAmt);
+        IERC20(viridianToken).transfer(curOffer.from, curOffer.toAmt);
         
     }
 
@@ -304,11 +311,4 @@ contract ViridianExchange is Ownable {
         bids[_bidId] = newBid;
         curListing.largestBid = newBid;
     }
-
-    // Probably should just call this straight from the NFT contract
-    // function withdrawNFT(uint256 _nftId) public payable returns(string memory) {
-    //     //Burn NFT
-    //     IERC721(viridianNFT).burn(_nftId);
-    //     //Send message to prompt front-end email sending
-    // }
 }
