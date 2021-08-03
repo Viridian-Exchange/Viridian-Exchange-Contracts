@@ -30,14 +30,14 @@ contract ViridianNFT is ERC721, Ownable {
 
     mapping (address => uint256[]) private _ownedNFTs;
 
-    address private viridianExchangeAddress;
+    //address private viridianExchangeAddress;
 
     // Base URI
     string private _baseURIextended;
 
-    function setExchangeAddress(address ea) public onlyOwner() {
-        viridianExchangeAddress = ea;
-    }
+    // function setExchangeAddress(address ea) public onlyOwner() {
+    //     viridianExchangeAddress = ea;
+    // }
     
     function setBaseURI(string memory baseURI_) external onlyOwner() {
         _baseURIextended = baseURI_;

@@ -36,15 +36,8 @@ contract ViridianExchange is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
     Counters.Counter private _offerIds;
-    Counters.Counter private _bidIds;
 
     //address vNFTContract = 
-
-    struct Bid {
-        address owner;
-        uint256 amount;
-        bool isVEXT;
-    }
     
     struct Listing {
         uint256 listingId;
@@ -53,10 +46,7 @@ contract ViridianExchange is Ownable {
         uint256 price;
         bool purchased;
         uint256 royalty;
-        bool isAuction;
         uint256 endTime;
-        Bid largestBid;
-        uint256[] bidIds;
         bool sold;
         bool isVEXT;
     }
@@ -72,7 +62,6 @@ contract ViridianExchange is Ownable {
     mapping (address => Offer[]) userOffers;
     mapping (uint256 => Offer) offers;
     mapping (uint256 => Listing) listings;
-    mapping (uint256 => Bid) bids;
     uint256[] private listingIds;
     uint256[] private offerIds;
     User[] public users;
@@ -99,12 +88,24 @@ contract ViridianExchange is Ownable {
         return listingIds;
     }
 
+    function getOffers() public view returns (uint256[] memory) {
+        return offerIds;
+    }
+
     function getListingsFromId(uint256 _listingId) public view returns (Listing memory) {
         return listings[_listingId];
     }
 
+    function getOffersFromId(uint256 _offerId) public view returns (Offer memory) {
+        return offers[_offerId];
+    }
+
     function getListingsFromUser(address _userAddr) public view returns (Listing[] memory) {
         return userListings[_userAddr];
+    }
+
+    function getOffersFromUser(address _userAddr) public view returns (Offer[] memory) {
+        return userOffers[_userAddr];
     }
 
     function getNftOwner(uint256 _nftId) public view returns (address) {
@@ -118,7 +119,7 @@ contract ViridianExchange is Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, bool _isAuction, uint256 _endTime, bool _isVEXT) public payable {
+    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, bool _isVEXT) public payable {
         require(getNftOwner(_nftId) == msg.sender);
 
         _listingIds.increment();
@@ -130,7 +131,6 @@ contract ViridianExchange is Ownable {
         saleListing.price = _price;
         saleListing.purchased = false;
         saleListing.royalty = _royalty;
-        saleListing.isAuction = _isAuction;
         saleListing.endTime = _endTime;
         saleListing.sold = false;
         saleListing.isVEXT = _isVEXT;
@@ -228,6 +228,7 @@ contract ViridianExchange is Ownable {
         
         userOffers[_to].push(newOffer);
         offers[_offerId] = newOffer;
+        offerIds.push(_offerId);
     }
 
     function cancelOffer(uint256 _offerId) public {
@@ -266,49 +267,31 @@ contract ViridianExchange is Ownable {
     function acceptOfferWithETH(uint256 _offerId) public payable {
         Offer storage curOffer = offers[_offerId];
 
+        require(curOffer.to != msg.sender);
+
         address payable ownerWallet = payable(curOffer.from);
 
         sendEther(ownerWallet);
+
+        cancelOffer(_offerId);
     }
 
     function acceptOfferWithVEXT(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
 
         IERC20(viridianToken).transferFrom(curOffer.from, msg.sender, curOffer.fromAmt);
-
         IERC20(viridianToken).transfer(curOffer.from, curOffer.toAmt);
-        
-    }
 
-    function bidOnAuctionWithVEXT(uint256 _listingId, uint256 _amount) public {
-        Listing storage curListing = listings[_listingId];
+        // Loop through all of the to items in the offer.
+        for (uint i = 0; i < curOffer.toNftIds.length; i++) {
+            IERC721(viridianNFT).approve(msg.sender, curOffer.fromNftIds[i]);
+            IERC721(viridianNFT).safeTransferFrom(curOffer.from, msg.sender, curOffer.toNftIds[i]);
+        }
 
-        require(curListing.isAuction, 'ViridianExchange: Cannot bid, current listing is not auction');
-        require(curListing.largestBid.amount < _amount, 'ViridianExchagne: Bid must be larger than current largest bid');
-
-        Bid memory newBid = Bid(msg.sender, _amount, true);
-
-        _bidIds.increment();
-        uint256 _bidId = _offerIds.current();
-
-        curListing.bidIds.push(_bidId);
-        bids[_bidId] = newBid;
-        curListing.largestBid = newBid;
-    }
-
-    function bidOnAuctionWithETH(uint256 _listingId, uint256 _amount) public {
-        Listing storage curListing = listings[_listingId];
-
-        require(curListing.isAuction, 'ViridianExchange: Cannot bid, current listing is not auction');
-        require(curListing.largestBid.amount < _amount, 'ViridianExchagne: Bid must be larger than current largest bid');
-
-        Bid memory newBid = Bid(msg.sender, _amount, false);
-
-        _bidIds.increment();
-        uint256 _bidId = _offerIds.current();
-
-        curListing.bidIds.push(_bidId);
-        bids[_bidId] = newBid;
-        curListing.largestBid = newBid;
+        // Loop through all of the from items in the offer.
+        for (uint i = 0; i < curOffer.fromNftIds.length; i++) {
+            IERC721(viridianNFT).approve(msg.sender, curOffer.fromNftIds[i]);
+            IERC721(viridianNFT).safeTransferFrom(curOffer.to, curOffer.from, curOffer.fromNftIds[i]);
+        }
     }
 }
