@@ -55,10 +55,10 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
      * construction.
      */
     constructor() public {
-        _name = "Viridian Token";
+        _name = "Viridian Exchange Token";
         _symbol = "VEXT";
         _decimals = 18;
-        uint amount = 100000000000000000000000000; // 100 Million Tokens w/ 18 Decimals
+        uint amount = 200000000000000000000000000; // 200 Million Tokens w/ 18 Decimals
         _totalSupply = amount;
         _balances[_msgSender()] = amount;
         emit Transfer(address(0), _msgSender(), amount);

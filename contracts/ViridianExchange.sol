@@ -16,8 +16,8 @@ contract ViridianExchange is Ownable {
         string coverPhotoURL;
         string profilePhotoURL;
         string bio;
-        User[] following;
-        User[] followers;
+        address[] following;
+        address[] followers;
         uint256[] likes;
     }
 
@@ -62,9 +62,9 @@ contract ViridianExchange is Ownable {
     mapping (address => Offer[]) userOffers;
     mapping (uint256 => Offer) offers;
     mapping (uint256 => Listing) listings;
+    mapping (address => User) users;
     uint256[] private listingIds;
     uint256[] private offerIds;
-    User[] public users;
 
     address public viridianNFT;
     address public ETH;
@@ -110,6 +110,18 @@ contract ViridianExchange is Ownable {
 
     function getNftOwner(uint256 _nftId) public view returns (address) {
         return IERC721(viridianNFT).ownerOf(_nftId);
+    }
+
+    function getUserFromAddress(address _userAddr) public view returns (User memory) {
+        return users[_userAddr];
+    }
+
+    function editUser(address _userAddr, string memory _displayName, string memory _coverPhotoURL, string memory _profilePhotoURL, string memory _bio) public {
+        require(msg.sender == _userAddr);
+
+        User memory curUser = getUserFromAddress(_userAddr);
+
+        users[msg.sender] = User(msg.sender, _displayName, _coverPhotoURL, _profilePhotoURL, _bio, curUser.followers, curUser.following, curUser.likes);
     }
 
     function sendEther(address payable _to) public payable {
