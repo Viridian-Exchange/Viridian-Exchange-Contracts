@@ -103,39 +103,6 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_userAddr",
-          "type": "address"
-        },
-        {
-          "internalType": "string",
-          "name": "_displayName",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_coverPhotoURL",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_profilePhotoURL",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_bio",
-          "type": "string"
-        }
-      ],
-      "name": "editUser",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
       "inputs": [],
       "name": "getBalance",
       "outputs": [
@@ -149,19 +116,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "getListings",
-      "outputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "",
-          "type": "uint256[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -169,7 +123,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getListingsFromId",
+      "name": "getListingFromId",
       "outputs": [
         {
           "components": [
@@ -222,6 +176,19 @@
           "internalType": "struct ViridianExchange.Listing",
           "name": "",
           "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getListings",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
         }
       ],
       "stateMutability": "view",
@@ -461,67 +428,6 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_userAddr",
-          "type": "address"
-        }
-      ],
-      "name": "getUserFromAddress",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "wallet",
-              "type": "address"
-            },
-            {
-              "internalType": "string",
-              "name": "displayName",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "coverPhotoURL",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "profilePhotoURL",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "bio",
-              "type": "string"
-            },
-            {
-              "internalType": "address[]",
-              "name": "following",
-              "type": "address[]"
-            },
-            {
-              "internalType": "address[]",
-              "name": "followers",
-              "type": "address[]"
-            },
-            {
-              "internalType": "uint256[]",
-              "name": "likes",
-              "type": "uint256[]"
-            }
-          ],
-          "internalType": "struct ViridianExchange.User",
-          "name": "",
-          "type": "tuple"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
           "name": "_to",
           "type": "address"
         },
@@ -679,7 +585,7 @@
       "type": "receive"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.6+commit.11564f7e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"ETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"acceptOfferWithETH\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"acceptOfferWithVEXT\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"buyNFTWithETH\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"buyNFTWithVEXT\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"cancelOffer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_userAddr\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"_displayName\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_coverPhotoURL\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_profilePhotoURL\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_bio\",\"type\":\"string\"}],\"name\":\"editUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getListings\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"getListingsFromId\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"purchased\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"royalty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"sold\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Listing\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_userAddr\",\"type\":\"address\"}],\"name\":\"getListingsFromUser\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"purchased\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"royalty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"sold\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Listing[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_nftId\",\"type\":\"uint256\"}],\"name\":\"getNftOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getOffers\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"getOffersFromId\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"offerId\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"toNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"toAmt\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"fromNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"fromAmt\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"pending\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Offer\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_userAddr\",\"type\":\"address\"}],\"name\":\"getOffersFromUser\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"offerId\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"toNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"toAmt\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"fromNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"fromAmt\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"pending\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Offer[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_userAddr\",\"type\":\"address\"}],\"name\":\"getUserFromAddress\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"wallet\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"displayName\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"coverPhotoURL\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"profilePhotoURL\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"bio\",\"type\":\"string\"},{\"internalType\":\"address[]\",\"name\":\"following\",\"type\":\"address[]\"},{\"internalType\":\"address[]\",\"name\":\"followers\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"likes\",\"type\":\"uint256[]\"}],\"internalType\":\"struct ViridianExchange.User\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256[]\",\"name\":\"_nftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_recNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"_recAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"}],\"name\":\"makeOffer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"pullFromSale\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_nftId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_royalty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"_isVEXT\",\"type\":\"bool\"}],\"name\":\"putUpForSale\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_to\",\"type\":\"address\"}],\"name\":\"sendEther\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"viridianNFT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"viridianToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianAuction.sol\":\"ViridianAuction\"},\"evmVersion\":\"berlin\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianAuction.sol\":{\"keccak256\":\"0x0e8d81ffc1a9fef2149ce5f476112daf39b999612a04a76ae753ca3d1bef9fc0\",\"urls\":[\"bzz-raw://2e1089f779454764b9a820164d6243a1d7033513a031000ac0852d5affd2ab3c\",\"dweb:/ipfs/QmQUW2WhmKLa8JPufgbqv8rW63EhCyHLc17pBxBFdd6hDF\"]},\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianExchange.sol\":{\"keccak256\":\"0x18b98cc3eef0417d760142e706e3f362539bb3086c2d6d059a5d3424ae2c8f7e\",\"urls\":[\"bzz-raw://29aba1b8f648f8a07a7d5774b99eaf784b261274a5b4875134780a3829122015\",\"dweb:/ipfs/QmUANg5yviLAXUd4Yq4j6S5KykMcXmfq4Njm8DFPt37L3A\"]},\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianNFT.sol\":{\"keccak256\":\"0x4a6a98c91c84e4faa8fb25a76f69cb2856fc8eda705bdddf3e43a54dc42d5a02\",\"urls\":[\"bzz-raw://0eebdbd59b1d12d2ab03ca796946e536e4f7ef1b5a6d321c9c1b086adce39ec0\",\"dweb:/ipfs/QmYkeekVYbNkisdsKJ4VAAbdC3PV9z2vww43crt4J86agq\"]},\"@openzeppelin/contracts/access/Ownable.sol\":{\"keccak256\":\"0x6bb804a310218875e89d12c053e94a13a4607cdf7cc2052f3e52bd32a0dc50a1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b2ebbbe6d0011175bd9e7268b83de3f9c2f9d8d4cbfbaef12aff977d7d727163\",\"dweb:/ipfs/Qmd5c7Vxtis9wzkDNhxwc6A2QT5H9xn9kfjhx7qx44vpro\"]},\"@openzeppelin/contracts/token/ERC20/ERC20.sol\":{\"keccak256\":\"0x418cfe64226a974419f8ab7287ad4bb413156a4d7af8ab5d9bcaa5678d1a2f22\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9f65118c99d5d6cfe602720418b8551c2da6c3de650e61c5231b0be4396aae0d\",\"dweb:/ipfs/QmdLmkRHJhEifzzDjF44MHXcQx2SXc5EzhpHzN2z1vUq8H\"]},\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"keccak256\":\"0x027b891937d20ccf213fdb9c31531574256de774bda99d3a70ecef6e1913ed2a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://087318b21c528119f649899f5b5580566dd8d7b0303d4904bd0e8580c3545f14\",\"dweb:/ipfs/Qmbn5Mj7aUn8hJuQ8VrQjjEXRsXyJKykgnjR9p4C3nfLtL\"]},\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"keccak256\":\"0x83fe24f5c04a56091e50f4a345ff504c8bff658a76d4c43b16878c8f940c53b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d4c3df1a7ca104b633a7d81c6c6f5192367d150cd5a32cba81f7f27012729013\",\"dweb:/ipfs/QmSim72e3ZVsfgZt8UceCvbiSuMRHR6WDsiamqNzZahGSY\"]},\"@openzeppelin/contracts/token/ERC721/ERC721.sol\":{\"keccak256\":\"0xd644260d8e4e64563a7adba96d774dbaac6ae89c2ee58ef49a19850ff1239b08\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://81a0c489456fafb7633712e4da200de197b5ddf5c1b7932820db852f0ff16c59\",\"dweb:/ipfs/QmQrBxoR7gSSK9ShqunCUwXf57w19xN7DN4fgZe89sWTNw\"]},\"@openzeppelin/contracts/token/ERC721/IERC721.sol\":{\"keccak256\":\"0xf101e8720213560fab41104d53b3cc7ba0456ef3a98455aa7f022391783144a0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://3e7820bcf567e6892d937c3cb10db263a4042e446799bca602535868d822384e\",\"dweb:/ipfs/QmPG2oeDjKncqsEeyYGjAN7CwAJmMgHterXGGnpzhha4z7\"]},\"@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol\":{\"keccak256\":\"0xd9517254724276e2e8de3769183c1f738f445f0095c26fd9b86d3c6687e887b9\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0e604bcdcd5e5b2fb299ad09769cde6db19d5aa1929d1b5e939234a0f10d7eb8\",\"dweb:/ipfs/Qmd8hXE3GZfBHuWx3RNiYgFW2ci7KvHtib8DiwzJ2dgo9V\"]},\"@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol\":{\"keccak256\":\"0xd32fb7f530a914b1083d10a6bed3a586f2451952fec04fe542bcc670a82f7ba5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://af63ab940a34687c45f0ad84960b048fc5f49330c92ccb422db7822a444733b9\",\"dweb:/ipfs/QmUShaQEu8HS1GjDnsMJQ8jkZEBrecn6NuDZ3pfjY1gVck\"]},\"@openzeppelin/contracts/utils/Address.sol\":{\"keccak256\":\"0x3b4820cac4f127869f6eb496c1d74fa6ac86ed24071e0f94742e6aef20e7252c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://23e1c7303c30a2ef9c9b3f861cda15c78e4c9697b4a7988f2bf7b21c392a02fb\",\"dweb:/ipfs/QmWQJh5MsXJZjSTzAs9n5gtrqWYgXwkBa6xfwD5KKGQgSC\"]},\"@openzeppelin/contracts/utils/Context.sol\":{\"keccak256\":\"0x95098bd1d9c8dec4d80d3dedb88a0d949fa0d740ee99f2aa466bc308216ca6d5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7fec968dcd68e13961521fa3c7dd87baecad91a2653b19240e81f21cc4f3ba85\",\"dweb:/ipfs/QmaXtsYt4Mphm8XHNUfk2me1cF3ssS2SqDBNFpYAzMjomC\"]},\"@openzeppelin/contracts/utils/Counters.sol\":{\"keccak256\":\"0x78450f4e3b722cce467b21e285f72ce5eaf361e9ba9dd2241a413926246773cd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f103065051300cd995fd4599ba91188d4071b92175b52f26110e02db091617c0\",\"dweb:/ipfs/QmSyDz67R2HCypDE8Pacn3voVwxw9x17NM66q47YgBnGqc\"]},\"@openzeppelin/contracts/utils/Strings.sol\":{\"keccak256\":\"0x391d3ba97ab6856a16b225d6ee29617ad15ff00db70f3b4df1ab5ea33aa47c9d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d636ba90bbbeed04a1ea7fe9ec2466757e30fd38ba2ca173636dbf69a518735e\",\"dweb:/ipfs/QmQwCB2BHnEuYR22PYt9HkpbgeFDhq4rHmaYqAZbX3WRC7\"]},\"@openzeppelin/contracts/utils/introspection/ERC165.sol\":{\"keccak256\":\"0x5718c5df9bd67ac68a796961df938821bb5dc0cd4c6118d77e9145afb187409b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d10e1d9b26042424789246603906ad06143bf9a928f4e99de8b5e3bdc662f549\",\"dweb:/ipfs/Qmejonoaj5MLekPus229rJQHcC6E9dz2xorjHJR84fMfmn\"]},\"@openzeppelin/contracts/utils/introspection/IERC165.sol\":{\"keccak256\":\"0xa28007762d9da9db878dd421960c8cb9a10471f47ab5c1b3309bfe48e9e79ff4\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://796ab6e88af7bf0e78def0f059310c903af6a312b565344e0ff524a0f26e81c6\",\"dweb:/ipfs/QmcsVgLgzWdor3UnAztUkXKNGcysm1MPneWksF72AvnwBx\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.7+commit.e28d00a7\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"ETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"acceptOfferWithETH\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"acceptOfferWithVEXT\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"buyNFTWithETH\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"buyNFTWithVEXT\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"cancelOffer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"getListingFromId\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"purchased\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"royalty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"sold\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Listing\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getListings\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_userAddr\",\"type\":\"address\"}],\"name\":\"getListingsFromUser\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"purchased\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"royalty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"sold\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Listing[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_nftId\",\"type\":\"uint256\"}],\"name\":\"getNftOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getOffers\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_offerId\",\"type\":\"uint256\"}],\"name\":\"getOffersFromId\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"offerId\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"toNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"toAmt\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"fromNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"fromAmt\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"pending\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Offer\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_userAddr\",\"type\":\"address\"}],\"name\":\"getOffersFromUser\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"offerId\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"toNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"toAmt\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"fromNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"fromAmt\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"pending\",\"type\":\"bool\"}],\"internalType\":\"struct ViridianExchange.Offer[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256[]\",\"name\":\"_nftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_recNftIds\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"_recAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isVEXT\",\"type\":\"bool\"}],\"name\":\"makeOffer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"pullFromSale\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_nftId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_royalty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"_isVEXT\",\"type\":\"bool\"}],\"name\":\"putUpForSale\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_to\",\"type\":\"address\"}],\"name\":\"sendEther\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"viridianNFT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"viridianToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianAuction.sol\":\"ViridianAuction\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianAuction.sol\":{\"keccak256\":\"0x0e8d81ffc1a9fef2149ce5f476112daf39b999612a04a76ae753ca3d1bef9fc0\",\"urls\":[\"bzz-raw://2e1089f779454764b9a820164d6243a1d7033513a031000ac0852d5affd2ab3c\",\"dweb:/ipfs/QmQUW2WhmKLa8JPufgbqv8rW63EhCyHLc17pBxBFdd6hDF\"]},\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianExchange.sol\":{\"keccak256\":\"0xef88a7a250d52d8b32c577f83b0d0eb44f51c4ca8a4b755d0567bc3a21e8d29f\",\"urls\":[\"bzz-raw://a4115a56b5700f3d7ed38161362094c46c39cbc049da7c86f12ac6f10ffe441b\",\"dweb:/ipfs/QmVaQsWqagkaZ7SNKzYz1FP3XCSzFEdPSBvTy3ZFDfAxTJ\"]},\"/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianNFT.sol\":{\"keccak256\":\"0xadcd9dad2d511514e3424dd9f13de63d394845fd0b368c22ef5eb7bcb0879777\",\"urls\":[\"bzz-raw://a1b565a2c8fdbf00b551bd414773785f8018ba1945a940bbae06a0d51cb13a65\",\"dweb:/ipfs/QmXB4AowiSuaZpdKM2zzAGVVNntWkzRRanQuei8dpGWQhV\"]},\"@openzeppelin/contracts/access/Ownable.sol\":{\"keccak256\":\"0x6bb804a310218875e89d12c053e94a13a4607cdf7cc2052f3e52bd32a0dc50a1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b2ebbbe6d0011175bd9e7268b83de3f9c2f9d8d4cbfbaef12aff977d7d727163\",\"dweb:/ipfs/Qmd5c7Vxtis9wzkDNhxwc6A2QT5H9xn9kfjhx7qx44vpro\"]},\"@openzeppelin/contracts/token/ERC20/ERC20.sol\":{\"keccak256\":\"0x418cfe64226a974419f8ab7287ad4bb413156a4d7af8ab5d9bcaa5678d1a2f22\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9f65118c99d5d6cfe602720418b8551c2da6c3de650e61c5231b0be4396aae0d\",\"dweb:/ipfs/QmdLmkRHJhEifzzDjF44MHXcQx2SXc5EzhpHzN2z1vUq8H\"]},\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"keccak256\":\"0x027b891937d20ccf213fdb9c31531574256de774bda99d3a70ecef6e1913ed2a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://087318b21c528119f649899f5b5580566dd8d7b0303d4904bd0e8580c3545f14\",\"dweb:/ipfs/Qmbn5Mj7aUn8hJuQ8VrQjjEXRsXyJKykgnjR9p4C3nfLtL\"]},\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"keccak256\":\"0x83fe24f5c04a56091e50f4a345ff504c8bff658a76d4c43b16878c8f940c53b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d4c3df1a7ca104b633a7d81c6c6f5192367d150cd5a32cba81f7f27012729013\",\"dweb:/ipfs/QmSim72e3ZVsfgZt8UceCvbiSuMRHR6WDsiamqNzZahGSY\"]},\"@openzeppelin/contracts/token/ERC721/ERC721.sol\":{\"keccak256\":\"0xd644260d8e4e64563a7adba96d774dbaac6ae89c2ee58ef49a19850ff1239b08\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://81a0c489456fafb7633712e4da200de197b5ddf5c1b7932820db852f0ff16c59\",\"dweb:/ipfs/QmQrBxoR7gSSK9ShqunCUwXf57w19xN7DN4fgZe89sWTNw\"]},\"@openzeppelin/contracts/token/ERC721/IERC721.sol\":{\"keccak256\":\"0xf101e8720213560fab41104d53b3cc7ba0456ef3a98455aa7f022391783144a0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://3e7820bcf567e6892d937c3cb10db263a4042e446799bca602535868d822384e\",\"dweb:/ipfs/QmPG2oeDjKncqsEeyYGjAN7CwAJmMgHterXGGnpzhha4z7\"]},\"@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol\":{\"keccak256\":\"0xd9517254724276e2e8de3769183c1f738f445f0095c26fd9b86d3c6687e887b9\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0e604bcdcd5e5b2fb299ad09769cde6db19d5aa1929d1b5e939234a0f10d7eb8\",\"dweb:/ipfs/Qmd8hXE3GZfBHuWx3RNiYgFW2ci7KvHtib8DiwzJ2dgo9V\"]},\"@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol\":{\"keccak256\":\"0xd32fb7f530a914b1083d10a6bed3a586f2451952fec04fe542bcc670a82f7ba5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://af63ab940a34687c45f0ad84960b048fc5f49330c92ccb422db7822a444733b9\",\"dweb:/ipfs/QmUShaQEu8HS1GjDnsMJQ8jkZEBrecn6NuDZ3pfjY1gVck\"]},\"@openzeppelin/contracts/utils/Address.sol\":{\"keccak256\":\"0x3b4820cac4f127869f6eb496c1d74fa6ac86ed24071e0f94742e6aef20e7252c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://23e1c7303c30a2ef9c9b3f861cda15c78e4c9697b4a7988f2bf7b21c392a02fb\",\"dweb:/ipfs/QmWQJh5MsXJZjSTzAs9n5gtrqWYgXwkBa6xfwD5KKGQgSC\"]},\"@openzeppelin/contracts/utils/Context.sol\":{\"keccak256\":\"0x95098bd1d9c8dec4d80d3dedb88a0d949fa0d740ee99f2aa466bc308216ca6d5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7fec968dcd68e13961521fa3c7dd87baecad91a2653b19240e81f21cc4f3ba85\",\"dweb:/ipfs/QmaXtsYt4Mphm8XHNUfk2me1cF3ssS2SqDBNFpYAzMjomC\"]},\"@openzeppelin/contracts/utils/Counters.sol\":{\"keccak256\":\"0x78450f4e3b722cce467b21e285f72ce5eaf361e9ba9dd2241a413926246773cd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f103065051300cd995fd4599ba91188d4071b92175b52f26110e02db091617c0\",\"dweb:/ipfs/QmSyDz67R2HCypDE8Pacn3voVwxw9x17NM66q47YgBnGqc\"]},\"@openzeppelin/contracts/utils/Strings.sol\":{\"keccak256\":\"0x391d3ba97ab6856a16b225d6ee29617ad15ff00db70f3b4df1ab5ea33aa47c9d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d636ba90bbbeed04a1ea7fe9ec2466757e30fd38ba2ca173636dbf69a518735e\",\"dweb:/ipfs/QmQwCB2BHnEuYR22PYt9HkpbgeFDhq4rHmaYqAZbX3WRC7\"]},\"@openzeppelin/contracts/utils/introspection/ERC165.sol\":{\"keccak256\":\"0x5718c5df9bd67ac68a796961df938821bb5dc0cd4c6118d77e9145afb187409b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d10e1d9b26042424789246603906ad06143bf9a928f4e99de8b5e3bdc662f549\",\"dweb:/ipfs/Qmejonoaj5MLekPus229rJQHcC6E9dz2xorjHJR84fMfmn\"]},\"@openzeppelin/contracts/utils/introspection/IERC165.sol\":{\"keccak256\":\"0xa28007762d9da9db878dd421960c8cb9a10471f47ab5c1b3309bfe48e9e79ff4\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://796ab6e88af7bf0e78def0f059310c903af6a312b565344e0ff524a0f26e81c6\",\"dweb:/ipfs/QmcsVgLgzWdor3UnAztUkXKNGcysm1MPneWksF72AvnwBx\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -693,55 +599,55 @@
     "absolutePath": "/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianAuction.sol",
     "exportedSymbols": {
       "Address": [
-        4731
+        4799
       ],
       "Context": [
-        4752
+        4820
       ],
       "Counters": [
-        4826
+        4894
       ],
       "ERC165": [
-        5053
+        5121
       ],
       "ERC20": [
-        3353
+        3421
       ],
       "ERC721": [
-        4274
+        4342
       ],
       "IERC165": [
-        5065
+        5133
       ],
       "IERC20": [
-        3431
+        3499
       ],
       "IERC20Metadata": [
-        3456
+        3524
       ],
       "IERC721": [
-        4390
+        4458
       ],
       "IERC721Metadata": [
-        4435
+        4503
       ],
       "IERC721Receiver": [
-        4408
+        4476
       ],
       "Ownable": [
-        2807
+        2875
       ],
       "Strings": [
-        5029
+        5097
       ],
       "ViridianAuction": [
         33
       ],
       "ViridianExchange": [
-        1117
+        1165
       ],
       "ViridianNFT": [
-        1581
+        1650
       ]
     },
     "id": 34,
@@ -765,7 +671,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 2808,
+        "sourceUnit": 2876,
         "src": "25:52:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -777,7 +683,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 4275,
+        "sourceUnit": 4343,
         "src": "78:57:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -789,7 +695,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 3432,
+        "sourceUnit": 3500,
         "src": "136:56:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -801,7 +707,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 3354,
+        "sourceUnit": 3422,
         "src": "193:55:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -813,7 +719,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 4391,
+        "sourceUnit": 4459,
         "src": "249:58:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -825,7 +731,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 1582,
+        "sourceUnit": 1651,
         "src": "309:27:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -837,7 +743,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 1118,
+        "sourceUnit": 1166,
         "src": "337:32:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -850,7 +756,7 @@
               "id": 9,
               "name": "ViridianExchange",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1117,
+              "referencedDeclaration": 1165,
               "src": "408:16:0"
             },
             "id": 10,
@@ -864,9 +770,9 @@
         "id": 33,
         "linearizedBaseContracts": [
           33,
-          1117,
-          2807,
-          4752
+          1165,
+          2875,
+          4820
         ],
         "name": "ViridianAuction",
         "nameLocation": "389:15:0",
@@ -1060,7 +966,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_struct$_Counter_$4758_storage",
+              "typeIdentifier": "t_struct$_Counter_$4826_storage",
               "typeString": "struct Counters.Counter"
             },
             "typeName": {
@@ -1070,13 +976,13 @@
                 "id": 25,
                 "name": "Counters.Counter",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 4758,
+                "referencedDeclaration": 4826,
                 "src": "601:16:0"
               },
-              "referencedDeclaration": 4758,
+              "referencedDeclaration": 4826,
               "src": "601:16:0",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_Counter_$4758_storage_ptr",
+                "typeIdentifier": "t_struct$_Counter_$4826_storage_ptr",
                 "typeString": "struct Counters.Counter"
               }
             },
@@ -1147,55 +1053,55 @@
     "absolutePath": "/Users/blakehatch/Viridian-Exchange-Contracts/contracts/ViridianAuction.sol",
     "exportedSymbols": {
       "Address": [
-        4731
+        4799
       ],
       "Context": [
-        4752
+        4820
       ],
       "Counters": [
-        4826
+        4894
       ],
       "ERC165": [
-        5053
+        5121
       ],
       "ERC20": [
-        3353
+        3421
       ],
       "ERC721": [
-        4274
+        4342
       ],
       "IERC165": [
-        5065
+        5133
       ],
       "IERC20": [
-        3431
+        3499
       ],
       "IERC20Metadata": [
-        3456
+        3524
       ],
       "IERC721": [
-        4390
+        4458
       ],
       "IERC721Metadata": [
-        4435
+        4503
       ],
       "IERC721Receiver": [
-        4408
+        4476
       ],
       "Ownable": [
-        2807
+        2875
       ],
       "Strings": [
-        5029
+        5097
       ],
       "ViridianAuction": [
         33
       ],
       "ViridianExchange": [
-        1117
+        1165
       ],
       "ViridianNFT": [
-        1581
+        1650
       ]
     },
     "id": 34,
@@ -1219,7 +1125,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 2808,
+        "sourceUnit": 2876,
         "src": "25:52:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1231,7 +1137,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 4275,
+        "sourceUnit": 4343,
         "src": "78:57:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1243,7 +1149,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 3432,
+        "sourceUnit": 3500,
         "src": "136:56:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1255,7 +1161,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 3354,
+        "sourceUnit": 3422,
         "src": "193:55:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1267,7 +1173,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 4391,
+        "sourceUnit": 4459,
         "src": "249:58:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1279,7 +1185,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 1582,
+        "sourceUnit": 1651,
         "src": "309:27:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1291,7 +1197,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 34,
-        "sourceUnit": 1118,
+        "sourceUnit": 1166,
         "src": "337:32:0",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1304,7 +1210,7 @@
               "id": 9,
               "name": "ViridianExchange",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1117,
+              "referencedDeclaration": 1165,
               "src": "408:16:0"
             },
             "id": 10,
@@ -1318,9 +1224,9 @@
         "id": 33,
         "linearizedBaseContracts": [
           33,
-          1117,
-          2807,
-          4752
+          1165,
+          2875,
+          4820
         ],
         "name": "ViridianAuction",
         "nameLocation": "389:15:0",
@@ -1514,7 +1420,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_struct$_Counter_$4758_storage",
+              "typeIdentifier": "t_struct$_Counter_$4826_storage",
               "typeString": "struct Counters.Counter"
             },
             "typeName": {
@@ -1524,13 +1430,13 @@
                 "id": 25,
                 "name": "Counters.Counter",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 4758,
+                "referencedDeclaration": 4826,
                 "src": "601:16:0"
               },
-              "referencedDeclaration": 4758,
+              "referencedDeclaration": 4826,
               "src": "601:16:0",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_Counter_$4758_storage_ptr",
+                "typeIdentifier": "t_struct$_Counter_$4826_storage_ptr",
                 "typeString": "struct Counters.Counter"
               }
             },
@@ -1599,11 +1505,11 @@
   },
   "compiler": {
     "name": "solc",
-    "version": "0.8.6+commit.11564f7e.Emscripten.clang"
+    "version": "0.8.7+commit.e28d00a7.Emscripten.clang"
   },
   "networks": {},
   "schemaVersion": "3.4.1",
-  "updatedAt": "2021-08-04T19:02:55.089Z",
+  "updatedAt": "2021-08-16T01:54:44.104Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

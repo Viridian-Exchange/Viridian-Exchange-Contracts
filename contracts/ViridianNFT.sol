@@ -105,12 +105,13 @@ contract ViridianNFT is ERC721, Ownable {
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId]);
-        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+
+        for (uint256 i = 0; i < _ownedNFTs[from].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[from][i];
             if (ownedNFT == tokenId) {
-                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
-                _ownedNFTs[msg.sender].pop();
+                _ownedNFTs[from][i] = _ownedNFTs[from][_ownedNFTs[from].length - 1];
+                _ownedNFTs[from].pop();
             }
         }
         _ownedNFTs[to].push(tokenId);
@@ -119,15 +120,25 @@ contract ViridianNFT is ERC721, Ownable {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
-        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+
+        for (uint256 i = 0; i < _ownedNFTs[from].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[from][i];
             if (ownedNFT == tokenId) {
-                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
-                _ownedNFTs[msg.sender].pop();
+                _ownedNFTs[from][i] = _ownedNFTs[from][_ownedNFTs[from].length - 1];
+                _ownedNFTs[from].pop();
             }
         }
         _ownedNFTs[to].push(tokenId);
 
         super.transferFrom(from, to, tokenId);
+    }
+
+    function listToken(uint256 _tokenId) public {
+        _tokensListed[_tokenId] = true;
+    }
+
+    function unlistToken(uint256 _tokenId) public {
+        _tokensListed[_tokenId] = false;
     }
 }

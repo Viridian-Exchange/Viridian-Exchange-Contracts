@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "Viridian-Exchange-Contracts",
+			"path": ".."
+		},
+		{
+			"name": "contracts",
+			"path": "."
+		}
+	],
+	"settings": {
+		"solidity.compileUsingRemoteVersion": "v0.8.0+commit.c7dfd78e"
+	}
+}

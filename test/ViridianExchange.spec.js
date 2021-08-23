@@ -39,6 +39,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.setApprovalForAll(exchange.address, true, {from: accounts[0]});
     await nft.setApprovalForAll(exchange.address, true, {from: accounts[1]});
     await nft.setApprovalForAll(exchange.address, true, {from: accounts[2]});
+    //token.approve(accounts[1], '500');
     //await web3.sendTransaction({to:exchange, from:accounts[3], value:web3.toWei("90", "ether")});
     //console.log("APVL: " + JSON.stringify(await nft.isApprovedForAll(accounts[0], exchange.address)));
   })
@@ -70,13 +71,15 @@ contract('ViridianExchange', (accounts) => {
     expect(listings[0].toString()).to.equal('1');
     expect(await userListings.length).to.equal(1);
     console.log("ULEB: " + JSON.stringify(listings));
-
+    await token.approve(exchange.address, 0);
     await exchange.pullFromSale("1");
     listings = await exchange.getListings.call();
     userListings = await exchange.getListingsFromUser.call(accounts[0]);
     console.log("ULE: " + JSON.stringify(listings));
     expect(await listings.length).to.equal(0);
     expect(await userListings.length).to.equal(0);
+    let allowanceAfter = await token.allowance(accounts[0], exchange.address);
+    expect(allowanceAfter.toString()).to.equal('0');
   })
 
   
@@ -86,6 +89,7 @@ contract('ViridianExchange', (accounts) => {
 
   it('transaction: nft should be able to be purchased with VEXT', async () => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    token.approve(exchange.address, 100);
     await exchange.putUpForSale("1", "100", "1", "0", true, {from: accounts[1]});
     let listings = await exchange.getListings.call({from: accounts[1]});
     let userListings = await exchange.getListingsFromUser(accounts[1]);
@@ -98,171 +102,183 @@ contract('ViridianExchange', (accounts) => {
     //console.log("VEXT Balance bef: " + balanceBefore);
 
     let ownedNFTs = await nft.getOwnedNFTs()
+    let ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]})
     //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
     expect(await ownedNFTs.length).to.equal(0);
+    expect(await ownedNFTsOther.length).to.equal(1);
 
     //console.log("Cur price: " + JSON.stringify(userListings[0].price));
 
-    await token.approve(exchange.address, 100);
+    //await token.approve(exchange.address, 100);
     await exchange.buyNFTWithVEXT(1);
 
     const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
-    ownedNFTs = await nft.getOwnedNFTs()
+    ownedNFTs = await nft.getOwnedNFTs();
+    ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
 
     //console.log("VEXT Balance aft: " + balanceAfter.toString());
+    listings = await exchange.getListings.call({from: accounts[1]});
+    userListings = await exchange.getListingsFromUser(accounts[1]);
 
-    assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
-    assert.strictEqual(balanceAfter.toString(), "99999999999999999999999900");
+    expect(await listings.length).to.equal(0);
+    expect(await userListings.length).to.equal(0);
+    assert.strictEqual(balanceBefore.toString(), "200000000000000000000000000");
+    assert.strictEqual(balanceAfter.toString(), "199999999999999999999999900");
     expect(await ownedNFTs.length).to.equal(1);
+    expect(await ownedNFTsOther.length).to.equal(0);
+
 
   })
 
-  it('transaction: nft should be able to be purchased with VEXT', async () => {
-    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-    await exchange.putUpForSale("1", "500", "1", "0", true, {from: accounts[1]});
-    let listings = await exchange.getListings.call({from: accounts[1]});
-    let userListings = await exchange.getListingsFromUser(accounts[1]);
-    expect(await listings.length).to.equal(1);
-    expect(listings[0].toString()).to.equal('1');
-    expect(await userListings.length).to.equal(1);
-
-    const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
-
-    //console.log("VEXT Balance bef: " + balanceBefore);
-
-    let ownedNFTs = await nft.getOwnedNFTs()
-    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
-    expect(await ownedNFTs.length).to.equal(0);
-
-    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
-
-    await token.approve(exchange.address, 500);
-    await exchange.buyNFTWithVEXT(1);
-
-    const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
-    ownedNFTs = await nft.getOwnedNFTs()
-
-    //console.log("VEXT Balance aft: " + balanceAfter.toString());
-
-    assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
-    assert.strictEqual(balanceAfter.toString(), "99999999999999999999999500");
-    expect(await ownedNFTs.length).to.equal(1);
-
-  })
-
-  it('transaction: nft should be able to be purchased with VEXT if approval is higher', async () => {
-    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-    await exchange.putUpForSale("1", "500", "1", "0", true, {from: accounts[1]});
-    let listings = await exchange.getListings.call({from: accounts[1]});
-    let userListings = await exchange.getListingsFromUser(accounts[1]);
-    expect(await listings.length).to.equal(1);
-    expect(listings[0].toString()).to.equal('1');
-    expect(await userListings.length).to.equal(1);
-
-    const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
-
-    //console.log("VEXT Balance bef: " + balanceBefore);
-
-    let ownedNFTs = await nft.getOwnedNFTs()
-    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
-    expect(await ownedNFTs.length).to.equal(0);
-
-    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
-
-    await token.approve(exchange.address, 600);
-    await exchange.buyNFTWithVEXT(1);
-
-    const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
-    ownedNFTs = await nft.getOwnedNFTs()
-
-    //console.log("VEXT Balance aft: " + balanceAfter.toString());
-
-    assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
-    assert.strictEqual(balanceAfter.toString(), "99999999999999999999999500");
-    expect(await ownedNFTs.length).to.equal(1);
-
-  })
-
-
-  it('items: offer should be able to be created for existing NFT', async () => {
-    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await exchange.makeOffer(accounts[1], ['2', '3'], '300', ['1'], '100', true);
-    let offers = await exchange.getOffers.call({from: accounts[1]});
-    let userOffers = await exchange.getOffersFromUser(accounts[1]);
-
-    console.log("UL: " + offers[0]);
-    expect(await offers.length).to.equal(1);
-    expect(offers[0].toString()).to.equal('1');
-    expect(await offers.length).to.equal(1);
-  })
-
-  it('items: offer should be able to be cancelled', async () => {
-    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await exchange.makeOffer(accounts[1], ['2', '3'], '300', ['1'], '100', true)
-    let offers = await exchange.getOffers.call({from: accounts[1]});
-    let userOffers = await exchange.getOffersFromUser(accounts[1]);
-
-    console.log("UL: " + offers[0]);
-    expect(await offers.length).to.equal(1);
-    expect(offers[0].toString()).to.equal('1');
-    expect(await offers.length).to.equal(1);
-
-    await exchange.cancelOffer("1");
-    offers = await exchange.getListings.call();
-    userOffers = await exchange.getOffersFromUser.call(accounts[0]);
-    console.log("ULE: " + JSON.stringify(offers));
-    expect(await offers.length).to.equal(0);
-    expect(await userOffers.length).to.equal(0);
-  })
-
-  it('transaction: should be able to accept ETH offer', async () => {
-  })
-
-
-  // it('transaction: should be able to accept VEXT offer', async () => {
+  // it('transaction: nft should be able to be purchased with VEXT', async () => {
   //   await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-  //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-  //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-  //   await exchange.makeOffer(accounts[1], [], '100', [], '200', true)
-  //   let offers = await exchange.getOffers.call({from: accounts[1]});
-  //   let userOffers = await exchange.getOffersFromUser(accounts[1]);
-  //   console.log("UL: " + offers[0]);
-  //   expect(await offers.length).to.equal(1);
-  //   expect(offers[0].toString()).to.equal('1');
-  //   expect(await offers.length).to.equal(1);
+  //   await exchange.putUpForSale("1", "500", "1", "0", true, {from: accounts[1]});
+  //   let listings = await exchange.getListings.call({from: accounts[1]});
+  //   let userListings = await exchange.getListingsFromUser(accounts[1]);
+  //   expect(await listings.length).to.equal(1);
+  //   expect(listings[0].toString()).to.equal('1');
+  //   expect(await userListings.length).to.equal(1);
 
+  //   const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
+
+  //   //console.log("VEXT Balance bef: " + balanceBefore);
+
+  //   let ownedNFTs = await nft.getOwnedNFTs()
+  //   //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+  //   expect(await ownedNFTs.length).to.equal(0);
+
+  //   //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+
+  //   await token.approve(exchange.address, 500);
+  //   await exchange.buyNFTWithVEXT(1);
+
+  //   const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
+  //   ownedNFTs = await nft.getOwnedNFTs()
+
+  //   //console.log("VEXT Balance aft: " + balanceAfter.toString());
+
+  //   assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
+  //   assert.strictEqual(balanceAfter.toString(), "99999999999999999999999500");
+  //   expect(await ownedNFTs.length).to.equal(1);
 
   // })
 
+//   it('transaction: nft should be able to be purchased with VEXT if approval is higher', async () => {
+//     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+//     await exchange.putUpForSale("1", "500", "1", "0", true, {from: accounts[1]});
+//     let listings = await exchange.getListings.call({from: accounts[1]});
+//     let userListings = await exchange.getListingsFromUser(accounts[1]);
+//     expect(await listings.length).to.equal(1);
+//     expect(listings[0].toString()).to.equal('1');
+//     expect(await userListings.length).to.equal(1);
 
-  // it('transaction: should be able to accept just NFT offer', async () => {
-  //   await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-  //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-  //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-  //   await exchange.makeOffer(accounts[1], ['2', '3'], '0', ['1'], '0', true)
-  //   let offers = await exchange.getOffers.call({from: accounts[1]});
-  //   let userOffers = await exchange.getOffersFromUser(accounts[1]);
-  //   console.log("UL: " + offers[0]);
-  //   expect(await offers.length).to.equal(1);
-  //   expect(offers[0].toString()).to.equal('1');
-  //   expect(await offers.length).to.equal(1);
+//     const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
+
+//     //console.log("VEXT Balance bef: " + balanceBefore);
+
+//     let ownedNFTs = await nft.getOwnedNFTs();
+//     //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+//     expect(await ownedNFTs.length).to.equal(0);
+
+//     //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+
+//     await token.approve(exchange.address, 600);
+//     await exchange.buyNFTWithVEXT(1);
+
+//     const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
+//     ownedNFTs = await nft.getOwnedNFTs()
+
+//     //console.log("VEXT Balance aft: " + balanceAfter.toString());
+
+//     assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
+//     assert.strictEqual(balanceAfter.toString(), "99999999999999999999999500");
+//     expect(await ownedNFTs.length).to.equal(1);
+
+//   })
 
 
-  // })  
+//   it('items: offer should be able to be created for existing NFT', async () => {
+//     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+//     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//     await exchange.makeOffer(accounts[1], ['2', '3'], '300', ['1'], '100', true);
+//     let offers = await exchange.getOffers.call({from: accounts[1]});
+//     let userOffers = await exchange.getOffersFromUser(accounts[1]);
+
+//     console.log("UL: " + offers[0]);
+//     expect(await offers.length).to.equal(1);
+//     expect(offers[0].toString()).to.equal('1');
+//     expect(await offers.length).to.equal(1);
+//   })
+
+//   it('items: offer should be able to be cancelled', async () => {
+//     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+//     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//     await exchange.makeOffer(accounts[1], ['2', '3'], '300', ['1'], '100', true)
+//     let offers = await exchange.getOffers.call({from: accounts[1]});
+//     let userOffers = await exchange.getOffersFromUser(accounts[1]);
+
+//     console.log("UL: " + offers[0]);
+//     expect(await offers.length).to.equal(1);
+//     expect(offers[0].toString()).to.equal('1');
+//     expect(await offers.length).to.equal(1);
+
+//     await exchange.cancelOffer("1");
+//     offers = await exchange.getListings.call();
+//     userOffers = await exchange.getOffersFromUser.call(accounts[0]);
+//     console.log("ULE: " + JSON.stringify(offers));
+//     expect(await offers.length).to.equal(0);
+//     expect(await userOffers.length).to.equal(0);
+//   })
+
+//   it('transaction: should be able to accept ETH offer', async () => {
+//   })
 
 
-  it('transaction: should be able to accept ETH/NFT hybrid offer', async () => {
-  })  
+//   // it('transaction: should be able to accept VEXT offer', async () => {
+//   //   await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+//   //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//   //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//   //   await exchange.makeOffer(accounts[1], [], '100', [], '200', true)
+//   //   let offers = await exchange.getOffers.call({from: accounts[1]});
+//   //   let userOffers = await exchange.getOffersFromUser(accounts[1]);
+//   //   console.log("UL: " + offers[0]);
+//   //   expect(await offers.length).to.equal(1);
+//   //   expect(offers[0].toString()).to.equal('1');
+//   //   expect(await offers.length).to.equal(1);
+
+
+//   // })
+
+
+//   // it('transaction: should be able to accept just NFT offer', async () => {
+//   //   await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+//   //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//   //   await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+//   //   await exchange.makeOffer(accounts[1], ['2', '3'], '0', ['1'], '0', true)
+//   //   let offers = await exchange.getOffers.call({from: accounts[1]});
+//   //   let userOffers = await exchange.getOffersFromUser(accounts[1]);
+//   //   console.log("UL: " + offers[0]);
+//   //   expect(await offers.length).to.equal(1);
+//   //   expect(offers[0].toString()).to.equal('1');
+//   //   expect(await offers.length).to.equal(1);
+
+
+//   // })  
+
+
+//   it('transaction: should be able to accept ETH/NFT hybrid offer', async () => {
+//   })  
 
 
   it('transaction: should be able to accept VEXT/NFT hybrid offer', async () => {
+    await token.transfer(accounts[1], '500');
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    await token.approve(exchange.address, 100, {from: accounts[1]});
+    //await token.approve(exchange.address, 300);
     await exchange.makeOffer(accounts[1], ['2', '3'], '300', ['1'], '100', true)
     let offers = await exchange.getOffers.call({from: accounts[1]});
     let userOffers = await exchange.getOffersFromUser(accounts[1]);
@@ -284,8 +300,7 @@ contract('ViridianExchange', (accounts) => {
 
     //console.log("Cur price: " + JSON.stringify(userListings[0].price));
     await token.approve(exchange.address, 300);
-    await token.approve(exchange.address, 300, {from: accounts[1]});
-    exchange.acceptOfferWithVEXT('1');
+    exchange.acceptOfferWithVEXT('1', {from: accounts[1]});
 
     offers = await exchange.getListings.call();
     userOffers = await exchange.getOffersFromUser.call(accounts[0]);
@@ -303,14 +318,14 @@ contract('ViridianExchange', (accounts) => {
 
     //console.log("VEXT Balance aft: " + balanceAfter.toString());
 
-    assert.strictEqual(balanceBefore.toString(), "100000000000000000000000000");
-    assert.strictEqual(balanceAfter.toString(), "99999999999999999999999800");
-    assert.strictEqual(balanceBefore1.toString(), "100000000000000000000000000");
-    assert.strictEqual(balanceAfter1.toString(), "100000000000000000000000200");
+    assert.strictEqual(balanceBefore.toString(), "199999999999999999999999500");
+    assert.strictEqual(balanceAfter.toString(),  "199999999999999999999999300");
+    assert.strictEqual(balanceBefore1.toString(), "500");
+    assert.strictEqual(balanceAfter1.toString(), "700");
 
   })
 
 
-  it('transfers: should handle zero-transfers normally', async () => {
-  })
+//   it('transfers: should handle zero-transfers normally', async () => {
+//   })
 })
