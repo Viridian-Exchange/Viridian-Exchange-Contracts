@@ -9,8 +9,13 @@ contract ViridianPack is ERC721, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping(string => uint8) hashes;
+    mapping(uint256 => uint256) private rarityOdds;
+    mapping(uint256 => string) private unmintedURIs;
+    mapping(uint256 => uint256) tokenRarity;
     
     constructor() ERC721("Viridian Pack", "VEXP") {}
+
+    address public viridianNFT;
 
     using Strings for uint256;
 
@@ -76,6 +81,10 @@ contract ViridianPack is ERC721, Ownable {
         return _tokens;
     }
 
+    function setRarityOdds(uint256 _rarity, uint256 _newOdds) external onlyOwner() {
+        rarityOdds[_rarity] = _newOdds;
+    }
+
     function mint(
         address _to,
         string memory tokenURI_
@@ -87,6 +96,13 @@ contract ViridianPack is ERC721, Ownable {
         _ownedNFTs[_to].push(_tokenId);
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
+    }
+
+    function openPack(uint256 _tokenId) public {
+        // Randomly 
+
+
+        burn(_tokenId);
     }
 
     function burn(uint256 tokenId) public {

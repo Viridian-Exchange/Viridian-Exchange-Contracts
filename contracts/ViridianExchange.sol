@@ -215,7 +215,7 @@ contract ViridianExchange is Ownable {
     function buyNFTWithVEXT(uint256 _listingId) public payable {
         Listing memory curListing = listings[_listingId];
 
-        require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
+        //require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
 
         // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);

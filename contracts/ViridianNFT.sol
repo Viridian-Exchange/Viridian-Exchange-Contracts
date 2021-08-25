@@ -10,6 +10,8 @@ contract ViridianNFT is ERC721, Ownable {
     Counters.Counter private _tokenIds;
     mapping(string => uint8) hashes;
     
+    mapping(address => bool) admins;
+    
     constructor() ERC721("Viridian NFT", "VNFT") {}
 
     using Strings for uint256;
@@ -76,10 +78,19 @@ contract ViridianNFT is ERC721, Ownable {
         return _tokens;
     }
 
+    modifier onlyAdmin() {
+        require(admins[msg.sender] == true);
+            _;
+    }
+
+    function addAdmin(address _newAdmin) external onlyOwner() {
+        admins[_newAdmin] = true;
+    }
+
     function mint(
         address _to,
         string memory tokenURI_
-    ) external onlyOwner() {
+    ) external onlyAdmin() {
         _tokenIds.increment();
         uint256 _tokenId = _tokenIds.current();
 
