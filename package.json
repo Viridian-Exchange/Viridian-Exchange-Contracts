@@ -8,6 +8,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
     "@babel/register": "^7.14.5",
+    "@chainlink/contracts": "^0.2.1",
     "@openzeppelin/test-helpers": "^0.5.11",
     "assert": "^2.0.0",
     "chai": "^4.3.4",

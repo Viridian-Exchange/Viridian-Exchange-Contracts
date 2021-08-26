@@ -12,7 +12,9 @@ contract ViridianNFT is ERC721, Ownable {
     
     mapping(address => bool) admins;
     
-    constructor() ERC721("Viridian NFT", "VNFT") {}
+    constructor() ERC721("Viridian NFT", "VNFT") {
+        admins[msg.sender] = true;
+    }
 
     using Strings for uint256;
 
@@ -94,7 +96,7 @@ contract ViridianNFT is ERC721, Ownable {
         _tokenIds.increment();
         uint256 _tokenId = _tokenIds.current();
 
-        _mint(_to, _tokenId);
+        _safeMint(_to, _tokenId);
         _ownedNFTs[_to].push(_tokenId);
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);

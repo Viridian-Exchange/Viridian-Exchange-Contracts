@@ -4,25 +4,69 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import "./RandomNumber.sol";
+import "./ViridianNFT.sol";
+
 contract ViridianPack is ERC721, Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    Counters.Counter private _unmintedTokenIds;
     mapping(string => uint8) hashes;
-    mapping(uint256 => uint256) private rarityOdds;
-    mapping(uint256 => string) private unmintedURIs;
+    mapping(uint256 => mapping(uint256 => uint256)) private rarityOdds;
+    mapping(uint256 => uint256) private numNFTs;
+    //mapping(uint256 => string) private unmintedURIs;
     mapping(uint256 => uint256) tokenRarity;
-    
-    constructor() ERC721("Viridian Pack", "VEXP") {}
+    mapping(uint256 => string[]) private uriRarityPools;
+    int private maxRarityIndex;
 
-    address public viridianNFT;
+    address public viridianNFTAddr;
+
+    ViridianNFT vNFT;
 
     using Strings for uint256;
 
+    constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") {
 
-    //TODO: Maybe add restrictions to NFT usage when it is listed on the exchange, do not allow ownership transfer 
-    // while it is listed for sale or offer to avoid issues with invalid purchasing, or just protect from transactions going through
-    // on exchange, ask someone about this scenario.
+        require(address(_viridianNFT) != address(0));
+
+        viridianNFTAddr = _viridianNFT;
+
+        vNFT = ViridianNFT(viridianNFTAddr);
+
+        //Set all beginning rarities
+
+        // Legendary rarity and cards in pack
+        rarityOdds[0][0] = 25;
+        rarityOdds[0][1] = 100;
+        rarityOdds[0][2] = 300;
+        rarityOdds[0][3] = 1000;
+        numNFTs[0] = 3;
+
+        // Mystical rarity and cards in pack
+        rarityOdds[1][0] = 1;
+        rarityOdds[1][1] = 50;
+        rarityOdds[1][2] = 200;
+        rarityOdds[1][3] = 1000;
+        numNFTs[0] = 3;
+
+        // Rare rarity and cards in pack
+        rarityOdds[1][0] = 0;
+        rarityOdds[1][1] = 50;
+        rarityOdds[1][2] = 100;
+        rarityOdds[1][3] = 1000;
+        numNFTs[0] = 3;
+
+        // Common rarity and cards in pack
+        rarityOdds[2][0] = 0;
+        rarityOdds[2][1] = 10;
+        rarityOdds[2][2] = 50;
+        rarityOdds[2][3] = 1000;
+        numNFTs[0] = 3;
+
+        maxRarityIndex = 3;
+    }
+    
     struct NFT {
         uint256 id;
         string uri;
@@ -39,10 +83,6 @@ contract ViridianPack is ERC721, Ownable {
 
     // Base URI
     string private _baseURIextended;
-
-    // function setExchangeAddress(address ea) public onlyOwner() {
-    //     viridianExchangeAddress = ea;
-    // }
     
     function setBaseURI(string memory baseURI_) external onlyOwner() {
         _baseURIextended = baseURI_;
@@ -81,8 +121,8 @@ contract ViridianPack is ERC721, Ownable {
         return _tokens;
     }
 
-    function setRarityOdds(uint256 _rarity, uint256 _newOdds) external onlyOwner() {
-        rarityOdds[_rarity] = _newOdds;
+    function setRarityOdds(uint256 _rarity, uint256 _rarityOdd, uint256 _newOdds) external onlyOwner() {
+        rarityOdds[_rarity][_rarityOdd] = _newOdds;
     }
 
     function mint(
@@ -92,15 +132,69 @@ contract ViridianPack is ERC721, Ownable {
         _tokenIds.increment();
         uint256 _tokenId = _tokenIds.current();
 
-        _mint(_to, _tokenId);
+        _safeMint(_to, _tokenId);
         _ownedNFTs[_to].push(_tokenId);
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
 
+    //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!
+    uint nonce;
+
+
+    function random(uint range) internal returns (uint) {
+        uint randomnumber = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, nonce))) % range;
+        randomnumber = randomnumber;
+        nonce++;
+
+        return randomnumber;
+    }
+
+    function calculateWeightedOdds(uint256 randomNum, mapping(uint256 => uint256) storage rarityOdd) private view returns (uint) {
+        uint256 n;
+
+        for (n = 0; int(n) < int(maxRarityIndex); n++) {
+            if (randomNum <= rarityOdd[n]) {
+                return n;
+            }
+        }
+
+        return n;
+    }
+
+    function softMintNFT(string memory uri, uint256 rarity) public onlyOwner() payable {
+        uriRarityPools[rarity].push(uri);
+    }
+
+    function compareStrings(string memory _s, string memory _s1) public pure returns (bool) {
+        return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
+    }
+
     function openPack(uint256 _tokenId) public {
         // Randomly 
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
 
+        uint256 tr = tokenRarity[_tokenId];
+
+        for (uint8 n = 0; n < numNFTs[tr]; n++) {
+            uint256 randIndexWithPercentOdds = calculateWeightedOdds(random(1000), rarityOdds[tr]);
+            uint256 randIndexInRarity = random(uriRarityPools[randIndexWithPercentOdds].length - 1);
+
+            string memory newURI = uriRarityPools[randIndexWithPercentOdds][randIndexInRarity];
+
+            vNFT.mint(msg.sender, newURI);
+
+            string[] memory curRarityPool = uriRarityPools[randIndexWithPercentOdds];
+            for (uint i = 0; i < uriRarityPools[randIndexWithPercentOdds].length; i++) {
+                string memory uri = uriRarityPools[randIndexWithPercentOdds][i];
+                if (compareStrings(uri, newURI)) {
+                    curRarityPool[i] = curRarityPool[curRarityPool.length - 1];
+                    uriRarityPools[randIndexWithPercentOdds] = curRarityPool;
+                    uriRarityPools[randIndexWithPercentOdds].pop();
+                    break;
+                }
+            }
+        }
 
         burn(_tokenId);
     }
