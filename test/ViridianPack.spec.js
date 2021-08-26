@@ -31,21 +31,25 @@ contract('Testing ERC721 contract', function(accounts) {
         pack = await ViridianPack.new(token.address);
         token.addAdmin(pack.address);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 0);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 0);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 0);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 1);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 1);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 1);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 2);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 2);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 2);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 3);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 3);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vp1.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 3);
     })
 
     it('should be able to deploy and mint ERC721 token', async () => {
@@ -55,14 +59,18 @@ contract('Testing ERC721 contract', function(accounts) {
         expect(await pack.name()).to.equal(name)
     })
 
-    it(' should be able to open', async () => {
+    it('should be able to open pack', async () => {
         await pack.mint(account1, tokenUri1, {from: accounts[0]}) //tokenId
+
+        let ownedPacks = await pack.getOwnedNFTs({from: accounts[1]});
+
+        expect(await ownedPacks.length).to.equal(1);
 
         await pack.openPack(1, {from: accounts[1]});
 
         let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
         let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
-        //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+        console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
         expect(await ownedNFTs.length).to.equal(0);
         expect(await ownedNFTsOther.length).to.equal(3);
         //console.log(JSON.stringify(duplicateTokenID));
