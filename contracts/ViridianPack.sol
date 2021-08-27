@@ -115,6 +115,10 @@ contract ViridianPack is ERC721, Ownable {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
+    function getUriRarityPools(uint256 _rarity) public view onlyOwner() returns (string[] memory) {
+        return uriRarityPools[_rarity];
+    }
+
     function getOwnedNFTs() public view virtual returns (uint256[] memory) {
         uint256[] memory _tokens = _ownedNFTs[msg.sender];
         
@@ -201,6 +205,15 @@ contract ViridianPack is ERC721, Ownable {
 
     function burn(uint256 tokenId) public {
         require(_isApprovedOrOwner(msg.sender, tokenId));
+
+        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+            if (ownedNFT == tokenId) {
+                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
+                _ownedNFTs[msg.sender].pop();
+            }
+        }
+
         _burn(tokenId);
     }
 

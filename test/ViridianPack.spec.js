@@ -66,7 +66,17 @@ contract('Testing ERC721 contract', function(accounts) {
 
         expect(await ownedPacks.length).to.equal(1);
 
+        console.log("Pools before: ");
+        for (i = 0; i <= 3; i++) {
+            console.log(await pack.getUriRarityPools(i));
+        }
+
         await pack.openPack(1, {from: accounts[1]});
+
+        console.log("Pools after: ");
+        for (i = 0; i <= 3; i++) {
+            console.log(await pack.getUriRarityPools(i));
+        }
 
         let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
         let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
