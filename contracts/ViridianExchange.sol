@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./ViridianNFT.sol";
+import "./ViridianPack.sol";
 
 contract ViridianExchange is Ownable {
 
@@ -27,6 +28,9 @@ contract ViridianExchange is Ownable {
     Counters.Counter private _offerIds;
 
     //address vNFTContract = 
+
+    ViridianNFT vNFT;
+    ViridianPack vPack;
     
     struct Listing {
         uint256 listingId;
@@ -67,6 +71,8 @@ contract ViridianExchange is Ownable {
         viridianToken = _viridianToken;
         //address _ETH, ETH = _ETH;
         viridianNFT = _viridianNFT;
+
+        vNFT = ViridianNFT(_viridianNFT);
     }
 
     function getBalance() public view returns (uint) {
@@ -110,10 +116,12 @@ contract ViridianExchange is Ownable {
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, bool _isVEXT) public payable {
         require(getNftOwner(_nftId) == msg.sender);
+        require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
 
-        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
-        //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
-        // }
+        //TODO: Maybe put this back
+        if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
+            IERC721(viridianNFT).setApprovalForAll(address(this), true);
+        }
 
         _listingIds.increment();
         uint256 _listingId = _listingIds.current();
@@ -134,6 +142,8 @@ contract ViridianExchange is Ownable {
         listings[_listingId] = saleListing;
         listingIds.push(saleListing.listingId);
 
+        vNFT.listToken(_nftId);
+
         //ERC20(viridianToken).approve(address(this), _price);
 
         //IERC721(viridianNFT).approve(address(this), _nftId);
@@ -144,6 +154,8 @@ contract ViridianExchange is Ownable {
         Listing memory curListing = listings[_listingId];
         require(curListing.owner == msg.sender);
         //IERC721(viridianNFT).safeTransferFrom(address(this), msg.sender, curListing.tokenId);
+        vNFT.unlistToken(curListing.tokenId);
+
         Listing[] storage curUserListings = userListings[msg.sender];
         for (uint i = 0; i < curUserListings.length; i++) {
             Listing memory listing = curUserListings[i];
@@ -196,14 +208,16 @@ contract ViridianExchange is Ownable {
     function buyNFTWithETH(uint256 _listingId) public payable {
         Listing memory curListing = listings[_listingId];
 
+        vNFT.unlistToken(curListing.tokenId);
+
         require(msg.sender.balance >= curListing.price, 'ViridianExchange: User does not have enough balance');
         address payable ownerWallet = payable(curListing.owner);
 
         require(msg.value == curListing.price, 'ViridianExchange: Incorrect amount paid to function');
 
-        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
-        //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
-        // }
+        if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
+            IERC721(viridianNFT).setApprovalForAll(address(this), true);
+        }
 
         sendEther(ownerWallet);
 
@@ -214,6 +228,8 @@ contract ViridianExchange is Ownable {
 
     function buyNFTWithVEXT(uint256 _listingId) public payable {
         Listing memory curListing = listings[_listingId];
+
+        vNFT.unlistToken(curListing.tokenId);
 
         //require(IERC20(viridianToken).balanceOf(msg.sender) >= curListing.price, 'ViridianExchange: User does not have enough balance');
 

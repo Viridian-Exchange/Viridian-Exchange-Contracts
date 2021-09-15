@@ -66,6 +66,8 @@ contract ViridianPack is ERC721, Ownable {
 
         maxRarityIndex = 3;
     }
+
+    event Open(string[10] newUris);
     
     struct NFT {
         uint256 id;
@@ -174,11 +176,13 @@ contract ViridianPack is ERC721, Ownable {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
 
-    function openPack(uint256 _tokenId) public {
+    function openPack(uint256 _tokenId) public payable {
         // Randomly 
         require(_isApprovedOrOwner(msg.sender, _tokenId));
 
         uint256 tr = tokenRarity[_tokenId];
+
+        string[10] memory newUris;
 
         for (uint8 n = 0; n < numNFTs[tr]; n++) {
             uint256 randIndexWithPercentOdds = calculateWeightedOdds(random(1000), rarityOdds[tr]);
@@ -187,6 +191,8 @@ contract ViridianPack is ERC721, Ownable {
             string memory newURI = uriRarityPools[randIndexWithPercentOdds][randIndexInRarity];
 
             vNFT.mint(msg.sender, newURI);
+
+            newUris[n] = newURI;
 
             string[] memory curRarityPool = uriRarityPools[randIndexWithPercentOdds];
             for (uint i = 0; i < uriRarityPools[randIndexWithPercentOdds].length; i++) {
@@ -201,6 +207,8 @@ contract ViridianPack is ERC721, Ownable {
         }
 
         burn(_tokenId);
+
+        emit Open(newUris);
     }
 
     function burn(uint256 tokenId) public {

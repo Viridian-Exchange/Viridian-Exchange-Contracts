@@ -4,9 +4,12 @@ const { expect } = require("chai");
 
 let token
 
+const truffleAssert = require('truffle-assertions');
+
 const ViridianExchange = artifacts.require('ViridianExchange');
 const ViridianToken = artifacts.require('ViridianToken');
 const ViridianNFT = artifacts.require('ViridianNFT');
+const ViridianPack = artifacts.require('ViridianPack');
 
 contract('ViridianExchange', (accounts) => {
     let nft;
@@ -31,6 +34,7 @@ contract('ViridianExchange', (accounts) => {
   beforeEach(async () => {
     token = await ViridianToken.new();
     nft = await ViridianNFT.new();
+    //pack = await ViridianPack.new(nft.address);
     exchange = await ViridianExchange.new(token.address, nft.address);
 
     // Create nft with id 1
@@ -323,6 +327,28 @@ contract('ViridianExchange', (accounts) => {
     assert.strictEqual(balanceBefore1.toString(), "500");
     assert.strictEqual(balanceAfter1.toString(), "700");
 
+  })
+
+  it('items: listing cannot be created twice', async () => {
+    //nft.approve(exchange.address, '1');
+    //nft.safeTransferFrom(accounts[0], exchange.address, '1');
+    await exchange.putUpForSale("1", "1", "1", "0", true);
+
+    await truffleAssert.reverts(
+      exchange.putUpForSale("1", "1", "1", "0", true),
+      "Cannot create multiple listings for one nft"
+    );
+
+    
+    // let listings = await exchange.getListings.call();
+    // //console.log(await exchange.getListingsFromUser(accounts[0]));
+    // let userListings = await exchange.getListingsFromUser.call(accounts[0]);
+    // //console.log("UL: " + JSON.stringify(userListings));
+    // console.log("UL: " + listings[0]);
+    // expect(await listings.length).to.equal(1);
+    // expect(listings[0].toString()).to.equal('1');
+    // expect(await userListings.length).to.equal(1);
+    // //console.log(listings);
   })
 
 

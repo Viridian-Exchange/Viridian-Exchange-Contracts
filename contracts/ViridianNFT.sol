@@ -102,6 +102,10 @@ contract ViridianNFT is ERC721, Ownable {
         _setTokenURI(_tokenId, tokenURI_);
     }
 
+    function isListed(uint256 tokenId) public view returns (bool) {
+        return _tokensListed[tokenId];
+    }
+
     function burn(uint256 tokenId) public {
         require(_isApprovedOrOwner(msg.sender, tokenId));
 
