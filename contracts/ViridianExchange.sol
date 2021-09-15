@@ -335,7 +335,16 @@ contract ViridianExchange is Ownable {
     function acceptOfferWithVEXT(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
 
-        require(curOffer.to == msg.sender);
+        require(curOffer.to == msg.sender, "Only offered account can accept offer");
+
+        for (uint i = 0; i < curOffer.toNftIds.length; i++) {
+            require(IERC721(viridianNFT).ownerOf(curOffer.toNftIds[i]) == curOffer.from, "Offered account must own all requested NFTs");
+        }
+
+        for (uint i = 0; i < curOffer.fromNftIds.length; i++) {
+            require(IERC721(viridianNFT).ownerOf(curOffer.fromNftIds[i]) == curOffer.to, "Offering account must own all offered NFTs");
+        }
+        
 
         // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
