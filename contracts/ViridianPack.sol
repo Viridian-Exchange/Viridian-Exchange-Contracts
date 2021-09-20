@@ -16,6 +16,7 @@ contract ViridianPack is ERC721, Ownable {
     mapping(uint256 => mapping(uint256 => uint256)) private rarityOdds;
     mapping(uint256 => uint256) private numNFTs;
     //mapping(uint256 => string) private unmintedURIs;
+    mapping (uint256 => bool) private _tokensListed;
     mapping(uint256 => uint256) tokenRarity;
     mapping(uint256 => string[]) private uriRarityPools;
     int private maxRarityIndex;
@@ -77,8 +78,6 @@ contract ViridianPack is ERC721, Ownable {
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
-    mapping (uint256 => bool) private _tokensListed;
-
     mapping (address => uint256[]) private _ownedNFTs;
 
     //address private viridianExchangeAddress;
@@ -129,6 +128,10 @@ contract ViridianPack is ERC721, Ownable {
 
     function setRarityOdds(uint256 _rarity, uint256 _rarityOdd, uint256 _newOdds) external onlyOwner() {
         rarityOdds[_rarity][_rarityOdd] = _newOdds;
+    }
+
+    function isListed(uint256 tokenId) public view returns (bool) {
+        return _tokensListed[tokenId];
     }
 
     function mint(
@@ -260,5 +263,13 @@ contract ViridianPack is ERC721, Ownable {
         _ownedNFTs[to].push(tokenId);
 
         super.transferFrom(from, to, tokenId);
+    }
+
+    function listToken(uint256 _tokenId) public {
+        _tokensListed[_tokenId] = true;
+    }
+
+    function unlistToken(uint256 _tokenId) public {
+        _tokensListed[_tokenId] = false;
     }
 }
