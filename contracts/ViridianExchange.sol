@@ -101,8 +101,8 @@ contract ViridianExchange is Ownable {
             require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
         }
         else {
-            require(getNftOwner(_nftId) == msg.sender);
-            require(!vPack.isListed(_nftId), "Cannot create multiple listings for one nft");
+            require(getPackOwner(_nftId) == msg.sender);
+            require(!vPack.isListed(_nftId), "Cannot create multiple listings for one pack");
         }
         
         
