@@ -30,6 +30,8 @@ contract ViridianExchangeOffers is Ownable {
         address from;
         bool isVEXT;
         bool pending;
+        uint256 startTime;
+        uint256 endTime;
     }
 
     mapping (address => Offer[]) userOffers;
@@ -69,7 +71,18 @@ contract ViridianExchangeOffers is Ownable {
         return userOffers[_userAddr];
     }
 
-    function makeOffer(address _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, bool isVEXT) public {
+    function hasOfferExpired(uint256 _offerId) public view returns (bool) {
+        Offer storage curOffer = offers[_offerId];
+
+        if (!curOffer.pending) {
+            return false;
+        }
+        else {
+            return curOffer.endTime > block.timestamp;
+        }
+    }
+
+    function makeOffer(address _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, bool isVEXT, uint256 _daysValid) public {
         require(_to != msg.sender);
 
         // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
@@ -79,7 +92,9 @@ contract ViridianExchangeOffers is Ownable {
         _offerIds.increment();
         uint256 _offerId = _offerIds.current();
 
-        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, msg.sender, isVEXT, true);
+        uint256 endTime = block.timestamp + (_daysValid * 1 days);
+
+        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, msg.sender, isVEXT, true, block.timestamp, endTime);
         
         userOffers[_to].push(newOffer);
         offers[_offerId] = newOffer;
@@ -122,6 +137,9 @@ contract ViridianExchangeOffers is Ownable {
         Offer storage curOffer = offers[_offerId];
 
         require(curOffer.to == msg.sender, "Only offered account can accept offer");
+        require(hasOfferExpired(_offerId), "Offer has expired");
+
+        curOffer.pending = false;
 
         for (uint i = 0; i < curOffer.toNftIds.length; i++) {
             require(IERC721(viridianNFT).ownerOf(curOffer.toNftIds[i]) == curOffer.from, "Offered account must own all requested NFTs");

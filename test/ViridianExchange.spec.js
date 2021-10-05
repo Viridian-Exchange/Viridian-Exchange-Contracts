@@ -237,7 +237,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true);
+    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true, "1");
     let offers = await exof.getOffers.call({from: accounts[1]});
     let userOffers = await exof.getOffersFromUser(accounts[1]);
 
@@ -251,7 +251,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true)
+    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true, "1")
     let offers = await exof.getOffers.call({from: accounts[1]});
     let userOffers = await exof.getOffersFromUser(accounts[1]);
 
@@ -276,7 +276,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await exof.makeOffer(accounts[1], [], [], '100', [], [], '200', true)
+    await exof.makeOffer(accounts[1], [], [], '100', [], [], '200', true, "1")
     let offers = await exof.getOffers.call({from: accounts[1]});
     let userOffers = await exof.getOffersFromUser(accounts[1]);
     console.log("UL: " + offers[0]);
@@ -292,7 +292,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-    await exof.makeOffer(accounts[1], ['2', '3'], [], '0', ['1'], [], '0', true)
+    await exof.makeOffer(accounts[1], ['2', '3'], [], '0', ['1'], [], '0', true, "1")
     let offers = await exof.getOffers.call({from: accounts[1]});
     let userOffers = await exof.getOffersFromUser(accounts[1]);
     console.log("UL: " + offers[0]);
@@ -315,7 +315,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await token.approve(exof.address, 100, {from: accounts[1]});
     //await token.approve(exchange.address, 300);
-    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true)
+    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true, "1")
     let offers = await exof.getOffers.call({from: accounts[1]});
     let userOffers = await exof.getOffersFromUser(accounts[1]);
     console.log("UL: " + offers[0]);
@@ -430,7 +430,7 @@ contract('ViridianExchange', (accounts) => {
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
     await token.approve(exchange.address, 100, {from: accounts[1]});
     //await token.approve(exchange.address, 300);
-    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true);
+    await exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['1'], [], '100', true, "1");
 
     //Transfer after offer already is created
     await nft.safeTransferFrom(accounts[1], accounts[0], "1", {from: accounts[1]});

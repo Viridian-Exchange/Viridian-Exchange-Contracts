@@ -30,6 +30,7 @@ contract ViridianExchange is Ownable {
         bool sold;
         bool isVEXT;
         bool isVNFT;
+        uint256 timeListed;
     }
 
     struct Collection {
@@ -50,7 +51,7 @@ contract ViridianExchange is Ownable {
     address public viridianToken;
 
     constructor(address _viridianToken, address _viridianNFT, address _viridianPack) {
-        require(address(_viridianToken) != address(0)); 
+        require(address(_viridianToken) != address(0));
         //require(address(_ETH) != address(0));
         require(address(_viridianNFT) != address(0));
         require(address(_viridianPack) != address(0));
@@ -85,7 +86,7 @@ contract ViridianExchange is Ownable {
     }
 
     function getPackOwner(uint256 _nftId) public view returns (address) {
-        return IERC721(viridianNFT).ownerOf(_nftId);
+        return IERC721(viridianPack).ownerOf(_nftId);
     }
 
     function sendEther(address payable _to) public payable {
@@ -97,11 +98,11 @@ contract ViridianExchange is Ownable {
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, bool _isVEXT, bool _isVNFT) public payable {
         if (_isVNFT) {
-            require(getNftOwner(_nftId) == msg.sender);
+            require(getNftOwner(_nftId) == msg.sender, 'Must be owner to list vnft');
             require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
         }
         else {
-            require(getPackOwner(_nftId) == msg.sender);
+            require(getPackOwner(_nftId) == msg.sender, 'Must be owner to list pack');
             require(!vPack.isListed(_nftId), "Cannot create multiple listings for one pack");
         }
         
@@ -125,6 +126,7 @@ contract ViridianExchange is Ownable {
         saleListing.sold = false;
         saleListing.isVEXT = _isVEXT;
         saleListing.isVNFT = _isVNFT;
+        saleListing.timeListed = block.timestamp;
 
         //_listingId, _nftId, msg.sender, _price, false, 
         //                                    _royalty, _isAuction, _endTime, Bid(msg.sender, 0, _isVEXT), new Bid[](0), false, _isVEXT);
@@ -143,6 +145,10 @@ contract ViridianExchange is Ownable {
 
         //IERC721(viridianNFT).approve(address(this), _nftId);
         //IERC721(viridianNFT).safeTransferFrom(msg.sender, address(this), _nftId);
+    }
+
+    function changeSalePrice(uint256 _listingId, uint256 _newPrice) public payable {
+        listings[_listingId].price = _newPrice;
     }
     
     function pullFromSale(uint256 _listingId) public payable {
