@@ -1,4 +1,6 @@
-const web3 = require("web3");
+const Web3 = require("web3");
+
+const web3 = new Web3(Web3.givenProvider || "HTTP://127.0.0.1:7545");
 
 const { expect } = require("chai");
 
@@ -122,6 +124,110 @@ contract('ViridianExchange', (accounts) => {
 
   
   it('transaction: nft should be able to be purchased with ETH', async () => {
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    //token.approve(exchange.address, 100);
+    await exchange.putUpForSale("1", "10", "1", "0", false, true, {from: accounts[1]});
+    let listings = await exchange.getListings.call({from: accounts[1]});
+    let userListings = await exchange.getListingsFromUser(accounts[1]);
+    expect(await listings.length).to.equal(1);
+    expect(listings[0].toString()).to.equal('1');
+    expect(await userListings.length).to.equal(1);
+
+    const balanceBefore = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");;
+    const balanceBeforeOther = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");;
+
+    //console.log("VEXT Balance bef: " + balanceBefore);
+
+    let ownedNFTs = await nft.getOwnedNFTs({from: accounts[2]});
+    let ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
+    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+    expect(await ownedNFTs.length).to.equal(0);
+    expect(await ownedNFTsOther.length).to.equal(1);
+
+    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+
+    //await token.approve(exchange.address, 100);
+    await exchange.buyNFTWithETH("1", {from: accounts[2], value: String(web3.utils.toWei("10"))});
+
+    const balanceAfter = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");
+    const balanceAfterOther = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");
+    ownedNFTs = await nft.getOwnedNFTs({from: accounts[2]});
+    ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
+
+    //console.log("VEXT Balance aft: " + balanceAfter.toString());
+    listings = await exchange.getListings.call({from: accounts[1]});
+    userListings = await exchange.getListingsFromUser(accounts[1]);
+
+    expect(await listings.length).to.equal(0);
+    expect(await userListings.length).to.equal(0);
+    assert.strictEqual(balanceBefore.toString().substring(0, 4), "99.9");
+    assert.strictEqual(balanceBeforeOther.toString().substring(0, 4), "99.9");
+    assert.strictEqual(balanceAfter.toString().substring(0, 4), "89.9");
+    assert.strictEqual(balanceAfterOther.toString().substring(0, 5), "109.9");
+    expect(await ownedNFTs.length).to.equal(1);
+    expect(await ownedNFTsOther.length).to.equal(0);
+  })
+
+  it('transaction: must send correct ETH amount (more)', async () => {
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    //token.approve(exchange.address, 100);
+    await exchange.putUpForSale("1", "10", "1", "0", false, true, {from: accounts[1]});
+    let listings = await exchange.getListings.call({from: accounts[1]});
+    let userListings = await exchange.getListingsFromUser(accounts[1]);
+    expect(await listings.length).to.equal(1);
+    expect(listings[0].toString()).to.equal('1');
+    expect(await userListings.length).to.equal(1);
+
+    const balanceBefore = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");;
+    const balanceBeforeOther = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");;
+
+    //console.log("VEXT Balance bef: " + balanceBefore);
+
+    let ownedNFTs = await nft.getOwnedNFTs({from: accounts[2]});
+    let ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
+    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+    expect(await ownedNFTs.length).to.equal(0);
+    expect(await ownedNFTsOther.length).to.equal(1);
+
+    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+
+    //await token.approve(exchange.address, 100);
+
+    truffleAssert.reverts(
+      exchange.buyNFTWithETH("1", {from: accounts[2], value: String(web3.utils.toWei("11"))}),
+      "Must send correct amount of ETH to owner of listing"
+    );
+  })
+
+  it('transaction: must send correct ETH amount (less)', async () => {
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    //token.approve(exchange.address, 100);
+    await exchange.putUpForSale("1", "10", "1", "0", false, true, {from: accounts[1]});
+    let listings = await exchange.getListings.call({from: accounts[1]});
+    let userListings = await exchange.getListingsFromUser(accounts[1]);
+    expect(await listings.length).to.equal(1);
+    expect(listings[0].toString()).to.equal('1');
+    expect(await userListings.length).to.equal(1);
+
+    const balanceBefore = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");;
+    const balanceBeforeOther = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");;
+
+    //console.log("VEXT Balance bef: " + balanceBefore);
+
+    let ownedNFTs = await nft.getOwnedNFTs({from: accounts[2]});
+    let ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
+    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+    expect(await ownedNFTs.length).to.equal(0);
+    expect(await ownedNFTsOther.length).to.equal(1);
+
+    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+
+    //await token.approve(exchange.address, 100);
+
+    await truffleAssert.reverts(
+      exchange.buyNFTWithETH("1", {from: accounts[2], value: String(web3.utils.toWei("9"))}),
+      "Must send correct amount of ETH to owner of listing"
+    );
   })
 
 

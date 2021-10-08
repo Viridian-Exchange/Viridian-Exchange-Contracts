@@ -41,12 +41,10 @@ contract ViridianExchangeOffers is Ownable {
 
     address public viridianNFT;
     address public viridianPack;
-    address public ETH;
     address public viridianToken;
 
     constructor(address _viridianToken, address _viridianNFT, address _viridianPack) {
         require(address(_viridianToken) != address(0));
-        //require(address(_ETH) != address(0));
         require(address(_viridianNFT) != address(0));
         require(address(_viridianPack) != address(0));
 

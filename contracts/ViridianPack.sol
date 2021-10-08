@@ -175,6 +175,18 @@ contract ViridianPack is ERC721, Ownable {
         uriRarityPools[rarity].push(uri);
     }
 
+    function burnSoftMintedNFTAtRarityIndex(uint256 rarity, uint256 index) public onlyOwner() payable {
+        string[] memory curRarityPool = uriRarityPools[rarity];
+            for (uint i = 0; i < uriRarityPools[rarity].length; i++) {
+                if (i == index) {
+                    curRarityPool[i] = curRarityPool[curRarityPool.length - 1];
+                    uriRarityPools[rarity] = curRarityPool;
+                    uriRarityPools[rarity].pop();
+                    break;
+                }
+            }
+    }
+
     function compareStrings(string memory _s, string memory _s1) public pure returns (bool) {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
@@ -187,6 +199,7 @@ contract ViridianPack is ERC721, Ownable {
 
         string[10] memory newUris;
 
+        //Need to delete the item from the rarity pool before minting happens again
         for (uint8 n = 0; n < numNFTs[tr]; n++) {
             uint256 randIndexWithPercentOdds = calculateWeightedOdds(random(1000), rarityOdds[tr]);
             uint256 randIndexInRarity = random(uriRarityPools[randIndexWithPercentOdds].length - 1);

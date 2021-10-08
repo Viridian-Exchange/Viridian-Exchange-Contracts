@@ -22,7 +22,7 @@ contract ViridianExchange is Ownable {
     struct Listing {
         uint256 listingId;
         uint256 tokenId;
-        address owner;
+        address payable owner;
         uint256 price;
         bool purchased;
         uint256 royalty;
@@ -118,7 +118,7 @@ contract ViridianExchange is Ownable {
         Listing memory saleListing;
         saleListing.listingId = _listingId;
         saleListing.tokenId = _nftId;
-        saleListing.owner = msg.sender;
+        saleListing.owner = payable(msg.sender);
         saleListing.price = _price;
         saleListing.purchased = false;
         saleListing.royalty = _royalty;
@@ -213,6 +213,7 @@ contract ViridianExchange is Ownable {
 
     function buyNFTWithVEXT(uint256 _listingId) public payable {
         Listing memory curListing = listings[_listingId];
+        require(curListing.isVEXT, "Cannot purchase an ETH listing with USDT");
 
         if(curListing.isVNFT) {
             vNFT.unlistToken(curListing.tokenId);
@@ -227,6 +228,37 @@ contract ViridianExchange is Ownable {
             vPack.unlistToken(curListing.tokenId);
 
             IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
+
+            IERC721(viridianPack).approve(msg.sender, curListing.tokenId);
+            IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
+            pullFromSaleOnBuy(_listingId);
+        }
+        
+    }
+
+    function buyNFTWithETH(uint256 _listingId) public payable {
+        Listing memory curListing = listings[_listingId];
+        require(!curListing.isVEXT, "Cannot purchase a USDT listing with ETH");
+
+        if(curListing.isVNFT) {
+            vNFT.unlistToken(curListing.tokenId);
+
+            //Replace this with ETH implementation
+            //IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
+            require(curListing.price * 1000000000000000000 == msg.value, "Must send correct amount of ETH to owner of listing");
+            curListing.owner.transfer(msg.value);
+
+            IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
+            IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
+            pullFromSaleOnBuy(_listingId);
+        }
+        else {
+            vPack.unlistToken(curListing.tokenId);
+
+            //Replace this with ETH implementation
+            //IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
+            require(curListing.price * 1000000000000000000 == msg.value, "Must send correct amount of ETH to owner of listing");
+            curListing.owner.transfer(msg.value);
 
             IERC721(viridianPack).approve(msg.sender, curListing.tokenId);
             IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
