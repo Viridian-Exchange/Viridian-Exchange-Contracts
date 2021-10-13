@@ -3,11 +3,12 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@imtbl/imx-contracts/contracts/Mintable.sol";
 
 import "./RandomNumber.sol";
 import "./ViridianNFT.sol";
 
-contract ViridianPack is ERC721, Ownable {
+contract ViridianPack is ERC721, Ownable { //, Mintable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -26,6 +27,8 @@ contract ViridianPack is ERC721, Ownable {
     ViridianNFT vNFT;
 
     using Strings for uint256;
+
+    //constructor(address _imx) ERC721("Viridian Pack", "VP") Mintable(msg.sender, _imx) {
 
     constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") {
 
@@ -69,11 +72,6 @@ contract ViridianPack is ERC721, Ownable {
     }
 
     event Open(string[10] newUris);
-    
-    struct NFT {
-        uint256 id;
-        string uri;
-    }
     
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
@@ -146,6 +144,18 @@ contract ViridianPack is ERC721, Ownable {
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
+
+    // function mintFor(
+    //     address user,
+    //     uint256 quantity,
+    //     bytes calldata mintingBlob
+    // ) external override onlyIMX {
+    //     require(quantity == 1, "Mintable: invalid quantity");
+    //     (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
+    //     _mintFor(user, id, blueprint);
+    //     blueprints[id] = blueprint;
+    //     emit AssetMinted(user, id, blueprint);
+    // }
 
     //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!
     uint nonce;

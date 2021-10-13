@@ -33,13 +33,6 @@ contract ViridianExchange is Ownable {
         uint256 timeListed;
     }
 
-    struct Collection {
-        string description;
-        uint256[] collectionNFTs;
-    }
-
-    //string[] public nftIds;
-    mapping (address => Collection) displayCases;
     mapping (address => Listing[]) userListings;
     mapping (uint256 => Listing) listings;
     address[] private userAddresses;
@@ -96,7 +89,7 @@ contract ViridianExchange is Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, bool _isVEXT, bool _isVNFT) public payable {
+    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, bool _isVEXT, bool _isVNFT) public {
         if (_isVNFT) {
             require(getNftOwner(_nftId) == msg.sender, 'Must be owner to list vnft');
             require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
@@ -109,9 +102,13 @@ contract ViridianExchange is Ownable {
         
 
         //TODO: Maybe put this back
-        if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
-            IERC721(viridianNFT).setApprovalForAll(address(this), true);
-        }
+        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
+        //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
+        // }
+
+        // if(!IERC721(viridianPack).isApprovedForAll(msg.sender, address(this))) {
+        //     IERC721(viridianPack).setApprovalForAll(address(this), true);
+        // }
 
         _listingIds.increment();
         uint256 _listingId = _listingIds.current();
@@ -138,7 +135,7 @@ contract ViridianExchange is Ownable {
             vNFT.listToken(_nftId);
         }
         else {
-            vNFT.listToken(_nftId);
+            vPack.listToken(_nftId);
         }
 
         //ERC20(viridianToken).approve(address(this), _price);
@@ -147,11 +144,11 @@ contract ViridianExchange is Ownable {
         //IERC721(viridianNFT).safeTransferFrom(msg.sender, address(this), _nftId);
     }
 
-    function changeSalePrice(uint256 _listingId, uint256 _newPrice) public payable {
+    function changeSalePrice(uint256 _listingId, uint256 _newPrice) public {
         listings[_listingId].price = _newPrice;
     }
     
-    function pullFromSale(uint256 _listingId) public payable {
+    function pullFromSale(uint256 _listingId) public {
         Listing memory curListing = listings[_listingId];
         require(curListing.owner == msg.sender);
         //IERC721(viridianNFT).safeTransferFrom(address(this), msg.sender, curListing.tokenId);
@@ -211,7 +208,7 @@ contract ViridianExchange is Ownable {
         delete listings[_listingId];
     }
 
-    function buyNFTWithVEXT(uint256 _listingId) public payable {
+    function buyNFTWithVEXT(uint256 _listingId) public {
         Listing memory curListing = listings[_listingId];
         require(curListing.isVEXT, "Cannot purchase an ETH listing with USDT");
 
@@ -245,10 +242,10 @@ contract ViridianExchange is Ownable {
 
             //Replace this with ETH implementation
             //IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
-            require(curListing.price * 1000000000000000000 == msg.value, "Must send correct amount of ETH to owner of listing");
+            require(curListing.price == msg.value, "Must send correct amount of ETH to owner of listing");
             curListing.owner.transfer(msg.value);
 
-            IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
+            //IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
             IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
             pullFromSaleOnBuy(_listingId);
         }
@@ -257,10 +254,10 @@ contract ViridianExchange is Ownable {
 
             //Replace this with ETH implementation
             //IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
-            require(curListing.price * 1000000000000000000 == msg.value, "Must send correct amount of ETH to owner of listing");
+            require(curListing.price == msg.value, "Must send correct amount of ETH to owner of listing");
             curListing.owner.transfer(msg.value);
 
-            IERC721(viridianPack).approve(msg.sender, curListing.tokenId);
+            //IERC721(viridianPack).approve(msg.sender, curListing.tokenId);
             IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
             pullFromSaleOnBuy(_listingId);
         }

@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@imtbl/imx-contracts/contracts/Mintable.sol";
 
-contract ViridianNFT is ERC721, Ownable {
+contract ViridianNFT is ERC721, Ownable { //, Mintable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -12,21 +13,21 @@ contract ViridianNFT is ERC721, Ownable {
     
     mapping(address => bool) admins;
     
+    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(msg.sender, _imx) {
+    //     admins[msg.sender] = true;
+    // }
+
     constructor() ERC721("Viridian NFT", "VNFT") {
         admins[msg.sender] = true;
     }
 
     using Strings for uint256;
 
-
     //TODO: Maybe add restrictions to NFT usage when it is listed on the exchange, do not allow ownership transfer 
     // while it is listed for sale or offer to avoid issues with invalid purchasing, or just protect from transactions going through
     // on exchange, ask someone about this scenario.
-    struct NFT {
-        uint256 id;
-        string uri;
-    }
-    
+
+
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
@@ -101,6 +102,18 @@ contract ViridianNFT is ERC721, Ownable {
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
+
+    // function mintFor(
+    //     address user,
+    //     uint256 quantity,
+    //     bytes calldata mintingBlob
+    // ) external override onlyIMX {
+    //     require(quantity == 1, "Mintable: invalid quantity");
+    //     (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
+    //     _mintFor(user, id, blueprint);
+    //     blueprints[id] = blueprint;
+    //     emit AssetMinted(user, id, blueprint);
+    // }
 
     function isListed(uint256 tokenId) public view returns (bool) {
         return _tokensListed[tokenId];

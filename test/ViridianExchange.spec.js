@@ -126,15 +126,15 @@ contract('ViridianExchange', (accounts) => {
   it('transaction: nft should be able to be purchased with ETH', async () => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     //token.approve(exchange.address, 100);
-    await exchange.putUpForSale("1", "10", "1", "0", false, true, {from: accounts[1]});
+    await exchange.putUpForSale("1", web3.utils.toWei("10"), "1", "0", false, true, {from: accounts[1]});
     let listings = await exchange.getListings.call({from: accounts[1]});
     let userListings = await exchange.getListingsFromUser(accounts[1]);
     expect(await listings.length).to.equal(1);
     expect(listings[0].toString()).to.equal('1');
     expect(await userListings.length).to.equal(1);
 
-    const balanceBefore = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");;
-    const balanceBeforeOther = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");;
+    const balanceBefore = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");
+    const balanceBeforeOther = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");
 
     //console.log("VEXT Balance bef: " + balanceBefore);
 
@@ -161,9 +161,9 @@ contract('ViridianExchange', (accounts) => {
     expect(await listings.length).to.equal(0);
     expect(await userListings.length).to.equal(0);
     assert.strictEqual(balanceBefore.toString().substring(0, 4), "99.9");
-    assert.strictEqual(balanceBeforeOther.toString().substring(0, 4), "99.9");
+    assert.strictEqual(balanceBeforeOther.toString().substring(0, 4), "97.4");
     assert.strictEqual(balanceAfter.toString().substring(0, 4), "89.9");
-    assert.strictEqual(balanceAfterOther.toString().substring(0, 5), "109.9");
+    assert.strictEqual(balanceAfterOther.toString().substring(0, 5), "107.4");
     expect(await ownedNFTs.length).to.equal(1);
     expect(await ownedNFTsOther.length).to.equal(0);
   })
@@ -171,7 +171,7 @@ contract('ViridianExchange', (accounts) => {
   it('transaction: must send correct ETH amount (more)', async () => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     //token.approve(exchange.address, 100);
-    await exchange.putUpForSale("1", "10", "1", "0", false, true, {from: accounts[1]});
+    await exchange.putUpForSale("1", web3.utils.toWei("10"), "1", "0", false, true, {from: accounts[1]});
     let listings = await exchange.getListings.call({from: accounts[1]});
     let userListings = await exchange.getListingsFromUser(accounts[1]);
     expect(await listings.length).to.equal(1);
@@ -202,7 +202,7 @@ contract('ViridianExchange', (accounts) => {
   it('transaction: must send correct ETH amount (less)', async () => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     //token.approve(exchange.address, 100);
-    await exchange.putUpForSale("1", "10", "1", "0", false, true, {from: accounts[1]});
+    await exchange.putUpForSale("1", web3.utils.toWei("10"), "1", "0", false, true, {from: accounts[1]});
     let listings = await exchange.getListings.call({from: accounts[1]});
     let userListings = await exchange.getListingsFromUser(accounts[1]);
     expect(await listings.length).to.equal(1);
@@ -393,7 +393,6 @@ contract('ViridianExchange', (accounts) => {
 
   })
 
-
   it('transaction: should be able to accept just NFT offer', async () => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
@@ -469,6 +468,66 @@ contract('ViridianExchange', (accounts) => {
     assert.strictEqual(balanceAfter.toString(),  "199999999999999999999999300");
     assert.strictEqual(balanceBefore1.toString(), "500");
     assert.strictEqual(balanceAfter1.toString(), "700");
+
+  })
+
+  it('transaction: should be able to accept ETH/NFT hybrid offer', async () => {
+    await token.transfer(accounts[1], '500');
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    await nft.mint(accounts[2], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    await nft.mint(accounts[2], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    //await token.approve(exof.address, 100, {from: accounts[1]});
+    //await token.approve(exchange.address, 300);
+    await exof.makeOffer(accounts[1], ['2', '3'], [], String(web3.utils.toWei("3")), ['1'], [], String(web3.utils.toWei("1")), false, "1", {from: accounts[2]})
+    let offers = await exof.getOffers.call({from: accounts[1]});
+    let userOffers = await exof.getOffersFromUser(accounts[1]);
+    console.log("UL: " + offers[0]);
+    expect(await offers.length).to.equal(1);
+    expect(offers[0].toString()).to.equal('1');
+    expect(await offers.length).to.equal(1);
+
+    const balanceBefore = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");
+    const balanceBefore1 = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");
+
+    console.log("to: " + accounts[1]);
+    console.log("Who owns 1: " + await nft.ownerOf("1"));
+
+    console.log("from: " + accounts[2]);
+    console.log("Who owns 2: " + await nft.ownerOf("2"));
+    console.log("Who owns 3: " + await nft.ownerOf("3"));
+
+    let ownedNFTs = await nft.getOwnedNFTs({from: accounts[2]});
+    let ownedNFTs1 = await nft.getOwnedNFTs({from: accounts[1]});
+    //console.log("ONFTS: " + JSON.stringify(ownedNFTs));
+    expect(await ownedNFTs.length).to.equal(2);
+    expect(await ownedNFTs1.length).to.equal(1);
+
+    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+    //await token.approve(exof.address, 300);
+    await exof.acceptOfferWithETH('1', {from: accounts[1], value: String(web3.utils.toWei("1"))});
+    await exof.finalApprovalWithETH('1', {from: accounts[2], value: String(web3.utils.toWei("3"))});
+    
+
+    offers = await exchange.getListings.call();
+    userOffers = await exof.getOffersFromUser.call(accounts[2]);
+    console.log("ULE: " + JSON.stringify(offers));
+    expect(await offers.length).to.equal(0);
+    expect(await userOffers.length).to.equal(0);
+
+    const balanceAfter = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");
+    const balanceAfter1 = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");
+    ownedNFTs = await nft.getOwnedNFTs({from: accounts[2]});
+    ownedNFTs1 = await nft.getOwnedNFTs({from: accounts[1]});
+
+    expect(await ownedNFTs.length).to.equal(1);
+    expect(await ownedNFTs1.length).to.equal(2);
+
+    //console.log("VEXT Balance aft: " + balanceAfter.toString());
+
+    assert.strictEqual(balanceBefore.toString().substring(0, 4), "89.9");
+    assert.strictEqual(balanceAfter.toString().substring(0, 4),  "87.9");
+    assert.strictEqual(balanceBefore1.toString().substring(0, 5), "107.4");
+    assert.strictEqual(balanceAfter1.toString().substring(0, 5), "109.4");
 
   })
 
