@@ -102,7 +102,7 @@ contract ViridianExchangeOffers is Ownable {
         Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, payable(msg.sender), isVEXT, true, false, false, block.timestamp, endTime);
         
         userOffers[_to].push(newOffer);
-        userOffers[_from].push(newOffer);
+        userOffers[msg.sender].push(newOffer);
         offers[_offerId] = newOffer;
         offerIds.push(_offerId);
     }

@@ -371,7 +371,7 @@ contract('ViridianExchange', (accounts) => {
     userOffers = await exof.getOffersFromUser.call(accounts[0]);
     console.log("ULE: " + JSON.stringify(offers));
     expect(await offers.length).to.equal(0);
-    expect(await userOffers.length).to.equal(0);
+    expect(await userOffers.length).to.equal(1);
   })
 
 //   it('transaction: should be able to accept ETH offer', async () => {
@@ -512,7 +512,7 @@ contract('ViridianExchange', (accounts) => {
     userOffers = await exof.getOffersFromUser.call(accounts[2]);
     console.log("ULE: " + JSON.stringify(offers));
     expect(await offers.length).to.equal(0);
-    expect(await userOffers.length).to.equal(0);
+    expect(await userOffers.length).to.equal(1);
 
     const balanceAfter = await web3.utils.fromWei(await web3.eth.getBalance(accounts[2]), "ether");
     const balanceAfter1 = await web3.utils.fromWei(await web3.eth.getBalance(accounts[1]), "ether");
