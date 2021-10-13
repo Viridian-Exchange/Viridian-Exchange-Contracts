@@ -161,9 +161,9 @@ contract('ViridianExchange', (accounts) => {
     expect(await listings.length).to.equal(0);
     expect(await userListings.length).to.equal(0);
     assert.strictEqual(balanceBefore.toString().substring(0, 4), "99.9");
-    assert.strictEqual(balanceBeforeOther.toString().substring(0, 4), "97.4");
+    assert.strictEqual(balanceBeforeOther.toString().substring(0, 4), "99.9");
     assert.strictEqual(balanceAfter.toString().substring(0, 4), "89.9");
-    assert.strictEqual(balanceAfterOther.toString().substring(0, 5), "107.4");
+    assert.strictEqual(balanceAfterOther.toString().substring(0, 5), "109.9");
     expect(await ownedNFTs.length).to.equal(1);
     expect(await ownedNFTsOther.length).to.equal(0);
   })
@@ -452,7 +452,7 @@ contract('ViridianExchange', (accounts) => {
     userOffers = await exof.getOffersFromUser.call(accounts[0]);
     console.log("ULE: " + JSON.stringify(offers));
     expect(await offers.length).to.equal(0);
-    expect(await userOffers.length).to.equal(0);
+    expect(await userOffers.length).to.equal(1);
 
     const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
     const balanceAfter1 = await token.balanceOf.call(accounts[ 1 ])
@@ -526,8 +526,8 @@ contract('ViridianExchange', (accounts) => {
 
     assert.strictEqual(balanceBefore.toString().substring(0, 4), "89.9");
     assert.strictEqual(balanceAfter.toString().substring(0, 4),  "87.9");
-    assert.strictEqual(balanceBefore1.toString().substring(0, 5), "107.4");
-    assert.strictEqual(balanceAfter1.toString().substring(0, 5), "109.4");
+    assert.strictEqual(balanceBefore1.toString().substring(0, 5), "109.9");
+    assert.strictEqual(balanceAfter1.toString().substring(0, 5), "111.9");
 
   })
 

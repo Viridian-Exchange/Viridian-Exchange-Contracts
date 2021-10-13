@@ -107,18 +107,7 @@ contract ViridianExchangeOffers is Ownable {
         offerIds.push(_offerId);
     }
 
-    function cancelOffer(uint256 _offerId) public {
-        Offer storage curOffer = offers[_offerId];
-        require(curOffer.from == msg.sender || curOffer.to == msg.sender);
-        require(!hasOfferExpired(_offerId), "Offer has expired");
-        require(!curOffer.fromAccepted, "Cannot regular cancel when from party has accepted");
-        require(!curOffer.toAccepted, "Cannot regular cancel when to party has accepted");
-
-        Offer[] storage curUserOffers = userOffers[curOffer.to];
-        
-        //TODO: Check who is cancelling and cancel that person's offers.
-
-        // Remove offer from current user's offers
+    function removeOffer(Offer storage curOffer, Offer[] storage curUserOffers) private {
         for (uint i = 0; i < curUserOffers.length; i++) {
             Offer memory offer = curUserOffers[i];
             if (offer.offerId == curOffer.offerId) {
@@ -128,6 +117,25 @@ contract ViridianExchangeOffers is Ownable {
                 break;
             }
         } 
+    }
+ 
+    function cancelOffer(uint256 _offerId) public {
+        Offer storage curOffer = offers[_offerId];
+        require(curOffer.from == msg.sender || curOffer.to == msg.sender);
+        require(!hasOfferExpired(_offerId), "Offer has expired");
+        require(!curOffer.fromAccepted, "Cannot regular cancel when from party has accepted");
+        require(!curOffer.toAccepted, "Cannot regular cancel when to party has accepted");
+
+        Offer[] storage curUserOffers = userOffers[curOffer.to];
+        Offer[] storage otherUserOffers = userOffers[curOffer.from];
+        
+        //TODO: Check who is cancelling and cancel that person's offers.
+
+        // Remove offer from current user's offers
+        removeOffer(curOffer, curUserOffers);
+
+        // Remove offer from other user's offers
+        removeOffer(curOffer, otherUserOffers);
 
         // Remove offer id from global list of offer ids
         for (uint256 i = 0; i < offerIds.length; i++) {
@@ -149,7 +157,7 @@ contract ViridianExchangeOffers is Ownable {
         require(!hasOfferExpired(_offerId), "Offer has expired");
         require(!curOffer.fromAccepted, "Cannot regular cancel when from party has accepted");
         require(curOffer.toAccepted, "Cannot regular cancel when to party has accepted");
-        Offer[] storage curUserOffers = userOffers[curOffer.to];
+        //Offer[] storage curUserOffers = userOffers[curOffer.to];
         
         //TODO: Check who is cancelling and cancel that person's offers.
 
@@ -157,16 +165,14 @@ contract ViridianExchangeOffers is Ownable {
         require(curOffer.fromAmt == msg.value, "Must send correct amount of ETH to owner of listing");
             curOffer.to.transfer(curOffer.fromAmt);
 
+        Offer[] storage curUserOffers = userOffers[curOffer.to];
+        Offer[] storage otherUserOffers = userOffers[curOffer.from];
+
         // Remove offer from current user's offers
-        for (uint i = 0; i < curUserOffers.length; i++) {
-            Offer memory offer = curUserOffers[i];
-            if (offer.offerId == curOffer.offerId) {
-                curUserOffers[i] = curUserOffers[curUserOffers.length - 1];
-                userOffers[curOffer.to] = curUserOffers;
-                userOffers[curOffer.to].pop();
-                break;
-            }
-        } 
+        removeOffer(curOffer, curUserOffers);
+
+        // Remove offer from other user's offers
+        removeOffer(curOffer, otherUserOffers);
 
         // Remove offer id from global list of offer ids
         for (uint256 i = 0; i < offerIds.length; i++) {
@@ -224,6 +230,17 @@ contract ViridianExchangeOffers is Ownable {
             IERC721(viridianPack).safeTransferFrom(_curOffer.to, _curOffer.from, _curOffer.fromPackIds[i]);
         }
     }
+
+    function getCurOffer(Offer storage curOffer, Offer[] storage curUserOffers) private returns (Offer storage) {
+        for (uint i = 0; i < curUserOffers.length; i++) {
+            Offer memory offer = curUserOffers[i];
+            if (offer.offerId == curOffer.offerId) {
+                return curUserOffers[i]; //.pending = false;
+            }
+        }
+
+        return curUserOffers[0];
+    }
     
     function acceptOfferWithVEXT(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
@@ -232,6 +249,31 @@ contract ViridianExchangeOffers is Ownable {
         require(!hasOfferExpired(_offerId), "Offer has expired");
 
         curOffer.pending = false;
+
+        Offer[] storage curUserOffers = userOffers[curOffer.to];
+        Offer[] storage otherUserOffers = userOffers[curOffer.from];
+
+        // for (uint i = 0; i < curUserOffers.length; i++) {
+        //     Offer memory offer = curUserOffers[i];
+        //     if (offer.offerId == curOffer.offerId) {
+        //         curUserOffers[i].pending = false;
+        //         break;
+        //     }
+        // }
+
+        Offer storage setOffer = getCurOffer(curOffer, curUserOffers);
+        setOffer.pending = false;
+
+        // for (uint i = 0; i < otherUserOffers.length; i++) {
+        //     Offer memory offer = otherUserOffers[i];
+        //     if (offer.offerId == curOffer.offerId) {
+        //         otherUserOffers[i].pending = false;
+        //         break;
+        //     }
+        // }
+
+        Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
+        setOfferO.pending = false;
 
         doOfferingPartiesOwnContents(curOffer);
 
@@ -256,6 +298,31 @@ contract ViridianExchangeOffers is Ownable {
 
         //curOffer.pending = true;
         curOffer.toAccepted = true;
+
+        Offer[] storage curUserOffers = userOffers[curOffer.to];
+        Offer[] storage otherUserOffers = userOffers[curOffer.from];
+
+        // for (uint i = 0; i < curUserOffers.length; i++) {
+        //     Offer memory offer = curUserOffers[i];
+        //     if (offer.offerId == curOffer.offerId) {
+        //         curUserOffers[i].toAccepted = true;
+        //         break;
+        //     }
+        // } 
+
+        Offer storage setOffer = getCurOffer(curOffer, curUserOffers);
+        setOffer.toAccepted = true;
+
+        // for (uint i = 0; i < otherUserOffers.length; i++) {
+        //     Offer memory offer = otherUserOffers[i];
+        //     if (offer.offerId == curOffer.offerId) {
+        //         otherUserOffers[i].toAccepted = true;
+        //         break;
+        //     }
+        // }
+
+        Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
+        setOfferO.toAccepted = true;
 
         doOfferingPartiesOwnContents(curOffer);
 
@@ -300,6 +367,36 @@ contract ViridianExchangeOffers is Ownable {
 
         curOffer.pending = false;
         curOffer.fromAccepted = true;
+
+        Offer[] storage curUserOffers = userOffers[curOffer.to];
+        Offer[] storage otherUserOffers = userOffers[curOffer.from];
+
+        // for (uint i = 0; i < curUserOffers.length; i++) {
+        //     Offer memory offer = curUserOffers[i];
+        //     if (offer.offerId == curOffer.offerId) {
+        //         curUserOffers[i].fromAccepted = true;
+        //         curUserOffers[i].pending = false;
+        //         break;
+        //     }
+        // }
+
+        Offer storage setOffer = getCurOffer(curOffer, curUserOffers);
+        setOffer.fromAccepted = true;
+        setOffer.pending = false;
+
+
+        // for (uint i = 0; i < otherUserOffers.length; i++) {
+        //     Offer memory offer = otherUserOffers[i];
+        //     if (offer.offerId == curOffer.offerId) {
+        //         otherUserOffers[i].fromAccepted = true;
+        //         otherUserOffers[i].pending = false;
+        //         break;
+        //     }
+        // } 
+
+        Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
+        setOfferO.fromAccepted = true;
+        setOfferO.pending = false;
 
         doOfferingPartiesOwnContents(curOffer);
 
