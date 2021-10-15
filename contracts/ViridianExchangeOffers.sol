@@ -12,6 +12,12 @@ import "./ViridianPack.sol";
 
 contract ViridianExchangeOffers is Ownable {
 
+    //EVENTS
+    event CreatedOffer(uint256 offerId, address wallet, bool created);
+    event CancelledOffer(uint256 offerId, address wallet, bool cancelled);
+    event AcceptedOffer(uint256 offerId, address wallet, bool accepted);
+
+
     using Counters for Counters.Counter;
     Counters.Counter private _offerIds;
 
@@ -105,6 +111,8 @@ contract ViridianExchangeOffers is Ownable {
         userOffers[msg.sender].push(newOffer);
         offers[_offerId] = newOffer;
         offerIds.push(_offerId);
+
+        emit CreatedOffer(_offerId, msg.sender, true);
     }
 
     function removeOffer(Offer storage curOffer, Offer[] storage curUserOffers) private {
@@ -149,6 +157,8 @@ contract ViridianExchangeOffers is Ownable {
 
         // Remove offer from global mapping of offers
         delete offers[_offerId];
+
+        emit CancelledOffer(curOffer.offerId, msg.sender, true);
     }
 
     function cancelAcceptedETHOffer(uint256 _offerId) public payable {
@@ -285,6 +295,7 @@ contract ViridianExchangeOffers is Ownable {
         IERC20(viridianToken).transferFrom(curOffer.to, curOffer.from, curOffer.fromAmt);
 
         transferAllOfferContents(curOffer);
+        emit AcceptedOffer(_offerId, msg.sender, true);
     }
 
     function acceptOfferWithETH(uint256 _offerId) public payable {
@@ -326,6 +337,8 @@ contract ViridianExchangeOffers is Ownable {
 
         doOfferingPartiesOwnContents(curOffer);
 
+        emit AcceptedOffer(_offerId, msg.sender, true);
+
         // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
         // }
@@ -355,6 +368,7 @@ contract ViridianExchangeOffers is Ownable {
         //     //IERC721(viridianNFT).approve(curOffer.to, curOffer.fromNftIds[i]);
         //     IERC721(viridianPack).safeTransferFrom(curOffer.to, curOffer.from, curOffer.fromPackIds[i]);
         // }
+        
     }
 
     function finalApprovalWithETH(uint256 _offerId) public payable {

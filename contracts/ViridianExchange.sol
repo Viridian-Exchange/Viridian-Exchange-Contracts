@@ -11,6 +11,10 @@ import "./ViridianPack.sol";
 
 contract ViridianExchange is Ownable {
 
+    event ItemListed(uint256 listingId, address wallet, bool listed);
+    event ItemUnlisted(uint256 listingId, address wallet, bool listed);
+    event PurchasedListing(uint256 listingId, address wallet, bool purchased);
+
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
 
@@ -142,6 +146,8 @@ contract ViridianExchange is Ownable {
 
         //IERC721(viridianNFT).approve(address(this), _nftId);
         //IERC721(viridianNFT).safeTransferFrom(msg.sender, address(this), _nftId);
+
+        emit ItemListed(_listingId, saleListing.owner, true);
     }
 
     function changeSalePrice(uint256 _listingId, uint256 _newPrice) public {
@@ -180,6 +186,8 @@ contract ViridianExchange is Ownable {
         }
 
         delete listings[_listingId];
+
+        emit ItemUnlisted(_listingId, msg.sender, false);
     }
 
     function pullFromSaleOnBuy(uint256 _listingId) private {
@@ -230,7 +238,7 @@ contract ViridianExchange is Ownable {
             IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
             pullFromSaleOnBuy(_listingId);
         }
-        
+        emit PurchasedListing(_listingId, msg.sender, true);
     }
 
     function buyNFTWithETH(uint256 _listingId) public payable {
@@ -261,7 +269,7 @@ contract ViridianExchange is Ownable {
             IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
             pullFromSaleOnBuy(_listingId);
         }
-        
+        emit PurchasedListing(_listingId, msg.sender, true);
     }
 
     receive() external payable {}
