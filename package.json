@@ -12,6 +12,7 @@
     "@imtbl/imx-contracts": "^1.0.0",
     "@imtbl/imx-sdk": "^1.1.0",
     "@openzeppelin/test-helpers": "^0.5.11",
+    "@truffle/hdwallet-provider": "^1.5.1",
     "assert": "^2.0.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
