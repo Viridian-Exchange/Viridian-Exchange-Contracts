@@ -104,6 +104,8 @@ contract ViridianExchangeOffers is Ownable {
         userOffers[_to].push(newOffer);
         userOffers[msg.sender].push(newOffer);
         offers[_offerId] = newOffer;
+
+        doOfferingPartiesOwnContents(offers[_offerId]);
         offerIds.push(_offerId);
     }
 

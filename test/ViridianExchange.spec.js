@@ -353,6 +353,26 @@ contract('ViridianExchange', (accounts) => {
     expect(await offers.length).to.equal(1);
   })
 
+  it('items: offer should not be able to be created for existing NFT when not owned NFTs are included', async () => {
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    await truffleAssert.reverts(
+      exof.makeOffer(accounts[1], ['1', '3'], [], '300', ['1'], [], '100', true, "1"),
+      "Offered account must own all requested NFTs"
+    );
+  })
+
+  it('items: offer should not be able to be created for existing NFT when not owned NFTs are included', async () => {
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    await truffleAssert.reverts(
+      exof.makeOffer(accounts[1], ['2', '3'], [], '300', ['3'], [], '100', true, "1"),
+      "Offering account must own all offered NFTs"
+    );
+  })
+
   it('items: offer should be able to be cancelled', async () => {
     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
