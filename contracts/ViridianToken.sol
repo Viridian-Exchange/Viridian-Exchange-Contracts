@@ -15,6 +15,7 @@ library SafeMath {
         }
         uint256 c = a * b;
         assert(c / a == b);
+        //require(c / a == b, "MUL FUCKED");
         return c;
     }
 
@@ -27,12 +28,14 @@ library SafeMath {
 
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         assert(b <= a);
+        //require(b <= a, "SUB FUCKED");
         return a - b;
     }
 
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         assert(c >= a);
+        //require(c >= a, "ADD FUCKED");
         return c;
     }
 }
@@ -57,7 +60,7 @@ contract Ownable {
       * @dev Throws if called by any account other than the owner.
       */
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Only owner");
         _;
     }
 
@@ -114,7 +117,7 @@ abstract contract BasicToken is Ownable, ERC20Basic {
     * @dev Fix for the ERC20 short address attack.
     */
     modifier onlyPayloadSize(uint size) {
-        require(!(msg.data.length < size + 4));
+        require(!(msg.data.length < size + 4), "Payload size issue");
         _;
     }
 
@@ -202,7 +205,7 @@ abstract contract StandardToken is BasicToken, ERC20 {
         //  allowance to zero by calling `approve(_spender, 0)` if it is not
         //  already 0 to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        require(!((_value != 0) && (allowed[msg.sender][_spender] != 0)));
+        require(!((_value != 0) && (allowed[msg.sender][_spender] != 0)), "Can't approve due not being reduced to 0");
 
         allowed[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
@@ -236,7 +239,7 @@ contract Pausable is Ownable {
    * @dev Modifier to make a function callable only when the contract is not paused.
    */
   modifier whenNotPaused() {
-    require(!paused);
+    require(!paused, "Not paused");
     _;
   }
 
@@ -244,7 +247,7 @@ contract Pausable is Ownable {
    * @dev Modifier to make a function callable only when the contract is paused.
    */
   modifier whenPaused() {
-    require(paused);
+    require(paused, "paused");
     _;
   }
 
@@ -289,7 +292,7 @@ abstract contract BlackList is Ownable, BasicToken {
     }
 
     function destroyBlackFunds (address _blackListedUser) public onlyOwner {
-        require(isBlackListed[_blackListedUser]);
+        require(isBlackListed[_blackListedUser], "User blacklisted");
         uint dirtyFunds = balanceOf(_blackListedUser);
         balances[_blackListedUser] = 0;
         _totalSupply -= dirtyFunds;
@@ -339,7 +342,7 @@ contract TetherToken is Pausable, StandardToken, BlackList {
 
     // Forward ERC20 methods to upgraded contract if this one is deprecated
     function transfer(address _to, uint _value) public override whenNotPaused {
-        require(!isBlackListed[msg.sender]);
+        require(!isBlackListed[msg.sender], "User blacklisted");
         if (deprecated) {
             return UpgradedStandardToken(upgradedAddress).transferByLegacy(msg.sender, _to, _value);
         } else {
@@ -349,7 +352,7 @@ contract TetherToken is Pausable, StandardToken, BlackList {
 
     // Forward ERC20 methods to upgraded contract if this one is deprecated
     function transferFrom(address _from, address _to, uint _value) public override whenNotPaused {
-        require(!isBlackListed[_from]);
+        require(!isBlackListed[_from], "User blacklisted");
         if (deprecated) {
             return UpgradedStandardToken(upgradedAddress).transferFromByLegacy(msg.sender, _from, _to, _value);
         } else {
@@ -405,8 +408,8 @@ contract TetherToken is Pausable, StandardToken, BlackList {
     //
     // @param _amount Number of tokens to be issued
     function issue(uint amount) public onlyOwner {
-        require(_totalSupply + amount > _totalSupply);
-        require(balances[owner] + amount > balances[owner]);
+        require(_totalSupply + amount > _totalSupply, "Cannot issue more than the supply");
+        require(balances[owner] + amount > balances[owner], "Must not issue more than the owner");
 
         balances[owner] += amount;
         _totalSupply += amount;
@@ -419,8 +422,8 @@ contract TetherToken is Pausable, StandardToken, BlackList {
     // or the call will fail.
     // @param _amount Number of tokens to be issued
     function redeem(uint amount) public onlyOwner {
-        require(_totalSupply >= amount);
-        require(balances[owner] >= amount);
+        require(_totalSupply >= amount, "Cannot redeem more than the total supply");
+        require(balances[owner] >= amount, "Cannot issue more than the owner has");
 
         _totalSupply -= amount;
         balances[owner] -= amount;
@@ -429,8 +432,8 @@ contract TetherToken is Pausable, StandardToken, BlackList {
 
     function setParams(uint newBasisPoints, uint newMaxFee) public onlyOwner {
         // Ensure transparency by hardcoding limit beyond which fees can never be added
-        require(newBasisPoints < 20);
-        require(newMaxFee < 50);
+        require(newBasisPoints < 20, "Fees cannot be more than 20");
+        require(newMaxFee < 50, "max fees must be be less than 50");
 
         basisPointsRate = newBasisPoints;
         maximumFee = newMaxFee * (10**decimals);

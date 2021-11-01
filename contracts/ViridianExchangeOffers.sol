@@ -131,7 +131,7 @@ contract ViridianExchangeOffers is Ownable {
  
     function cancelOffer(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
-        require(curOffer.from == msg.sender || curOffer.to == msg.sender);
+        require(curOffer.from == msg.sender || curOffer.to == msg.sender, "Cannot be cancelled by non involved parties");
         require(!hasOfferExpired(_offerId), "Offer has expired");
         require(!curOffer.fromAccepted, "Cannot regular cancel when from party has accepted");
         require(!curOffer.toAccepted, "Cannot regular cancel when to party has accepted");
@@ -165,7 +165,7 @@ contract ViridianExchangeOffers is Ownable {
 
     function cancelAcceptedETHOffer(uint256 _offerId) public payable {
         Offer storage curOffer = offers[_offerId];
-        require(curOffer.from == msg.sender || curOffer.to == msg.sender);
+        require(curOffer.from == msg.sender || curOffer.to == msg.sender, "Cannot be cancelled by non involved parties");
         require(!hasOfferExpired(_offerId), "Offer has expired");
         require(!curOffer.fromAccepted, "Cannot regular cancel when from party has accepted");
         require(curOffer.toAccepted, "Cannot regular cancel when to party has accepted");
@@ -260,8 +260,6 @@ contract ViridianExchangeOffers is Ownable {
         require(curOffer.to == msg.sender, "Only offered account can accept offer");
         require(!hasOfferExpired(_offerId), "Offer has expired");
 
-        curOffer.pending = false;
-
         Offer[] storage curUserOffers = userOffers[curOffer.to];
         Offer[] storage otherUserOffers = userOffers[curOffer.from];
 
@@ -274,7 +272,6 @@ contract ViridianExchangeOffers is Ownable {
         // }
 
         Offer storage setOffer = getCurOffer(curOffer, curUserOffers);
-        setOffer.pending = false;
 
         // for (uint i = 0; i < otherUserOffers.length; i++) {
         //     Offer memory offer = otherUserOffers[i];
@@ -285,7 +282,6 @@ contract ViridianExchangeOffers is Ownable {
         // }
 
         Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
-        setOfferO.pending = false;
 
         doOfferingPartiesOwnContents(curOffer);
 
@@ -297,6 +293,10 @@ contract ViridianExchangeOffers is Ownable {
         IERC20(viridianToken).transferFrom(curOffer.to, curOffer.from, curOffer.fromAmt);
 
         transferAllOfferContents(curOffer);
+
+        curOffer.pending = false;
+        setOffer.pending = false;
+        setOfferO.pending = false;
         emit AcceptedOffer(_offerId, msg.sender, true);
     }
 
@@ -310,7 +310,8 @@ contract ViridianExchangeOffers is Ownable {
         require(!curOffer.toAccepted, "Offered party has already accepted, wait for the original offerer to make final approval");
 
         //curOffer.pending = true;
-        curOffer.toAccepted = true;
+
+        doOfferingPartiesOwnContents(curOffer);
 
         Offer[] storage curUserOffers = userOffers[curOffer.to];
         Offer[] storage otherUserOffers = userOffers[curOffer.from];
@@ -337,7 +338,7 @@ contract ViridianExchangeOffers is Ownable {
         Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
         setOfferO.toAccepted = true;
 
-        doOfferingPartiesOwnContents(curOffer);
+        curOffer.toAccepted = true;
 
         emit AcceptedOffer(_offerId, msg.sender, true);
 
@@ -381,9 +382,6 @@ contract ViridianExchangeOffers is Ownable {
         require(!curOffer.fromAccepted, "Offering party has already accepted");
         require(!hasOfferExpired(_offerId), "Offer has expired");
 
-        curOffer.pending = false;
-        curOffer.fromAccepted = true;
-
         Offer[] storage curUserOffers = userOffers[curOffer.to];
         Offer[] storage otherUserOffers = userOffers[curOffer.from];
 
@@ -397,8 +395,6 @@ contract ViridianExchangeOffers is Ownable {
         // }
 
         Offer storage setOffer = getCurOffer(curOffer, curUserOffers);
-        setOffer.fromAccepted = true;
-        setOffer.pending = false;
 
 
         // for (uint i = 0; i < otherUserOffers.length; i++) {
@@ -411,8 +407,6 @@ contract ViridianExchangeOffers is Ownable {
         // } 
 
         Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
-        setOfferO.fromAccepted = true;
-        setOfferO.pending = false;
 
         doOfferingPartiesOwnContents(curOffer);
 
@@ -427,12 +421,21 @@ contract ViridianExchangeOffers is Ownable {
         require(curOffer.toAmt == msg.value, "Must send correct amount of ETH to the offered party");
         curOffer.to.transfer(msg.value);
 
+        transferAllOfferContents(curOffer);
+
+
+        curOffer.pending = false;
+        curOffer.fromAccepted = true;
+        setOffer.fromAccepted = true;
+        setOffer.pending = false;
+        setOfferO.fromAccepted = true;
+        setOfferO.pending = false;
+
 
         // IERC20(viridianToken).transferFrom(curOffer.from, curOffer.to, curOffer.toAmt);
         // IERC20(viridianToken).transferFrom(curOffer.to, curOffer.from, curOffer.fromAmt);
 
         // Loop through all of the to items in the offer.
-        transferAllOfferContents(curOffer);
     }
 
     receive() external payable {}

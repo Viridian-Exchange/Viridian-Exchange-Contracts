@@ -48,10 +48,10 @@ contract ViridianExchange is Ownable {
     address public viridianToken;
 
     constructor(address _viridianToken, address _viridianNFT, address _viridianPack) {
-        require(address(_viridianToken) != address(0));
+        require(address(_viridianToken) != address(0), "Token address must not be the 0 address");
         //require(address(_ETH) != address(0));
-        require(address(_viridianNFT) != address(0));
-        require(address(_viridianPack) != address(0));
+        require(address(_viridianNFT) != address(0), "Token address must not be the 0 address");
+        require(address(_viridianPack) != address(0), "Token address must not be the 0 address");
 
         viridianToken = _viridianToken;
         //address _ETH, ETH = _ETH;
@@ -156,7 +156,7 @@ contract ViridianExchange is Ownable {
     
     function pullFromSale(uint256 _listingId) public {
         Listing memory curListing = listings[_listingId];
-        require(curListing.owner == msg.sender);
+        require(curListing.owner == msg.sender, "Must be the owner to pull from sale");
         //IERC721(viridianNFT).safeTransferFrom(address(this), msg.sender, curListing.tokenId);
         if(curListing.isVNFT) {
             vNFT.unlistToken(curListing.tokenId);

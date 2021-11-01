@@ -55,17 +55,17 @@ contract ViridianPack is ERC721, Ownable { //, Mintable {
         numNFTs[0] = 3;
 
         // Rare rarity and cards in pack
-        rarityOdds[1][0] = 0;
-        rarityOdds[1][1] = 50;
-        rarityOdds[1][2] = 100;
-        rarityOdds[1][3] = 1000;
+        rarityOdds[2][0] = 0;
+        rarityOdds[2][1] = 50;
+        rarityOdds[2][2] = 100;
+        rarityOdds[2][3] = 1000;
         numNFTs[0] = 3;
 
         // Common rarity and cards in pack
-        rarityOdds[2][0] = 0;
-        rarityOdds[2][1] = 10;
-        rarityOdds[2][2] = 50;
-        rarityOdds[2][3] = 1000;
+        rarityOdds[3][0] = 0;
+        rarityOdds[3][1] = 10;
+        rarityOdds[3][2] = 50;
+        rarityOdds[3][3] = 1000;
         numNFTs[0] = 3;
 
         maxRarityIndex = 3;
@@ -240,11 +240,13 @@ contract ViridianPack is ERC721, Ownable { //, Mintable {
     function burn(uint256 tokenId) public {
         require(_isApprovedOrOwner(msg.sender, tokenId));
 
-        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+        address owner = ownerOf(tokenId);
+
+        for (uint256 i = 0; i < _ownedNFTs[owner].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[owner][i];
             if (ownedNFT == tokenId) {
-                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
-                _ownedNFTs[msg.sender].pop();
+                _ownedNFTs[owner][i] = _ownedNFTs[owner][_ownedNFTs[owner].length - 1];
+                _ownedNFTs[owner].pop();
             }
         }
 
@@ -262,12 +264,12 @@ contract ViridianPack is ERC721, Ownable { //, Mintable {
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId]);
-        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+        for (uint256 i = 0; i < _ownedNFTs[from].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[from][i];
             if (ownedNFT == tokenId) {
-                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
-                _ownedNFTs[msg.sender].pop();
+                _ownedNFTs[from][i] = _ownedNFTs[from][_ownedNFTs[from].length - 1];
+                _ownedNFTs[from].pop();
             }
         }
         _ownedNFTs[to].push(tokenId);
@@ -276,11 +278,12 @@ contract ViridianPack is ERC721, Ownable { //, Mintable {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
-        for (uint256 i = 0; i < _ownedNFTs[msg.sender].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[msg.sender][i];
+        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+        for (uint256 i = 0; i < _ownedNFTs[from].length; i++) {
+            uint256 ownedNFT = _ownedNFTs[from][i];
             if (ownedNFT == tokenId) {
-                _ownedNFTs[msg.sender][i] = _ownedNFTs[msg.sender][_ownedNFTs[msg.sender].length - 1];
-                _ownedNFTs[msg.sender].pop();
+                _ownedNFTs[from][i] = _ownedNFTs[from][_ownedNFTs[from].length - 1];
+                _ownedNFTs[from].pop();
             }
         }
         _ownedNFTs[to].push(tokenId);
