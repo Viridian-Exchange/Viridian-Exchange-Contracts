@@ -2,39 +2,69 @@
 pragma solidity ^0.8.0;
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RandomEmitter is VRFConsumerBase {
+contract RandomNumberConsumer is VRFConsumerBase, Ownable {
+    
+    mapping(address => bool) admins;
 
-  uint public contractNumber = 0;
-  address public owner;
+    bytes32 internal keyHash;
+    uint256 internal fee;
+    uint256 public maxRange;
+    
+    uint256 public randomResult;
+    
+    /**
+     * Constructor inherits VRFConsumerBase
+     * 
+     * Network: Kovan
+     * Chainlink VRF Coordinator address: 0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9
+     * LINK token address:                0xa36085F69e2889c224210F603D836748e7dC0088
+     * Key Hash: 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4
+     */
+    constructor() 
+        VRFConsumerBase(
+            0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B, // VRF Coordinator
+            0x01BE23585060835E02B77ef475b0Cc51aA1e0709  // LINK Token
+        )
+    {
+        admins[msg.sender] = true;
+        keyHash = 0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311;
+        fee = 0.1 * 10 ** 18; // 0.1 LINK (Varies by network)
+        maxRange = 1000;
+    }
 
-  bytes32 internal keyHash;
-  bytes32 public currentRequestId;
+    modifier onlyAdmin() {
+        require(admins[msg.sender] == true, 'Only admins can call this function');
+            _;
+    }
 
-  event Request(bytes32 requestId);
-  event RandomNumber(uint randomNumber);
+    function addAdmin(address _newAdmin) external onlyOwner() {
+        admins[_newAdmin] = true;
+    }
 
-  constructor(
-    address _vrfCoordinator,
-    address _linkToken,
-    bytes32 _keyHash
-  ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
-    owner = msg.sender;
-    keyHash = _keyHash;
-  }
+    function removeAdmin(address _newAdmin) external onlyOwner() {
+        admins[_newAdmin] = false;
+    }
+    
+    /** 
+     * Requests randomness 
+     */
+    function getRandomNumber() public onlyAdmin() returns (bytes32 requestId){
+        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
+        return requestRandomness(keyHash, fee);
+    }
 
-  /// @dev Sends a random number request to the Chainlink VRF system.
-  function requestRandomNumber() external {
-    currentRequestId = requestRandomness(keyHash, 0.1 ether);
-    emit Request(currentRequestId);
-  }
+    /**
+     * Callback function used by VRF Coordinator
+     */
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        randomResult = (randomness % maxRange) + 1;
+    }
 
-  /// @dev Called by Chainlink VRF random number provider.
-  function fulfillRandomness(bytes32 requestId, uint randomness) internal override {
-    require(requestId == currentRequestId, "The requestId is invalid.");
+    function setMaxRange(uint256 _maxRange) public onlyAdmin() returns (uint256) {
+      return maxRange = _maxRange;
+    }
 
-    contractNumber = (randomness % 50) + 1;
-
-    emit RandomNumber((randomness % 50) + 1);
-  }
+    function withdrawLink() external onlyAdmin() {} // - Implement a withdraw function to avoid locking your LINK in the contract
 }

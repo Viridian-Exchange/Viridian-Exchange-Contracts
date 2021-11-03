@@ -90,6 +90,10 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
         admins[_newAdmin] = true;
     }
 
+    function removeAdmin(address _newAdmin) external onlyOwner() {
+        admins[_newAdmin] = false;
+    }
+
     function mint(
         address _to,
         string memory tokenURI_
