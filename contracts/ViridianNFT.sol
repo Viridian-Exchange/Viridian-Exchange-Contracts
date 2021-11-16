@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@imtbl/imx-contracts/contracts/Mintable.sol";
 
-contract ViridianNFT is ERC721, Ownable { //, Mintable {
+contract ViridianNFT is ERC721, Ownable, Mintable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -17,8 +17,10 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
     //     admins[msg.sender] = true;
     // }
 
-    constructor() ERC721("Viridian NFT", "VNFT") {
-        admins[msg.sender] = true;
+    constructor() ERC721("Viridian NFT", "VNFT") Mintable() {
+        addAdmin(msg.sender);
+        //IMX testnet address
+        addAdmin(0x4527be8f31e2ebfbef4fcaddb5a17447b27d2aef);
     }
 
     using Strings for uint256;
@@ -31,9 +33,9 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
-    mapping (uint256 => bool) private _tokensListed;
+    mapping(uint256 => bytes) public blueprints;
 
-    mapping (address => uint256[]) private _ownedNFTs;
+    mapping (uint256 => bool) private _tokensListed;
 
     //address private viridianExchangeAddress;
 
@@ -48,7 +50,7 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
         _baseURIextended = baseURI_;
     }
     
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyOwner() {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
@@ -76,7 +78,13 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
     }
 
     function getOwnedNFTs() public view virtual returns (uint256[] memory) {
-        uint256[] memory _tokens = _ownedNFTs[msg.sender];
+        uint256[] memory _tokens = [];
+
+        for (uint256 i = 0; i < _tokenIds.current(); i++) {
+            if (ownerOf(tokenId) == msg.sender) {
+                _tokens.push(tokenId);
+            }
+        }
         
         return _tokens;
     }
@@ -102,22 +110,21 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
         uint256 _tokenId = _tokenIds.current();
 
         _safeMint(_to, _tokenId);
-        _ownedNFTs[_to].push(_tokenId);
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
 
-    // function mintFor(
-    //     address user,
-    //     uint256 quantity,
-    //     bytes calldata mintingBlob
-    // ) external override onlyIMX {
-    //     require(quantity == 1, "Mintable: invalid quantity");
-    //     (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
-    //     _mintFor(user, id, blueprint);
-    //     blueprints[id] = blueprint;
-    //     emit AssetMinted(user, id, blueprint);
-    // }
+    function mintFor(
+        address user,
+        uint256 quantity,
+        bytes calldata mintingBlob
+    ) external override onlyAdmin() {
+        require(quantity == 1, "Mintable: invalid quantity");
+        (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
+        _mintFor(user, id, blueprint);
+        super.blueprints[id] = blueprint;
+        emit super.AssetMinted(user, id, blueprint);
+    }
 
     function isListed(uint256 tokenId) public view returns (bool) {
         return _tokensListed[tokenId];
@@ -127,14 +134,6 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
         require(_isApprovedOrOwner(msg.sender, tokenId));
 
         address owner = ownerOf(tokenId);
-
-        for (uint256 i = 0; i < _ownedNFTs[owner].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[owner][i];
-            if (ownedNFT == tokenId) {
-                _ownedNFTs[owner][i] = _ownedNFTs[owner][_ownedNFTs[owner].length - 1];
-                _ownedNFTs[owner].pop();
-            }
-        }
 
         _burn(tokenId);
     }
@@ -152,29 +151,11 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
         require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
 
-        for (uint256 i = 0; i < _ownedNFTs[from].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[from][i];
-            if (ownedNFT == tokenId) {
-                _ownedNFTs[from][i] = _ownedNFTs[from][_ownedNFTs[from].length - 1];
-                _ownedNFTs[from].pop();
-            }
-        }
-        _ownedNFTs[to].push(tokenId);
-
         super.safeTransferFrom(from, to, tokenId);
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
         require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
-
-        for (uint256 i = 0; i < _ownedNFTs[from].length; i++) {
-            uint256 ownedNFT = _ownedNFTs[from][i];
-            if (ownedNFT == tokenId) {
-                _ownedNFTs[from][i] = _ownedNFTs[from][_ownedNFTs[from].length - 1];
-                _ownedNFTs[from].pop();
-            }
-        }
-        _ownedNFTs[to].push(tokenId);
 
         super.transferFrom(from, to, tokenId);
     }
