@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@imtbl/imx-contracts/contracts/Mintable.sol";
 
-contract ViridianNFT is ERC721, Ownable { //, Mintable {
+contract ViridianNFT is ERC721, Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -102,18 +102,6 @@ contract ViridianNFT is ERC721, Ownable { //, Mintable {
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
-
-    // function mintFor(
-    //     address user,
-    //     uint256 quantity,
-    //     bytes calldata mintingBlob
-    // ) external override onlyIMX {
-    //     require(quantity == 1, "Mintable: invalid quantity");
-    //     (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
-    //     _mintFor(user, id, blueprint);
-    //     blueprints[id] = blueprint;
-    //     emit AssetMinted(user, id, blueprint);
-    // }
 
     function isListed(uint256 tokenId) public view returns (bool) {
         return _tokensListed[tokenId];

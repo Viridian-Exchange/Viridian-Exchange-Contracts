@@ -8,7 +8,7 @@ import "@imtbl/imx-contracts/contracts/Mintable.sol";
 import "./RandomNumber.sol";
 import "./ViridianNFT.sol";
 
-contract ViridianPack is ERC721, Ownable { //, Mintable {
+contract ViridianPack is ERC721, Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -144,18 +144,6 @@ contract ViridianPack is ERC721, Ownable { //, Mintable {
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
-
-    // function mintFor(
-    //     address user,
-    //     uint256 quantity,
-    //     bytes calldata mintingBlob
-    // ) external override onlyIMX {
-    //     require(quantity == 1, "Mintable: invalid quantity");
-    //     (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
-    //     _mintFor(user, id, blueprint);
-    //     blueprints[id] = blueprint;
-    //     emit AssetMinted(user, id, blueprint);
-    // }
 
     //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!
     uint nonce;
