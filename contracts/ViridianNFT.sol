@@ -17,10 +17,10 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
     //     admins[msg.sender] = true;
     // }
 
-    constructor() ERC721("Viridian NFT", "VNFT") Mintable() {
-        addAdmin(msg.sender);
+    constructor() ERC721("Viridian NFT", "VNFT") Mintable(msg.sender, 0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef) {
+        admins[msg.sender] = true;
         //IMX testnet address
-        addAdmin(0x4527be8f31e2ebfbef4fcaddb5a17447b27d2aef);
+        admins[0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef] = true;
     }
 
     using Strings for uint256;
@@ -33,7 +33,7 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
-    mapping(uint256 => bytes) public blueprints;
+    //mapping(uint256 => bytes) public blueprints;
 
     mapping (uint256 => bool) private _tokensListed;
 
@@ -41,6 +41,19 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
 
     // Base URI
     string private _baseURIextended;
+
+    modifier onlyAdmin() {
+        require(admins[msg.sender] == true);
+            _;
+    }
+
+    function addAdmin(address _newAdmin) external onlyOwner() {
+        admins[_newAdmin] = true;
+    }
+
+    function removeAdmin(address _newAdmin) external onlyOwner() {
+        admins[_newAdmin] = false;
+    }
 
     // function setExchangeAddress(address ea) public onlyOwner() {
     //     viridianExchangeAddress = ea;
@@ -77,29 +90,18 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
-    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
-        uint256[] memory _tokens = [];
+    function getOwnedNFTs(uint256 n) public view virtual returns (uint256[] memory) {
+        uint256[] memory _tokens = new uint256[](n);
+        uint256 curIndex;
 
         for (uint256 i = 0; i < _tokenIds.current(); i++) {
-            if (ownerOf(tokenId) == msg.sender) {
-                _tokens.push(tokenId);
+            if (ownerOf(i) == msg.sender) {
+                _tokens[curIndex] = i;
+                curIndex++;
             }
         }
         
         return _tokens;
-    }
-
-    modifier onlyAdmin() {
-        require(admins[msg.sender] == true);
-            _;
-    }
-
-    function addAdmin(address _newAdmin) external onlyOwner() {
-        admins[_newAdmin] = true;
-    }
-
-    function removeAdmin(address _newAdmin) external onlyOwner() {
-        admins[_newAdmin] = false;
     }
 
     function mint(
@@ -114,16 +116,12 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
         _setTokenURI(_tokenId, tokenURI_);
     }
 
-    function mintFor(
-        address user,
-        uint256 quantity,
-        bytes calldata mintingBlob
-    ) external override onlyAdmin() {
-        require(quantity == 1, "Mintable: invalid quantity");
-        (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
-        _mintFor(user, id, blueprint);
-        super.blueprints[id] = blueprint;
-        emit super.AssetMinted(user, id, blueprint);
+    function _mintFor(
+        address to,
+        uint256 id,
+        bytes memory blueprint
+    ) internal virtual override {
+        _mint(to, id);
     }
 
     function isListed(uint256 tokenId) public view returns (bool) {

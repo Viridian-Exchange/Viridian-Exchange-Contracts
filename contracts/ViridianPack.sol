@@ -32,7 +32,7 @@ contract ViridianPack is ERC721, Ownable, Mintable {
 
     //constructor(address _imx) ERC721("Viridian Pack", "VP") Mintable(msg.sender, _imx) {
 
-    constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") {
+    constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") Mintable(msg.sender, 0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef) {
 
         require(address(_viridianNFT) != address(0));
 
@@ -72,9 +72,9 @@ contract ViridianPack is ERC721, Ownable, Mintable {
 
         maxRarityIndex = 3;
 
-        addAdmin(msg.sender);
+        admins[msg.sender] = true;
         //IMX testnet address
-        addAdmin(0x4527be8f31e2ebfbef4fcaddb5a17447b27d2aef);
+        admins[0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef] = true;
     }
 
     event Open(string[10] newUris);
@@ -86,6 +86,11 @@ contract ViridianPack is ERC721, Ownable, Mintable {
 
     // Base URI
     string private _baseURIextended;
+
+    modifier onlyAdmin() {
+        require(admins[msg.sender] == true);
+            _;
+    }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = true;
@@ -130,12 +135,14 @@ contract ViridianPack is ERC721, Ownable, Mintable {
         return uriRarityPools[_rarity];
     }
 
-    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
-        uint256[] memory _tokens = [];
+    function getOwnedNFTs(uint256 n) public view virtual returns (uint256[] memory) {
+        uint256[] memory _tokens = new uint256[](n);
+        uint256 curIndex;
 
         for (uint256 i = 0; i < _tokenIds.current(); i++) {
-            if (ownerOf(tokenId) == msg.sender) {
-                _tokens.push(tokenId);
+            if (ownerOf(i) == msg.sender) {
+                _tokens[curIndex] = i;
+                curIndex++;
             }
         }
         
@@ -162,16 +169,12 @@ contract ViridianPack is ERC721, Ownable, Mintable {
         _setTokenURI(_tokenId, tokenURI_);
     }
 
-    function mintFor(
-        address user,
-        uint256 quantity,
-        bytes calldata mintingBlob
-    ) external override onlyAdmin() {
-        require(quantity == 1, "Mintable: invalid quantity");
-        (uint256 id, bytes memory blueprint) = Minting.split(mintingBlob);
-        _mintFor(user, id, blueprint);
-        super.blueprints[id] = blueprint;
-        emit super.AssetMinted(user, id, blueprint);
+    function _mintFor(
+        address to,
+        uint256 id,
+        bytes memory blueprint
+    ) internal virtual override {
+        _mint(to, id);
     }
 
     //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!
