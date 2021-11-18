@@ -3,12 +3,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@imtbl/imx-contracts/contracts/Mintable.sol";
 
 import "./RandomNumber.sol";
 import "./ViridianNFT.sol";
 
-contract ViridianPack is ERC721, Ownable, Mintable {
+contract ViridianPack is ERC721, Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -32,7 +31,7 @@ contract ViridianPack is ERC721, Ownable, Mintable {
 
     //constructor(address _imx) ERC721("Viridian Pack", "VP") Mintable(msg.sender, _imx) {
 
-    constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") Mintable(msg.sender, 0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef) {
+    constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") {
 
         require(address(_viridianNFT) != address(0));
 
@@ -73,8 +72,6 @@ contract ViridianPack is ERC721, Ownable, Mintable {
         maxRarityIndex = 3;
 
         admins[msg.sender] = true;
-        //IMX testnet address
-        admins[0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef] = true;
     }
 
     event Open(string[10] newUris);
@@ -167,14 +164,6 @@ contract ViridianPack is ERC721, Ownable, Mintable {
         _safeMint(_to, _tokenId);
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
-    }
-
-    function _mintFor(
-        address to,
-        uint256 id,
-        bytes memory blueprint
-    ) internal virtual override {
-        _mint(to, id);
     }
 
     //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!

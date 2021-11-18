@@ -3,9 +3,8 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@imtbl/imx-contracts/contracts/Mintable.sol";
 
-contract ViridianNFT is ERC721, Ownable, Mintable {
+contract ViridianNFT is ERC721, Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -17,10 +16,8 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
     //     admins[msg.sender] = true;
     // }
 
-    constructor() ERC721("Viridian NFT", "VNFT") Mintable(msg.sender, 0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef) {
+    constructor() ERC721("Viridian NFT", "VNFT") {
         admins[msg.sender] = true;
-        //IMX testnet address
-        admins[0x4527BE8f31E2ebFbEF4fCADDb5a17447B27d2aef] = true;
     }
 
     using Strings for uint256;
@@ -114,14 +111,6 @@ contract ViridianNFT is ERC721, Ownable, Mintable {
         _safeMint(_to, _tokenId);
         _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
-    }
-
-    function _mintFor(
-        address to,
-        uint256 id,
-        bytes memory blueprint
-    ) internal virtual override {
-        _mint(to, id);
     }
 
     function isListed(uint256 tokenId) public view returns (bool) {
