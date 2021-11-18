@@ -18,21 +18,19 @@ contract ViridianExchange is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
 
-    //address vNFTContract = 
-
     ViridianNFT vNFT;
     ViridianPack vPack;
     
     struct Listing {
         uint256 listingId;
         uint256 tokenId;
-        address payable owner;
+        address owner;
         uint256 price;
         bool purchased;
         uint256 royalty;
         uint256 endTime;
         bool sold;
-        bool isVEXT;
+        address erc20Address;
         bool isVNFT;
         uint256 timeListed;
     }
@@ -44,22 +42,23 @@ contract ViridianExchange is Ownable {
 
     address public viridianNFT;
     address public viridianPack;
-    address public ETH;
-    address public viridianToken;
+    mapping (address => bool) public approvedTokens;
 
-    constructor(address _viridianToken, address _viridianNFT, address _viridianPack) {
-        require(address(_viridianToken) != address(0), "Token address must not be the 0 address");
-        //require(address(_ETH) != address(0));
+    constructor(address _erc20Token, address _viridianNFT, address _viridianPack) {
+        require(address(_erc20Token) != address(0), "Token address must not be the 0 address");
         require(address(_viridianNFT) != address(0), "Token address must not be the 0 address");
         require(address(_viridianPack) != address(0), "Token address must not be the 0 address");
 
-        viridianToken = _viridianToken;
-        //address _ETH, ETH = _ETH;
+        approvedTokens[_erc20Token] = true;
         viridianNFT = _viridianNFT;
         viridianPack = _viridianPack;
 
         vNFT = ViridianNFT(_viridianNFT);
         vPack = ViridianPack(_viridianPack);
+    }
+
+    function addERC20Token(address _erc20Address) public onlyOwner() returns (uint) {
+        approvedTokens[_erc20Address] = true;
     }
 
     function getBalance() public view returns (uint) {
@@ -86,25 +85,17 @@ contract ViridianExchange is Ownable {
         return IERC721(viridianPack).ownerOf(_nftId);
     }
 
-    function sendEther(address payable _to) public payable {
-        // Call returns a boolean value indicating success or failure.
-        // This is the current recommended method to use.
-        (bool sent, bytes memory data) = _to.call{value: msg.value}("");
-        require(sent, "Failed to send Ether");
-    }
-
-    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, bool _isVEXT, bool _isVNFT) public {
+    function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, address _erc20Address, bool _isVNFT) public {
+        require(approvedTokens[_erc20Address], "Must be listed price in approved token");
         if (_isVNFT) {
-            require(getNftOwner(_nftId) == msg.sender, 'Must be owner to list vnft');
+            require(getNftOwner(_nftId) == msg.sender, "Must be owner to list vnft");
             require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
         }
         else {
-            require(getPackOwner(_nftId) == msg.sender, 'Must be owner to list pack');
+            require(getPackOwner(_nftId) == msg.sender, "Must be owner to list pack");
             require(!vPack.isListed(_nftId), "Cannot create multiple listings for one pack");
         }
         
-        
-
         //TODO: Maybe put this back
         // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
@@ -119,18 +110,17 @@ contract ViridianExchange is Ownable {
         Listing memory saleListing;
         saleListing.listingId = _listingId;
         saleListing.tokenId = _nftId;
-        saleListing.owner = payable(msg.sender);
+        saleListing.owner = msg.sender;
         saleListing.price = _price;
         saleListing.purchased = false;
         saleListing.royalty = _royalty;
         saleListing.endTime = _endTime;
         saleListing.sold = false;
-        saleListing.isVEXT = _isVEXT;
+        saleListing.erc20Address = _erc20Address;
         saleListing.isVNFT = _isVNFT;
         saleListing.timeListed = block.timestamp;
 
-        //_listingId, _nftId, msg.sender, _price, false, 
-        //                                    _royalty, _isAuction, _endTime, Bid(msg.sender, 0, _isVEXT), new Bid[](0), false, _isVEXT);
+
         userListings[msg.sender].push(saleListing);
         listings[_listingId] = saleListing;
         listingIds.push(saleListing.listingId);
@@ -216,14 +206,13 @@ contract ViridianExchange is Ownable {
         delete listings[_listingId];
     }
 
-    function buyNFTWithVEXT(uint256 _listingId) public {
+    function buyNFTWithERC20(uint256 _listingId) public {
         Listing memory curListing = listings[_listingId];
-        require(curListing.isVEXT, "Cannot purchase an ETH listing with USDT");
 
         if(curListing.isVNFT) {
             vNFT.unlistToken(curListing.tokenId);
 
-            IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
+            IERC20(curListing.erc20Address).transferFrom(msg.sender, curListing.owner, curListing.price);
 
             IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
             IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
@@ -232,7 +221,7 @@ contract ViridianExchange is Ownable {
         else {
             vPack.unlistToken(curListing.tokenId);
 
-            IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
+            IERC20(curListing.erc20Address).transferFrom(msg.sender, curListing.owner, curListing.price);
 
             IERC721(viridianPack).approve(msg.sender, curListing.tokenId);
             IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
@@ -240,40 +229,4 @@ contract ViridianExchange is Ownable {
         }
         emit PurchasedListing(_listingId, msg.sender, true);
     }
-
-    function buyNFTWithETH(uint256 _listingId) public payable {
-        Listing memory curListing = listings[_listingId];
-        require(!curListing.isVEXT, "Cannot purchase a USDT listing with ETH");
-
-        if(curListing.isVNFT) {
-            vNFT.unlistToken(curListing.tokenId);
-
-            //Replace this with ETH implementation
-            //IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
-            require(curListing.price == msg.value, "Must send correct amount of ETH to owner of listing");
-            curListing.owner.transfer(msg.value);
-
-            //IERC721(viridianNFT).approve(msg.sender, curListing.tokenId);
-            IERC721(viridianNFT).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
-            pullFromSaleOnBuy(_listingId);
-        }
-        else {
-            vPack.unlistToken(curListing.tokenId);
-
-            //Replace this with ETH implementation
-            //IERC20(viridianToken).transferFrom(msg.sender, curListing.owner, curListing.price);
-            require(curListing.price == msg.value, "Must send correct amount of ETH to owner of listing");
-            curListing.owner.transfer(msg.value);
-
-            //IERC721(viridianPack).approve(msg.sender, curListing.tokenId);
-            IERC721(viridianPack).safeTransferFrom(curListing.owner, msg.sender, curListing.tokenId);
-            pullFromSaleOnBuy(_listingId);
-        }
-        emit PurchasedListing(_listingId, msg.sender, true);
-    }
-
-    receive() external payable {}
-
-    // Fallback function is called when msg.data is not empty
-    fallback() external payable {}
 }
