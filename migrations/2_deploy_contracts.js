@@ -1,4 +1,4 @@
-//var ViridianToken = artifacts.require("ViridianToken");
+var ViridianToken = artifacts.require("ViridianToken");
 var ViridianNFT = artifacts.require("ViridianNFT");
 var ViridianPack = artifacts.require("ViridianPack");
 var ViridianExchange = artifacts.require("ViridianExchange");
@@ -6,7 +6,7 @@ var ViridianExchangeOffers = artifacts.require("ViridianExchangeOffers");
 
 
 module.exports = async function(deployer) {
-  let tokenAddr = '0x6ee856ae55b6e1a249f04cd3b947141bc146273c';
+  let tokenAddr = '0x062f24cb618e6ba873ec1c85fd08b8d2ee9bf23e';
   let nftAddr;
   let excAddr;
   let excOffAddr;

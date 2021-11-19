@@ -11,26 +11,30 @@ contract RandomNumberConsumer is VRFConsumerBase, Ownable {
     bytes32 internal keyHash;
     uint256 internal fee;
     uint256 public maxRange;
+    uint256 public maxRange1;
     
-    uint256 public randomResult;
+    mapping(bytes32 => uint256) public requestIdResults;
+    mapping(bytes32 => uint256) public requestIdRawResults;
+    mapping(uint256 => bytes32) public tokenRequestIds;
+
+    //mapping(uint256 => uint256) private rarityResult;
     
     /**
      * Constructor inherits VRFConsumerBase
      * 
-     * Network: Kovan
-     * Chainlink VRF Coordinator address: 0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9
-     * LINK token address:                0xa36085F69e2889c224210F603D836748e7dC0088
-     * Key Hash: 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4
+     * Network: Polygon Mumbai
+     * Chainlink VRF Coordinator address: 0x8C7382F9D8f56b33781fE506E897a4F1e2d17255
+     * LINK token address:                0x326C977E6efc84E512bB9C30f76E30c160eD06FB
+     * Key Hash: 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4
      */
-    constructor() 
-        VRFConsumerBase(
-            0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B, // VRF Coordinator
-            0x01BE23585060835E02B77ef475b0Cc51aA1e0709  // LINK Token
-        )
-    {
+    constructor(address _packAddr) VRFConsumerBase(
+            0x8C7382F9D8f56b33781fE506E897a4F1e2d17255, // VRF Coordinator
+            0x326C977E6efc84E512bB9C30f76E30c160eD06FB  // LINK Token
+        ) {
         admins[msg.sender] = true;
-        keyHash = 0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311;
-        fee = 0.1 * 10 ** 18; // 0.1 LINK (Varies by network)
+        admins[_packAddr] = true;
+        keyHash = 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4;
+        fee = 0.0001 * 10 ** 18; // 0.0001 LINK (Varies by network)
         maxRange = 1000;
     }
 
@@ -47,10 +51,10 @@ contract RandomNumberConsumer is VRFConsumerBase, Ownable {
         admins[_newAdmin] = false;
     }
     
-    /** 
-     * Requests randomness 
+    /**
+     * Requests randomness
      */
-    function getRandomNumber() public onlyAdmin() returns (bytes32 requestId){
+    function getRandomNumber() public onlyAdmin() returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         return requestRandomness(keyHash, fee);
     }
@@ -59,11 +63,20 @@ contract RandomNumberConsumer is VRFConsumerBase, Ownable {
      * Callback function used by VRF Coordinator
      */
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        randomResult = (randomness % maxRange) + 1;
+        requestIdResults[requestId] = (randomness % maxRange) + 1;
+        requestIdRawResults[requestId] = randomness + 1;
     }
 
     function setMaxRange(uint256 _maxRange) public onlyAdmin() returns (uint256) {
       return maxRange = _maxRange;
+    }
+
+    function getRandomResultForToken(uint256 _tokenId) public view onlyAdmin() returns (uint256) {
+        return requestIdResults[tokenRequestIds[_tokenId]];
+    }
+
+    function getRandomRawResultForToken(uint256 _tokenId) public view onlyAdmin() returns (uint256) {
+        return requestIdRawResults[tokenRequestIds[_tokenId]];
     }
 
     function withdrawLink() external onlyAdmin() {} // - Implement a withdraw function to avoid locking your LINK in the contract

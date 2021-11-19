@@ -59,33 +59,33 @@ contract('Testing ERC721 contract', function(accounts) {
         expect(await pack.name()).to.equal(name)
     })
 
-    it('should be able to open pack', async () => {
-        await pack.mint(account1, tokenUri1, {from: accounts[0]}) //tokenId
+    // it('should be able to open pack', async () => {
+    //     await pack.mint(account1, tokenUri1, {from: accounts[0]}) //tokenId
 
-        let ownedPacks = await pack.getOwnedNFTs({from: accounts[1]});
+    //     let ownedPacks = await pack.getOwnedNFTs({from: accounts[1]});
 
-        expect(await ownedPacks.length).to.equal(1);
+    //     expect(await ownedPacks.length).to.equal(1);
 
-        console.log("Pools before: ");
-        for (i = 0; i <= 3; i++) {
-            console.log(await pack.getUriRarityPools(i));
-        }
+    //     console.log("Pools before: ");
+    //     for (i = 0; i <= 3; i++) {
+    //         console.log(await pack.getUriRarityPools(i));
+    //     }
 
-        await pack.openPack(1, {from: accounts[1]});
+    //     await pack.openPack(1, {from: accounts[1]});
 
-        console.log("Pools after: ");
-        for (i = 0; i <= 3; i++) {
-            console.log(await pack.getUriRarityPools(i));
-        }
+    //     console.log("Pools after: ");
+    //     for (i = 0; i <= 3; i++) {
+    //         console.log(await pack.getUriRarityPools(i));
+    //     }
 
-        let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
-        let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
-        console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
-        expect(await ownedNFTs.length).to.equal(0);
-        expect(await ownedNFTsOther.length).to.equal(3);
-        //console.log(JSON.stringify(duplicateTokenID));
-        //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
-    })
+    //     let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
+    //     let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
+    //     console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
+    //     expect(await ownedNFTs.length).to.equal(0);
+    //     expect(await ownedNFTsOther.length).to.equal(3);
+    //     //console.log(JSON.stringify(duplicateTokenID));
+    //     //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
+    // })
 
     // it(' should be unique', async () => {
     //     const duplicateTokenID = token.mint(account2, tokenId1, tokenUri2, {from: accounts[0]}) //tokenId

@@ -16,20 +16,21 @@ contract ViridianPack is ERC721, Ownable {
     mapping(uint256 => mapping(uint256 => uint256)) private rarityOdds;
     mapping(uint256 => uint256) private numNFTs;
     //mapping(uint256 => string) private unmintedURIs;
-    mapping (uint256 => bool) private _tokensListed;
+    mapping(uint256 => bool) private _tokensListed;
     mapping(uint256 => uint256) tokenRarity;
     mapping(uint256 => string[]) private uriRarityPools;
     int private maxRarityIndex;
+
+    mapping(uint256 => bool) private packResultDecided;
 
     mapping(address => bool) admins;
 
     address public viridianNFTAddr;
 
     ViridianNFT vNFT;
+    RandomNumberConsumer vrf;
 
     using Strings for uint256;
-
-    //constructor(address _imx) ERC721("Viridian Pack", "VP") Mintable(msg.sender, _imx) {
 
     constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") {
 
@@ -38,6 +39,7 @@ contract ViridianPack is ERC721, Ownable {
         viridianNFTAddr = _viridianNFT;
 
         vNFT = ViridianNFT(viridianNFTAddr);
+        vrf = RandomNumberConsumer(address(this));
 
         //Set all beginning rarities
 
@@ -132,11 +134,29 @@ contract ViridianPack is ERC721, Ownable {
         return uriRarityPools[_rarity];
     }
 
-    function getOwnedNFTs(uint256 n) public view virtual returns (uint256[] memory) {
-        uint256[] memory _tokens = new uint256[](n);
-        uint256 curIndex;
+    function getNumNFTs() public view returns (uint256 n) {
+        return _tokenIds.current();
+    }
 
-        for (uint256 i = 0; i < _tokenIds.current(); i++) {
+    function getNumOwnedNFTs() public view virtual returns (uint256) {
+        uint256 numOwnedNFTs = 0;
+
+        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
+            if (ownerOf(i) == msg.sender) {
+                numOwnedNFTs++;
+            }
+        }
+
+        return numOwnedNFTs;
+    }
+ 
+    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
+
+        uint256[] memory _tokens = new uint256[](getNumOwnedNFTs());
+
+        uint256 curIndex = 0;
+
+        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
             if (ownerOf(i) == msg.sender) {
                 _tokens[curIndex] = i;
                 curIndex++;
@@ -168,15 +188,6 @@ contract ViridianPack is ERC721, Ownable {
 
     //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!
     uint nonce;
-
-
-    function random(uint range) internal returns (uint) {
-        uint randomnumber = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, nonce))) % range;
-        randomnumber = randomnumber;
-        nonce++;
-
-        return randomnumber;
-    }
 
     function calculateWeightedOdds(uint256 randomNum, mapping(uint256 => uint256) storage rarityOdd) private view returns (uint) {
         uint256 n;
@@ -210,9 +221,16 @@ contract ViridianPack is ERC721, Ownable {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
 
+    function lockInPackResult(uint256 _tokenId) public payable {
+        require(!packResultDecided[_tokenId], "Viridian Pack: Cannot redo pack result");
+        vrf.getRandomNumber();
+    }
+
     function openPack(uint256 _tokenId) public payable {
         // Randomly 
         require(_isApprovedOrOwner(msg.sender, _tokenId));
+        require(vrf.getRandomRawResultForToken(_tokenId) > 0, "Viridian Pack: VRF hasn't generated random raw result yet");
+        require(vrf.getRandomResultForToken(_tokenId) > 0, "Viridian Pack: VRF hasn't generated random result yet");
 
         uint256 tr = tokenRarity[_tokenId];
 
@@ -220,8 +238,8 @@ contract ViridianPack is ERC721, Ownable {
 
         //Need to delete the item from the rarity pool before minting happens again
         for (uint8 n = 0; n < numNFTs[tr]; n++) {
-            uint256 randIndexWithPercentOdds = calculateWeightedOdds(random(1000), rarityOdds[tr]);
-            uint256 randIndexInRarity = random(uriRarityPools[randIndexWithPercentOdds].length - 1);
+            uint256 randIndexWithPercentOdds = calculateWeightedOdds(vrf.getRandomResultForToken(_tokenId), rarityOdds[tr]);
+            uint256 randIndexInRarity = vrf.getRandomRawResultForToken(_tokenId) % (uriRarityPools[randIndexWithPercentOdds].length - 1);
 
             string memory newURI = uriRarityPools[randIndexWithPercentOdds][randIndexInRarity];
 
@@ -266,21 +284,25 @@ contract ViridianPack is ERC721, Ownable {
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
         require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+        require(!packResultDecided[tokenId], "Viridian NFT: Can only open pack once result is decided");
 
         super.safeTransferFrom(from, to, tokenId);
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
         require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+        require(!packResultDecided[tokenId], "Viridian NFT: Can only open pack once result is decided");
 
         super.transferFrom(from, to, tokenId);
     }
 
     function listToken(uint256 _tokenId) public {
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
         _tokensListed[_tokenId] = true;
     }
 
     function unlistToken(uint256 _tokenId) public {
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
         _tokensListed[_tokenId] = false;
     }
 }

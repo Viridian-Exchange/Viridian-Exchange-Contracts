@@ -87,11 +87,29 @@ contract ViridianNFT is ERC721, Ownable {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
-    function getOwnedNFTs(uint256 n) public view virtual returns (uint256[] memory) {
-        uint256[] memory _tokens = new uint256[](n);
-        uint256 curIndex;
+    function getNumNFTs() public view returns (uint256 n) {
+        return _tokenIds.current();
+    }
 
-        for (uint256 i = 0; i < _tokenIds.current(); i++) {
+    function getNumOwnedNFTs() public view virtual returns (uint256) {
+        uint256 numOwnedNFTs = 0;
+
+        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
+            if (ownerOf(i) == msg.sender) {
+                numOwnedNFTs++;
+            }
+        }
+
+        return numOwnedNFTs;
+    }
+ 
+    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
+
+        uint256[] memory _tokens = new uint256[](getNumOwnedNFTs());
+
+        uint256 curIndex = 0;
+
+        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
             if (ownerOf(i) == msg.sender) {
                 _tokens[curIndex] = i;
                 curIndex++;
@@ -148,10 +166,12 @@ contract ViridianNFT is ERC721, Ownable {
     }
 
     function listToken(uint256 _tokenId) public {
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
         _tokensListed[_tokenId] = true;
     }
 
     function unlistToken(uint256 _tokenId) public {
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
         _tokensListed[_tokenId] = false;
     }
 }
