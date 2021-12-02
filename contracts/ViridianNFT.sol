@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-contract ViridianNFT is ERC721, Ownable {
+abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -12,12 +13,12 @@ contract ViridianNFT is ERC721, Ownable {
     
     mapping(address => bool) admins;
     
-    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(msg.sender, _imx) {
-    //     admins[msg.sender] = true;
+    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(_msgSender(), _imx) {
+    //     admins[_msgSender()] = true;
     // }
 
     constructor() ERC721("Viridian NFT", "VNFT") {
-        admins[msg.sender] = true;
+        admins[_msgSender()] = true;
     }
 
     using Strings for uint256;
@@ -40,8 +41,16 @@ contract ViridianNFT is ERC721, Ownable {
     string private _baseURIextended;
 
     modifier onlyAdmin() {
-        require(admins[msg.sender] == true);
+        require(admins[_msgSender()] == true);
             _;
+    }
+
+    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address) {
+        return BaseRelayRecipient._msgSender();
+    }
+
+    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
+        return BaseRelayRecipient._msgData();
     }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
@@ -95,7 +104,7 @@ contract ViridianNFT is ERC721, Ownable {
         uint256 numOwnedNFTs = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == msg.sender) {
+            if (ownerOf(i) == _msgSender()) {
                 numOwnedNFTs++;
             }
         }
@@ -110,7 +119,7 @@ contract ViridianNFT is ERC721, Ownable {
         uint256 curIndex = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == msg.sender) {
+            if (ownerOf(i) == _msgSender()) {
                 _tokens[curIndex] = i;
                 curIndex++;
             }
@@ -136,7 +145,7 @@ contract ViridianNFT is ERC721, Ownable {
     }
 
     function burn(uint256 tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, tokenId));
+        require(_isApprovedOrOwner(_msgSender(), tokenId));
 
         address owner = ownerOf(tokenId);
 
@@ -166,12 +175,12 @@ contract ViridianNFT is ERC721, Ownable {
     }
 
     function listToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, _tokenId));
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
         _tokensListed[_tokenId] = true;
     }
 
     function unlistToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, _tokenId));
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
         _tokensListed[_tokenId] = false;
     }
 }

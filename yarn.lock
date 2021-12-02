@@ -1646,6 +1646,13 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@opengsn/contracts@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@opengsn/contracts/-/contracts-2.2.4.tgz#8b46baf2f1f86f30fbcffa1347df3fad2a24d55c"
+  integrity sha512-3FG8vqGSJSGYRmSeDHp9hUsVFAAL1fOu6UQ6yFUQFJzUYamimF/Ywelm8CtyTwpE54as2ZqnzTOFlDCJmZgXcg==
+  dependencies:
+    "@openzeppelin/contracts" "^4.2.0"
+
 "@openzeppelin/contract-loader@^0.6.2":
   version "0.6.3"
   resolved "https://registry.npmjs.org/@openzeppelin/contract-loader/-/contract-loader-0.6.3.tgz"
