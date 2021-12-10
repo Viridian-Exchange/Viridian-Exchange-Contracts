@@ -14,9 +14,9 @@ import "./ViridianPack.sol";
 abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
 
     //EVENTS
-    event CreatedOffer(uint256 offerId, address wallet, bool created);
-    event CancelledOffer(uint256 offerId, address wallet, bool cancelled);
-    event AcceptedOffer(uint256 offerId, address wallet, bool accepted);
+    event CreatedOffer(uint256 offerId, address to, address wallet, bool created);
+    event CancelledOffer(uint256 offerId, address to, address wallet, bool cancelled);
+    event AcceptedOffer(uint256 offerId, address to, address wallet, bool accepted);
 
 
     using Counters for Counters.Counter;
@@ -106,7 +106,7 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
         }
     }
 
-    function makeOffer(address payable _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, address _erc20Address, uint256 _daysValid) public {
+    function makeOffer(address _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, address _erc20Address, uint256 _daysValid) public {
         require(approvedTokens[_erc20Address], "Must be listed price in approved token");
         require(_to != _msgSender());
 
@@ -119,7 +119,7 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
 
         uint256 endTime = block.timestamp + (_daysValid * 1 days);
 
-        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, payable(_msgSender()), _erc20Address, true, false, false, block.timestamp, endTime);
+        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, _msgSender(), _erc20Address, true, false, false, block.timestamp, endTime);
         
         userOffers[_to].push(newOffer);
         userOffers[_msgSender()].push(newOffer);
@@ -128,7 +128,7 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
         doOfferingPartiesOwnContents(offers[_offerId]);
         offerIds.push(_offerId);
 
-        emit CreatedOffer(_offerId, _msgSender(), true);
+        emit CreatedOffer(_offerId, _to, _msgSender(), true);
     }
 
     function removeOffer(Offer storage curOffer, Offer[] storage curUserOffers) private {
@@ -174,7 +174,7 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
         // Remove offer from global mapping of offers
         delete offers[_offerId];
 
-        emit CancelledOffer(curOffer.offerId, _msgSender(), true);
+        emit CancelledOffer(curOffer.offerId, curOffer.to, _msgSender(), true);
     }
 
     function doOfferingPartiesOwnContents(Offer storage _curOffer) private view {
@@ -274,6 +274,6 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
         curOffer.pending = false;
         setOffer.pending = false;
         setOfferO.pending = false;
-        emit AcceptedOffer(_offerId, _msgSender(), true);
+        emit AcceptedOffer(_offerId, curOffer.to, _msgSender(), true);
     }
 }

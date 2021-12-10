@@ -12,9 +12,9 @@ import "./ViridianPack.sol";
 
 abstract contract ViridianExchange is Ownable, BaseRelayRecipient {
 
-    event ItemListed(uint256 listingId, address wallet, bool listed);
-    event ItemUnlisted(uint256 listingId, address wallet, bool listed);
-    event PurchasedListing(uint256 listingId, address wallet, bool purchased);
+    event ItemListed(uint256 listingId, uint256 tokenId, address wallet, bool listed);
+    event ItemUnlisted(uint256 listingId, uint256 tokenId, address wallet, bool listed);
+    event PurchasedListing(uint256 listingId, uint256 tokenId, address wallet, bool purchased);
 
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
@@ -146,7 +146,7 @@ abstract contract ViridianExchange is Ownable, BaseRelayRecipient {
         //IERC721(viridianNFT).approve(address(this), _nftId);
         //IERC721(viridianNFT).safeTransferFrom(_msgSender(), address(this), _nftId);
 
-        emit ItemListed(_listingId, saleListing.owner, true);
+        emit ItemListed(_listingId, _nftId, saleListing.owner, true);
     }
 
     function changeSalePrice(uint256 _listingId, uint256 _newPrice) public {
@@ -186,7 +186,7 @@ abstract contract ViridianExchange is Ownable, BaseRelayRecipient {
 
         delete listings[_listingId];
 
-        emit ItemUnlisted(_listingId, _msgSender(), false);
+        emit ItemUnlisted(_listingId, curListing.tokenId, _msgSender(), false);
     }
 
     function pullFromSaleOnBuy(uint256 _listingId) private {
@@ -236,6 +236,6 @@ abstract contract ViridianExchange is Ownable, BaseRelayRecipient {
             IERC721(viridianPack).safeTransferFrom(curListing.owner, _msgSender(), curListing.tokenId);
             pullFromSaleOnBuy(_listingId);
         }
-        emit PurchasedListing(_listingId, _msgSender(), true);
+        emit PurchasedListing(_listingId, curListing.tokenId, _msgSender(), true);
     }
 }

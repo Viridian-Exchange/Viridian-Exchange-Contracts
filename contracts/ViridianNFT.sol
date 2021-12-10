@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianNFT is ERC721, Ownable {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -13,12 +13,12 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     
     mapping(address => bool) admins;
     
-    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(_msgSender(), _imx) {
-    //     admins[_msgSender()] = true;
+    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(msg.sender, _imx) {
+    //     admins[msg.sender] = true;
     // }
 
     constructor() ERC721("Viridian NFT", "VNFT") {
-        admins[_msgSender()] = true;
+        admins[msg.sender] = true;
     }
 
     using Strings for uint256;
@@ -41,35 +41,27 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     string private _baseURIextended;
 
     modifier onlyAdmin() {
-        require(admins[_msgSender()] == true);
+        require(admins[msg.sender] == true);
             _;
     }
 
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address) {
-        return BaseRelayRecipient._msgSender();
-    }
-
-    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
-        return BaseRelayRecipient._msgData();
-    }
-
-    function addAdmin(address _newAdmin) external onlyOwner() {
+    function addAdmin(address _newAdmin) external onlyAdmin() {
         admins[_newAdmin] = true;
     }
 
-    function removeAdmin(address _newAdmin) external onlyOwner() {
+    function removeAdmin(address _newAdmin) external onlyAdmin() {
         admins[_newAdmin] = false;
     }
 
-    // function setExchangeAddress(address ea) public onlyOwner() {
+    // function setExchangeAddress(address ea) public onlyAdmin() {
     //     viridianExchangeAddress = ea;
     // }
     
-    function setBaseURI(string memory baseURI_) external onlyOwner() {
+    function setBaseURI(string memory baseURI_) external onlyAdmin() {
         _baseURIextended = baseURI_;
     }
     
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyOwner() {
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
@@ -104,8 +96,10 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 numOwnedNFTs = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == _msgSender()) {
-                numOwnedNFTs++;
+            if (_exists(i)) {
+                if (ownerOf(i) == msg.sender) {
+                    numOwnedNFTs++;
+                }
             }
         }
 
@@ -119,9 +113,11 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 curIndex = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == _msgSender()) {
-                _tokens[curIndex] = i;
-                curIndex++;
+            if (_exists(i)) {
+                if (ownerOf(i) == msg.sender) {
+                    _tokens[curIndex] = i;
+                    curIndex++;
+                }
             }
         }
         
@@ -145,9 +141,9 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     }
 
     function burn(uint256 tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), tokenId));
+        require(_isApprovedOrOwner(msg.sender, tokenId));
 
-        address owner = ownerOf(tokenId);
+        //address owner = ownerOf(tokenId);
 
         _burn(tokenId);
     }
@@ -175,12 +171,12 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     }
 
     function listToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
         _tokensListed[_tokenId] = true;
     }
 
     function unlistToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
+        require(_isApprovedOrOwner(msg.sender, _tokenId));
         _tokensListed[_tokenId] = false;
     }
 }
