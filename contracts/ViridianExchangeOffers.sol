@@ -11,7 +11,7 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "./ViridianNFT.sol";
 import "./ViridianPack.sol";
 
-abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
+contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
     //EVENTS
     event CreatedOffer(uint256 offerId, address wallet, bool created);
@@ -52,10 +52,12 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
     address public viridianPack;
     mapping (address => bool) public approvedTokens;
 
-    constructor(address _erc20Token, address _viridianNFT, address _viridianPack) {
+    constructor(address _erc20Token, address _viridianNFT, address _viridianPack) {//, address _forwarder) {
         require(address(_erc20Token) != address(0));
         require(address(_viridianNFT) != address(0));
         require(address(_viridianPack) != address(0));
+
+        //_setTrustedForwarder(_forwarder);
 
         approvedTokens[_erc20Token] = true;
         //address _ETH, ETH = _ETH;
@@ -66,13 +68,19 @@ abstract contract ViridianExchangeOffers is Ownable, BaseRelayRecipient {
         vPack = ViridianPack(_viridianPack);
     }
 
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address) {
-        return BaseRelayRecipient._msgSender();
+    string public override versionRecipient = "2.2.0";
+
+    function setTrustedForwarder(address _forwarder) public onlyOwner() {
+        _setTrustedForwarder(_forwarder);
+    }
+
+    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
+        sender = BaseRelayRecipient._msgSender();
     }
 
     function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
         return BaseRelayRecipient._msgData();
-    } 
+    }
 
     function addERC20Token(address _erc20Address) public onlyOwner() {
         approvedTokens[_erc20Address] = true;

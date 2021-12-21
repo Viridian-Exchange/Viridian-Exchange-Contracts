@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -17,8 +17,16 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     //     admins[_msgSender()] = true;
     // }
 
-    constructor() ERC721("Viridian NFT", "VNFT") {
+    constructor(/*address _forwarder*/) ERC721("Viridian NFT", "VNFT") {
+        //_setTrustedForwarder(_forwarder);
+        
         admins[_msgSender()] = true;
+    }
+
+    string public override versionRecipient = "2.2.0";
+
+    function setTrustedForwarder(address _forwarder) public onlyOwner() {
+        _setTrustedForwarder(_forwarder);
     }
 
     using Strings for uint256;
@@ -45,8 +53,8 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
             _;
     }
 
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address) {
-        return BaseRelayRecipient._msgSender();
+    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
+        sender = BaseRelayRecipient._msgSender();
     }
 
     function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
@@ -146,8 +154,6 @@ abstract contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
     function burn(uint256 tokenId) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId));
-
-        address owner = ownerOf(tokenId);
 
         _burn(tokenId);
     }

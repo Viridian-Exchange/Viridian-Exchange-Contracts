@@ -70,7 +70,7 @@ module.exports = {
     },
 
     matic: {
-      provider: () => new HDWalletProvider(mnemonic, `https://polygon-mumbai.infura.io/v3/c2ccaf282d324e8983bcb0c6ffaa05a6`),//.engine._blockTracker._pollingInterval = 1800000,
+      provider: () => new HDWalletProvider(mnemonic, `wss://polygon-mumbai.g.alchemy.com/v2/XvPpXkhm8UtkGw9b8tIMcR3vr1zTZd3b`),//.engine._blockTracker._pollingInterval = 1800000,
       network_id: 80001,       // Ropsten's id
       gas: 7976590,        // Ropsten has a lower block limit than mainnet
       confirmations: 2,    // # of confs to wait between deployments. (default: 0)

@@ -5,7 +5,7 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-abstract contract RandomNumberConsumer is VRFConsumerBase, Ownable, BaseRelayRecipient {
+contract RandomNumberConsumer is VRFConsumerBase, Ownable, BaseRelayRecipient {
     
     mapping(address => bool) admins;
 
@@ -14,6 +14,7 @@ abstract contract RandomNumberConsumer is VRFConsumerBase, Ownable, BaseRelayRec
     uint256 public maxRange;
     uint256 public maxRange1;
     
+    mapping(bytes32 => uint256) public requestTokenIds;
     mapping(bytes32 => uint256) public requestIdResults;
     mapping(bytes32 => uint256) public requestIdRawResults;
     mapping(uint256 => bytes32) public tokenRequestIds;
@@ -39,6 +40,14 @@ abstract contract RandomNumberConsumer is VRFConsumerBase, Ownable, BaseRelayRec
         maxRange = 1000;
     }
 
+    event RandomnessFulfilled(uint256 tokenId);
+
+    string public override versionRecipient = "2.2.0";
+
+    function setTrustedForwarder(address _forwarder) public onlyOwner() {
+        _setTrustedForwarder(_forwarder);
+    }
+
     function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address) {
         return BaseRelayRecipient._msgSender();
     }
@@ -59,13 +68,17 @@ abstract contract RandomNumberConsumer is VRFConsumerBase, Ownable, BaseRelayRec
     function removeAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = false;
     }
-    
+
     /**
      * Requests randomness
      */
-    function getRandomNumber() public onlyAdmin() returns (bytes32 requestId) {
+    function getRandomNumber(uint256 _tokenId) public onlyAdmin() returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
-        return requestRandomness(keyHash, fee);
+        bytes32 _requestId = requestRandomness(keyHash, fee);
+        require(tokenRequestIds[_tokenId] != _requestId, "Request Id number for token already locked in");
+        tokenRequestIds[_tokenId] = _requestId;
+        requestTokenIds[_requestId] = _tokenId;
+        return _requestId;
     }
 
     /**
@@ -74,10 +87,12 @@ abstract contract RandomNumberConsumer is VRFConsumerBase, Ownable, BaseRelayRec
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         requestIdResults[requestId] = (randomness % maxRange) + 1;
         requestIdRawResults[requestId] = randomness + 1;
+
+        emit RandomnessFulfilled(requestTokenIds[requestId]);
     }
 
     function setMaxRange(uint256 _maxRange) public onlyAdmin() returns (uint256) {
-      return maxRange = _maxRange;
+        return maxRange = _maxRange;
     }
 
     function getRandomResultForToken(uint256 _tokenId) public view onlyAdmin() returns (uint256) {

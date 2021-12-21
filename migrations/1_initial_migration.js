@@ -3,6 +3,7 @@ const Migrations1 = artifacts.require("ViridianNFT");
 const Migrations2 = artifacts.require("ViridianPack");
 const Migrations3 = artifacts.require("ViridianExchange");
 const Migrations4 = artifacts.require("ViridianExchangeOffers");
+const Migrations5 = artifacts.require("RandomNumberConsumer");
 
 module.exports = async function (deployer) {
   //await deployer.deploy(Migrations);
@@ -11,5 +12,5 @@ module.exports = async function (deployer) {
   // Currency address is Polygon Mumbai contract
   await deployer.deploy(Migrations3, '0x062f24cb618e6ba873ec1c85fd08b8d2ee9bf23e', Migrations1.address, Migrations2.address);
   await deployer.deploy(Migrations4, '0x062f24cb618e6ba873ec1c85fd08b8d2ee9bf23e', Migrations1.address, Migrations2.address);
-  //await Migrations1.setApprovalForAll(Migrations2.address, true);
+  await deployer.deploy(Migrations5, Migrations2.address);
 };

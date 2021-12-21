@@ -8,7 +8,7 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "./RandomNumber.sol";
 import "./ViridianNFT.sol";
 
-abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -33,11 +33,13 @@ abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
 
     using Strings for uint256;
 
-    constructor(address _viridianNFT) ERC721("Viridian Pack", "VP") {
+    constructor(address _viridianNFT/*, address _forwarder*/) ERC721("Viridian Pack", "VP") {
 
         require(address(_viridianNFT) != address(0));
 
         viridianNFTAddr = _viridianNFT;
+
+        //_setTrustedForwarder(_forwarder);
 
         vNFT = ViridianNFT(viridianNFTAddr);
         vrf = RandomNumberConsumer(address(this));
@@ -77,7 +79,14 @@ abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         admins[_msgSender()] = true;
     }
 
+    string public override versionRecipient = "2.2.0";
+
+    function setTrustedForwarder(address _forwarder) public onlyOwner() {
+        _setTrustedForwarder(_forwarder);
+    }
+
     event Open(string[10] newUris);
+    event PackResultDecided(uint256 tokenId);
     
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
@@ -92,13 +101,13 @@ abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
             _;
     }
 
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address) {
-        return BaseRelayRecipient._msgSender();
+    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
+        sender = BaseRelayRecipient._msgSender();
     }
 
     function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
         return BaseRelayRecipient._msgData();
-    } 
+    }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = true;
@@ -210,11 +219,11 @@ abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return n;
     }
 
-    function softMintNFT(string memory uri, uint256 rarity) public onlyAdmin() payable {
+    function softMintNFT(string memory uri, uint256 rarity) public onlyAdmin() {
         uriRarityPools[rarity].push(uri);
     }
 
-    function burnSoftMintedNFTAtRarityIndex(uint256 rarity, uint256 index) public onlyAdmin() payable {
+    function burnSoftMintedNFTAtRarityIndex(uint256 rarity, uint256 index) public onlyAdmin() {
         string[] memory curRarityPool = uriRarityPools[rarity];
             for (uint i = 0; i < uriRarityPools[rarity].length; i++) {
                 if (i == index) {
@@ -230,14 +239,23 @@ abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
 
-    function lockInPackResult(uint256 _tokenId) public payable {
+    function lockInPackResult(uint256 _tokenId) public {
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
         require(!packResultDecided[_tokenId], "Viridian Pack: Cannot redo pack result");
-        vrf.getRandomNumber();
+        packResultDecided[_tokenId] = true;
+        vrf.getRandomNumber(_tokenId);
+
+        emit PackResultDecided(_tokenId);
     }
 
-    function openPack(uint256 _tokenId) public payable {
+    function isPackResultDecided(uint256 _tokenId) public view returns (bool) {
+        return packResultDecided[_tokenId];
+    }
+
+    function openPack(uint256 _tokenId) public {
         // Randomly 
         require(_isApprovedOrOwner(_msgSender(), _tokenId));
+        require(packResultDecided[_tokenId], "Viridian NFT: pack result not decided yet");
         require(vrf.getRandomRawResultForToken(_tokenId) > 0, "Viridian Pack: VRF hasn't generated random raw result yet");
         require(vrf.getRandomResultForToken(_tokenId) > 0, "Viridian Pack: VRF hasn't generated random result yet");
 
@@ -275,8 +293,6 @@ abstract contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
 
     function burn(uint256 tokenId) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId));
-
-        address owner = ownerOf(tokenId);
 
         _burn(tokenId);
     }
