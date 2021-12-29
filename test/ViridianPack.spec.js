@@ -13,17 +13,17 @@ contract('Testing ERC721 contract', function(accounts) {
 
     let token;
     const name = "Viridian Pack";
-    const symbol = "VP"
+    const symbol = "VP";
 
-    const account1 = accounts[1]
+    const account1 = accounts[1];
     const tokenId1 = 1111;
     const tokenUri1 = "This is data for the token 1"; // Does not have to be unique
 
-    const account2 = accounts[2]
+    const account2 = accounts[2];
     const tokenId2 = 2222;
     const tokenUri2 = "This is data for the token 2"; // Does not have to be unique
 
-    const account3 = accounts[3]
+    const account3 = accounts[3];
 
     beforeEach(async () => {
         //console.log(ViridianNFT);
@@ -31,25 +31,25 @@ contract('Testing ERC721 contract', function(accounts) {
         pack = await ViridianPack.new(token.address);
         token.addAdmin(pack.address);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 0);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 0);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 0);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 0);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 0);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 0);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 0);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 0);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 1);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 1);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 1);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 1);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 1);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 1);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 1);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 1);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 2);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 2);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 2);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 2);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 2);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 2);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 2);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 2);
 
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 3);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 3);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 3);
-        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 3);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 3);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 3);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 3);
+        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 3);
     })
 
     // it('should be able to deploy and mint ERC721 token', async () => {
@@ -68,25 +68,25 @@ contract('Testing ERC721 contract', function(accounts) {
 
         expect(await ownedPacks.length).to.equal(1);
 
-        console.log("Pools before: ");
-        for (i = 0; i <= 3; i++) {
-            console.log(await pack.getUriRarityPools(i));
-        }
+        // console.log("Pools before: ");
+        // for (i = 0; i <= 3; i++) {
+        //     console.log(await pack.getUriRarityPools(i));
+        // }
 
-        console.log("IS OPENED?: " + await pack.isPackResultDecided(1, {from: accounts[1]}))
+        // console.log("IS OPENED?: " + await pack.isPackResultDecided(1, {from: accounts[1]}))
 
-        await pack.openPack(1, {from: accounts[1]});
+        // await pack.openPack(1, {from: accounts[1]});
 
-        console.log("Pools after: ");
-        for (i = 0; i <= 3; i++) {
-            console.log(await pack.getUriRarityPools(i));
-        }
+        // console.log("Pools after: ");
+        // for (i = 0; i <= 3; i++) {
+        //     console.log(await pack.getUriRarityPools(i));
+        // }
 
-        let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
-        let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
-        console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
-        expect(await ownedNFTs.length).to.equal(0);
-        expect(await ownedNFTsOther.length).to.equal(3);
+        // let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
+        // let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
+        // console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
+        // expect(await ownedNFTs.length).to.equal(0);
+        // expect(await ownedNFTsOther.length).to.equal(3);
         //console.log(JSON.stringify(duplicateTokenID));
         //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
     })
