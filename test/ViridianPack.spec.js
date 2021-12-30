@@ -3,11 +3,13 @@
 const truffleAssert = require('truffle-assertions');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
+//const vtJSON = require('../build/contracts/ViridianToken.json');
 chai.use(chaiAsPromised)
 const { expect, assert } = chai
 
 var ViridianNFT = artifacts.require("ViridianNFT");
 var ViridianPack = artifacts.require("ViridianPack");
+//var VRF = artifacts.require("RandomNumberConsumer");
 
 contract('Testing ERC721 contract', function(accounts) {
 
@@ -29,7 +31,14 @@ contract('Testing ERC721 contract', function(accounts) {
         //console.log(ViridianNFT);
         token = await ViridianNFT.new();
         pack = await ViridianPack.new(token.address);
+        //vrf = await VRF.new(pack.address);
         token.addAdmin(pack.address);
+        //pack.configureVRF(vrf.address);
+
+        // const linkContractAddress = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB';
+        // let vtABI = new web3.eth.Contract(vtJSON['abi'], linkContractAddress);
+
+        // await vtABI.methods.transfer(vrf.address, '5000000000000000').send.request({from: accounts[0]});
 
         await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 0);
         await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 0);
@@ -60,33 +69,35 @@ contract('Testing ERC721 contract', function(accounts) {
     // })
 
     it('should be able to open pack', async () => {
-        await pack.mint(accounts[2], tokenUri1, {from: accounts[0]}); //tokenId
+        await pack.mint(accounts[0], tokenUri1, {from: accounts[0]}); //tokenId
 
-        //await pack.lockInPackResult(1, {from: accounts[2]});
+        //await pack.lockInPackResult(1, {from: accounts[0]});
 
-        let ownedPacks = await pack.getOwnedNFTs({from: accounts[2]});
+        let ownedPacks = await pack.getOwnedNFTs({from: accounts[0]});
 
         expect(await ownedPacks.length).to.equal(1);
 
-        // console.log("Pools before: ");
-        // for (i = 0; i <= 3; i++) {
-        //     console.log(await pack.getUriRarityPools(i));
-        // }
+        console.log("Pools before: ");
+        for (i = 0; i <= 3; i++) {
+            console.log(await pack.getUriRarityPools(i));
+        }
+
+        //await sleep(10000);
 
         // console.log("IS OPENED?: " + await pack.isPackResultDecided(1, {from: accounts[1]}))
 
-        await pack.openPack(1, {from: accounts[1]});
+        await pack.openPack(1, {from: accounts[0]});
 
-        // console.log("Pools after: ");
-        // for (i = 0; i <= 3; i++) {
-        //     console.log(await pack.getUriRarityPools(i));
-        // }
+        console.log("Pools after: ");
+        for (i = 0; i <= 3; i++) {
+            console.log(await pack.getUriRarityPools(i));
+        }
 
-        // let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
-        // let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
-        // console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
-        // expect(await ownedNFTs.length).to.equal(0);
-        // expect(await ownedNFTsOther.length).to.equal(3);
+        let ownedNFTs = await token.getOwnedNFTs({from: accounts[0]})
+        let ownedNFTsOther = await token.getOwnedNFTs({from: accounts[1]})
+        console.log("ONFTS: " + JSON.stringify(ownedNFTsOther));
+        expect(await ownedNFTs.length).to.equal(3);
+        expect(await ownedNFTsOther.length).to.equal(0);
         //console.log(JSON.stringify(duplicateTokenID));
         //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
     })

@@ -120,7 +120,7 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         _baseURIextended = baseURI_;
     }
     
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyOwner() {
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
@@ -159,8 +159,10 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         uint256 numOwnedNFTs = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == _msgSender()) {
-                numOwnedNFTs++;
+            if (_exists(i)) {
+                if (ownerOf(i) == _msgSender()) {
+                    numOwnedNFTs++;
+                }
             }
         }
 
@@ -174,9 +176,11 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         uint256 curIndex = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == _msgSender()) {
-                _tokens[curIndex] = i;
-                curIndex++;
+            if (_exists(i)) {
+                if (ownerOf(i) == _msgSender()) {
+                    _tokens[curIndex] = i;
+                    curIndex++;
+                }
             }
         }
         
@@ -255,12 +259,35 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return packResultDecided[_tokenId];
     }
 
+    function getRandIndexPercentOdds(uint256 _tokenId) public view onlyAdmin() returns (uint256) {
+        uint256 randRes = vrf.getRandomResultForToken(_tokenId);
+        uint256 tr = tokenRarity[_tokenId];
+        uint256 randIndexWithPercentOdds = calculateWeightedOdds(randRes, rarityOdds[tr]);
+        return randIndexWithPercentOdds;
+    }
+
+    function getRandIndexRarity(uint256 _tokenId) public view onlyAdmin() returns (uint256) {
+        uint256 rawRandRes = vrf.getRandomRawResultForToken(_tokenId);
+
+        uint256 randRes = vrf.getRandomResultForToken(_tokenId);
+        uint256 tr = tokenRarity[_tokenId];
+        uint256 randIndexWithPercentOdds = calculateWeightedOdds(randRes, rarityOdds[tr]);
+
+        uint256 randIndexInRarity = rawRandRes % (uriRarityPools[randIndexWithPercentOdds].length - 1);
+
+        return randIndexInRarity;
+    }
+
     function openPack(uint256 _tokenId) public {
         // Randomly 
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "Viridian Pack: must be approved or owner to open");
         require(packResultDecided[_tokenId], "Viridian Pack: pack result not decided yet");
-        require(vrf.getRandomRawResultForToken(_tokenId) > 0, "Viridian Pack: VRF hasn't generated random raw result yet");
-        require(vrf.getRandomResultForToken(_tokenId) > 0, "Viridian Pack: VRF hasn't generated random result yet");
+
+        uint256 rawRandRes = vrf.getRandomRawResultForToken(_tokenId);
+        uint256 randRes = vrf.getRandomResultForToken(_tokenId);
+
+        require(rawRandRes > 0, "Viridian Pack: VRF hasn't generated random raw result yet");
+        require(randRes > 0, "Viridian Pack: VRF hasn't generated random result yet");
 
         uint256 tr = tokenRarity[_tokenId];
 
@@ -268,8 +295,8 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
 
         //Need to delete the item from the rarity pool before minting happens again
         for (uint8 n = 0; n < numNFTs[tr]; n++) {
-            uint256 randIndexWithPercentOdds = calculateWeightedOdds(vrf.getRandomResultForToken(_tokenId), rarityOdds[tr]);
-            uint256 randIndexInRarity = vrf.getRandomRawResultForToken(_tokenId) % (uriRarityPools[randIndexWithPercentOdds].length - 1);
+            uint256 randIndexWithPercentOdds = calculateWeightedOdds(randRes, rarityOdds[tr]);
+            uint256 randIndexInRarity = rawRandRes % (uriRarityPools[randIndexWithPercentOdds].length - 1);
 
             string memory newURI = uriRarityPools[randIndexWithPercentOdds][randIndexInRarity];
 

@@ -73,11 +73,11 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     //     viridianExchangeAddress = ea;
     // }
     
-    function setBaseURI(string memory baseURI_) external onlyOwner() {
+    function setBaseURI(string memory baseURI_) external onlyAdmin() {
         _baseURIextended = baseURI_;
     }
     
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyOwner() {
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
@@ -112,8 +112,10 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 numOwnedNFTs = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == _msgSender()) {
-                numOwnedNFTs++;
+            if (_exists(i)) {
+                if (ownerOf(i) == _msgSender()) {
+                    numOwnedNFTs++;
+                }
             }
         }
 
@@ -127,9 +129,11 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 curIndex = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == _msgSender()) {
-                _tokens[curIndex] = i;
-                curIndex++;
+            if (_exists(i)) {
+                if (ownerOf(i) == _msgSender()) {
+                    _tokens[curIndex] = i;
+                    curIndex++;
+                }
             }
         }
         
