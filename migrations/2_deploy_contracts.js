@@ -7,7 +7,7 @@ var RandomNumber = artifacts.require("RandomNumberConsumer");
 
 
 module.exports = async function(deployer) {
-  let tokenAddr = '0x062f24cb618e6ba873ec1c85fd08b8d2ee9bf23e';
+  let tokenAddr = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB';
   let nftAddr;
   let excAddr;
   let excOffAddr;

@@ -1,63 +1,63 @@
-// const Web3 = require("web3");
+const Web3 = require("web3");
 
-// const web3 = new Web3(Web3.givenProvider || "HTTP://127.0.0.1:7545");
+const web3 = new Web3(Web3.givenProvider || "HTTP://127.0.0.1:7545");
 
-// const { expect } = require("chai");
+const { expect } = require("chai");
 
-// let token
+let token
 
-// const truffleAssert = require('truffle-assertions');
+const truffleAssert = require('truffle-assertions');
 
-// const ViridianExchange = artifacts.require('ViridianExchange');
-// const ViridianExchangeOffers = artifacts.require('ViridianExchangeOffers');
-// const ViridianToken = artifacts.require('ViridianToken');
-// const ViridianNFT = artifacts.require('ViridianNFT');
-// const ViridianPack = artifacts.require('ViridianPack');
+const ViridianExchange = artifacts.require('ViridianExchange');
+const ViridianExchangeOffers = artifacts.require('ViridianExchangeOffers');
+const ViridianToken = artifacts.require('ViridianToken');
+const ViridianNFT = artifacts.require('ViridianNFT');
+const ViridianPack = artifacts.require('ViridianPack');
 
-// contract('ViridianExchange', (accounts) => {
-//     let nft;
-//     let token;
-//     let exchange;
-//     const name = "Viridian NFT";
-//     const symbol = "VNFT";
+contract('ViridianExchange', (accounts) => {
+    let nft;
+    let token;
+    let exchange;
+    const name = "Viridian NFT";
+    const symbol = "VNFT";
 
-//     const account1 = accounts[1];
-//     const tokenId1 = 1111;
-//     const tokenUri1 = "This is data for the token 1"; // Does not have to be unique
+    const account1 = accounts[1];
+    const tokenId1 = 1111;
+    const tokenUri1 = "This is data for the token 1"; // Does not have to be unique
 
-//     const account2 = accounts[2];
-//     const tokenId2 = 2222;
-//     const tokenUri2 = "This is data for the token 2"; // Does not have to be unique
+    const account2 = accounts[2];
+    const tokenId2 = 2222;
+    const tokenUri2 = "This is data for the token 2"; // Does not have to be unique
 
-//     const account3 = accounts[3];
-//     const tokenName = 'Tether Token'
-//     const tokenSymbol = 'USDT'
-//     const tokenDecimals = 0
+    const account3 = accounts[3];
+    const tokenName = 'Tether Token'
+    const tokenSymbol = 'USDT'
+    const tokenDecimals = 0
 
-//   beforeEach(async () => {
-//     token = await ViridianToken.new();
-//     nft = await ViridianNFT.new();
-//     pack = await ViridianPack.new(nft.address);
-//     exchange = await ViridianExchange.new(token.address, nft.address, pack.address);
-//     exof = await ViridianExchangeOffers.new(token.address, nft.address, pack.address);
+  beforeEach(async () => {
+    token = await ViridianToken.new();
+    nft = await ViridianNFT.new();
+    pack = await ViridianPack.new(nft.address);
+    exchange = await ViridianExchange.new(token.address, nft.address, pack.address);
+    exof = await ViridianExchangeOffers.new(token.address, nft.address, pack.address);
 
-//     // Create nft with id 1
-//     await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
-//     //await nft.setExchangeAddress(exchange.address);
-//     await nft.setApprovalForAll(exchange.address, true, {from: accounts[0]});
-//     await nft.setApprovalForAll(exchange.address, true, {from: accounts[1]});
-//     await nft.setApprovalForAll(exchange.address, true, {from: accounts[2]});
+    // Create nft with id 1
+    await nft.mint(accounts[0], "https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json");
+    //await nft.setExchangeAddress(exchange.address);
+    await nft.setApprovalForAll(exchange.address, true, {from: accounts[0]});
+    await nft.setApprovalForAll(exchange.address, true, {from: accounts[1]});
+    await nft.setApprovalForAll(exchange.address, true, {from: accounts[2]});
 
-//     await nft.setApprovalForAll(exof.address, true, {from: accounts[0]});
-//     await nft.setApprovalForAll(exof.address, true, {from: accounts[1]});
-//     await nft.setApprovalForAll(exof.address, true, {from: accounts[2]});
-//     token.approve(accounts[0], 0);
-//     token.approve(accounts[1], 0);
-//     token.approve(accounts[2], 0);
-//     //token.approve(accounts[1], '500');
-//     //await web3.sendTransaction({to:exchange, from:accounts[3], value:web3.toWei("90", "ether")});
-//     //console.log("APVL: " + JSON.stringify(await nft.isApprovedForAll(accounts[0], exchange.address)));
-//   })
+    await nft.setApprovalForAll(exof.address, true, {from: accounts[0]});
+    await nft.setApprovalForAll(exof.address, true, {from: accounts[1]});
+    await nft.setApprovalForAll(exof.address, true, {from: accounts[2]});
+    token.approve(accounts[0], 0);
+    token.approve(accounts[1], 0);
+    token.approve(accounts[2], 0);
+    //token.approve(accounts[1], '500');
+    //await web3.sendTransaction({to:exchange, from:accounts[3], value:web3.toWei("90", "ether")});
+    //console.log("APVL: " + JSON.stringify(await nft.isApprovedForAll(accounts[0], exchange.address)));
+  })
   
 //   // TRANSERS
 //   // normal transfers without approvals
@@ -131,49 +131,49 @@
 //   })
 
 
-//   it('transaction: nft should be able to be purchased with ERC20', async () => {
-//     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
-//     await token.approve(exchange.address, 0);
-//     await token.approve(exchange.address, 100);
-//     await exchange.putUpForSale("1", "100", "1", "0", token.address, true, {from: accounts[1]});
-//     let listings = await exchange.getListings.call({from: accounts[1]});
-//     let userListings = await exchange.getListingsFromUser(accounts[1]);
-//     expect(await listings.length).to.equal(1);
-//     expect(listings[0].toString()).to.equal('1');
-//     expect(await userListings.length).to.equal(1);
+  it('transaction: nft should be able to be purchased with ERC20', async () => {
+    await nft.safeTransferFrom(accounts[0], accounts[1], "1");
+    await token.approve(exchange.address, 0);
+    await token.approve(exchange.address, 100);
+    await exchange.putUpForSale("1", "100", "1", "0", token.address, true, {from: accounts[1]});
+    let listings = await exchange.getListings.call({from: accounts[1]});
+    let userListings = await exchange.getListingsFromUser(accounts[1]);
+    expect(await listings.length).to.equal(1);
+    expect(listings[0].toString()).to.equal('1');
+    expect(await userListings.length).to.equal(1);
 
-//     const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
+    const balanceBefore = await token.balanceOf.call(accounts[ 0 ])
 
-//     console.log("ERC20 Balance bef: " + balanceBefore);
+    console.log("ERC20 Balance bef: " + balanceBefore);
 
-//     let ownedNFTs = await nft.getOwnedNFTs({from: accounts[0]})
-//     let ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]})
-//     console.log("ONFTS__)O: " + JSON.stringify(ownedNFTs));
-//     console.log("ONFTSOOO: " + JSON.stringify(ownedNFTsOther));
-//     expect(await ownedNFTs.length).to.equal(0);
-//     expect(await ownedNFTsOther.length).to.equal(1);
+    let ownedNFTs = await nft.getOwnedNFTs({from: accounts[0]})
+    let ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]})
+    console.log("ONFTS__)O: " + JSON.stringify(ownedNFTs));
+    console.log("ONFTSOOO: " + JSON.stringify(ownedNFTsOther));
+    expect(await ownedNFTs.length).to.equal(0);
+    expect(await ownedNFTsOther.length).to.equal(1);
 
-//     //console.log("Cur price: " + JSON.stringify(userListings[0].price));
+    //console.log("Cur price: " + JSON.stringify(userListings[0].price));
 
-//     //await token.approve(exchange.address, 100);
-//     //await token.approve(exchange.address, 0);
-//     await exchange.buyNFTWithERC20(1);
+    //await token.approve(exchange.address, 100);
+    //await token.approve(exchange.address, 0);
+    await exchange.buyNFTWithERC20(1);
 
-//     const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
-//     ownedNFTs = await nft.getOwnedNFTs();
-//     ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
+    const balanceAfter = await token.balanceOf.call(accounts[ 0 ])
+    ownedNFTs = await nft.getOwnedNFTs();
+    ownedNFTsOther = await nft.getOwnedNFTs({from: accounts[1]});
 
-//     //console.log("ERC20 Balance aft: " + balanceAfter.toString());
-//     listings = await exchange.getListings.call({from: accounts[1]});
-//     userListings = await exchange.getListingsFromUser(accounts[1]);
+    //console.log("ERC20 Balance aft: " + balanceAfter.toString());
+    listings = await exchange.getListings.call({from: accounts[1]});
+    userListings = await exchange.getListingsFromUser(accounts[1]);
 
-//     expect(await listings.length).to.equal(0);
-//     expect(await userListings.length).to.equal(0);
-//     assert.strictEqual(balanceBefore.toString(), "200000000000000000000000000");
-//     assert.strictEqual(balanceAfter.toString(), "199999999999999999999999900");
-//     expect(await ownedNFTs.length).to.equal(1);
-//     expect(await ownedNFTsOther.length).to.equal(0);
-//   })
+    expect(await listings.length).to.equal(0);
+    expect(await userListings.length).to.equal(0);
+    assert.strictEqual(balanceBefore.toString(), "200000000000000000000000000");
+    assert.strictEqual(balanceAfter.toString(), "199999999999999999999999900");
+    expect(await ownedNFTs.length).to.equal(1);
+    expect(await ownedNFTsOther.length).to.equal(0);
+  })
 
 //   it('transaction: nft should be able to be purchased with ERC20', async () => {
 //     await nft.safeTransferFrom(accounts[0], accounts[1], "1");
@@ -559,4 +559,4 @@
 //     );
 
 //   })
- //})
+})

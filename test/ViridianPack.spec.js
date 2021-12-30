@@ -31,25 +31,25 @@ contract('Testing ERC721 contract', function(accounts) {
         pack = await ViridianPack.new(token.address);
         token.addAdmin(pack.address);
 
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 0);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 0);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 0);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 0);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 0);
 
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 1);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 1);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 1);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 1);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 1);
 
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 2);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 2);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 2);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 2);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 2);
 
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 3);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 3);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 3);
-        // await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd1.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd2.json', 3);
+        await pack.softMintNFT('https://viridian-nft-metadata.s3.us-east-2.amazonaws.com/vmd3.json', 3);
     })
 
     // it('should be able to deploy and mint ERC721 token', async () => {
@@ -60,11 +60,11 @@ contract('Testing ERC721 contract', function(accounts) {
     // })
 
     it('should be able to open pack', async () => {
-        await pack.mint(account1, tokenUri1, {from: accounts[0]}) //tokenId
+        await pack.mint(accounts[2], tokenUri1, {from: accounts[0]}); //tokenId
 
-        await pack.lockInPackResult(1, {from: accounts[0]});
+        //await pack.lockInPackResult(1, {from: accounts[2]});
 
-        let ownedPacks = await pack.getOwnedNFTs({from: accounts[1]});
+        let ownedPacks = await pack.getOwnedNFTs({from: accounts[2]});
 
         expect(await ownedPacks.length).to.equal(1);
 
@@ -75,7 +75,7 @@ contract('Testing ERC721 contract', function(accounts) {
 
         // console.log("IS OPENED?: " + await pack.isPackResultDecided(1, {from: accounts[1]}))
 
-        // await pack.openPack(1, {from: accounts[1]});
+        await pack.openPack(1, {from: accounts[1]});
 
         // console.log("Pools after: ");
         // for (i = 0; i <= 3; i++) {
@@ -91,31 +91,31 @@ contract('Testing ERC721 contract', function(accounts) {
         //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
     })
 
-    it(' should be unique', async () => {
-        const duplicateTokenID = token.mint(account2, tokenId1, tokenUri2, {from: accounts[0]}) //tokenId
-        console.log("Create " + JSON.stringify(await duplicateTokenID));
-        await truffleAssert.reverts(duplicateTokenID, '/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/');
-        //console.log(JSON.stringify(duplicateTokenID));
-        //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
-    })
+    // it(' should be unique', async () => {
+    //     const duplicateTokenID = token.mint(account2, tokenId1, tokenUri2, {from: accounts[0]}) //tokenId
+    //     console.log("Create " + JSON.stringify(await duplicateTokenID));
+    //     await truffleAssert.reverts(duplicateTokenID, '/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/');
+    //     //console.log(JSON.stringify(duplicateTokenID));
+    //     //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
+    // })
 
-    it(' should allow safe transfers', async () => {
-        //const unownedTokenId = token.safeTransferFrom(account2, account3, tokenId1, {from: accounts[2]}) // tokenId
-        await truffleAssert.reverts(token.safeTransferFrom(account2, account3, tokenId1, {from: accounts[2]}), 'ERC721: operator query for nonexistent token');
-        //console.log(unownedTokenId);
-        //expect(unownedTokenId).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
-        //expect(await token.ownerOf(tokenId2)).to.equal(account2)
+    // it(' should allow safe transfers', async () => {
+    //     //const unownedTokenId = token.safeTransferFrom(account2, account3, tokenId1, {from: accounts[2]}) // tokenId
+    //     await truffleAssert.reverts(token.safeTransferFrom(account2, account3, tokenId1, {from: accounts[2]}), 'ERC721: operator query for nonexistent token');
+    //     //console.log(unownedTokenId);
+    //     //expect(unownedTokenId).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
+    //     //expect(await token.ownerOf(tokenId2)).to.equal(account2)
 
-        //const wrongOwner = token.safeTransferFrom(account1, account3, tokenId2, {from: accounts[1]}) // wrong owner
-        //expect(wrongOwner).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: operator query for nonexistent token -- Reason given: ERC721: operator query for nonexistent token./)
-        //expect(await token.ownerOf(tokenId2)).to.equal(account1)
+    //     //const wrongOwner = token.safeTransferFrom(account1, account3, tokenId2, {from: accounts[1]}) // wrong owner
+    //     //expect(wrongOwner).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: operator query for nonexistent token -- Reason given: ERC721: operator query for nonexistent token./)
+    //     //expect(await token.ownerOf(tokenId2)).to.equal(account1)
 
-        // Noticed that the from gas param needs to be the token owners or it fails
-        //const wrongFromGas = token.safeTransferFrom(account2, account3, tokenId2, {from: accounts[1]}) // wrong owner
-        //expect(wrongFromGas).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: operator query for nonexistent token -- Reason given: ERC721: operator query for nonexistent token./)
-        //expect(await token.ownerOf(tokenId2)).to.equal(account2)
+    //     // Noticed that the from gas param needs to be the token owners or it fails
+    //     //const wrongFromGas = token.safeTransferFrom(account2, account3, tokenId2, {from: accounts[1]}) // wrong owner
+    //     //expect(wrongFromGas).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: operator query for nonexistent token -- Reason given: ERC721: operator query for nonexistent token./)
+    //     //expect(await token.ownerOf(tokenId2)).to.equal(account2)
 
-        await token.safeTransferFrom(account2, account3, tokenId2, {from: accounts[2]})
-        expect(await token.ownerOf(tokenId2)).to.equal(account3)
-    })
+    //     await token.safeTransferFrom(account2, account3, tokenId2, {from: accounts[2]})
+    //     expect(await token.ownerOf(tokenId2)).to.equal(account3)
+    // })
 })

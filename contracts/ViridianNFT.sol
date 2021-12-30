@@ -20,7 +20,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     constructor(/*address _forwarder*/) ERC721("Viridian NFT", "VNFT") {
         //_setTrustedForwarder(_forwarder);
         
-        admins[msg.sender] = true;
+        admins[_msgSender()] = true;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -49,7 +49,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     string private _baseURIextended;
 
     modifier onlyAdmin() {
-        require(admins[msg.sender] == true);
+        require(admins[_msgSender()] == true);
             _;
     }
 
@@ -112,7 +112,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 numOwnedNFTs = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == msg.sender) {
+            if (ownerOf(i) == _msgSender()) {
                 numOwnedNFTs++;
             }
         }
@@ -127,7 +127,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 curIndex = 0;
 
         for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (ownerOf(i) == msg.sender) {
+            if (ownerOf(i) == _msgSender()) {
                 _tokens[curIndex] = i;
                 curIndex++;
             }
@@ -153,7 +153,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     }
 
     function burn(uint256 tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, tokenId));
+        require(_isApprovedOrOwner(_msgSender(), tokenId));
 
         _burn(tokenId);
     }
@@ -181,12 +181,12 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     }
 
     function listToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, _tokenId));
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
         _tokensListed[_tokenId] = true;
     }
 
     function unlistToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(msg.sender, _tokenId));
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
         _tokensListed[_tokenId] = false;
     }
 }
