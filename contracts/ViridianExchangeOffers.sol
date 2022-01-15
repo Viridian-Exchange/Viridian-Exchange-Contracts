@@ -15,6 +15,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
     //EVENTS
     event CreatedOffer(uint256 offerId, address wallet, bool created);
+    event CreatedCounterOffer(uint256 offerId, uint256 oldOfferId, address wallet, bool created);
     event CancelledOffer(uint256 offerId, address wallet, bool cancelled);
     event AcceptedOffer(uint256 offerId, address wallet, bool accepted);
 
@@ -114,11 +115,11 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         }
     }
 
-    function makeOffer(address payable _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, address _erc20Address, uint256 _daysValid) public {
+    function makeOffer(address payable _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, address _erc20Address, uint256 _daysValid, bool _isCounterOffer, uint256 _oldOfferId) public {
         require(approvedTokens[_erc20Address], "Must be listed price in approved token");
-        require(_to != _msgSender());
+        require(_to != msg.sender);
 
-        // if(!IERC721(viridianNFT).isApprovedForAll(_msgSender(), address(this))) {
+        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
         // }
 
@@ -127,16 +128,21 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
         uint256 endTime = block.timestamp + (_daysValid * 1 days);
 
-        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, payable(_msgSender()), _erc20Address, true, false, false, block.timestamp, endTime);
+        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, payable(msg.sender), _erc20Address, true, false, false, block.timestamp, endTime);
         
         userOffers[_to].push(newOffer);
-        userOffers[_msgSender()].push(newOffer);
+        userOffers[msg.sender].push(newOffer);
         offers[_offerId] = newOffer;
 
         doOfferingPartiesOwnContents(offers[_offerId]);
         offerIds.push(_offerId);
 
-        emit CreatedOffer(_offerId, _msgSender(), true);
+        if (_isCounterOffer) {
+            emit CreatedCounterOffer(_offerId, _oldOfferId, msg.sender, true);
+        }
+        else {
+            emit CreatedOffer(_offerId, msg.sender, true);
+        }
     }
 
     function removeOffer(Offer storage curOffer, Offer[] storage curUserOffers) private {
@@ -153,7 +159,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
  
     function cancelOffer(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
-        require(curOffer.from == _msgSender() || curOffer.to == _msgSender(), "Cannot be cancelled by non involved parties");
+        require(curOffer.from == msg.sender || curOffer.to == msg.sender, "Cannot be cancelled by non involved parties");
         require(!hasOfferExpired(_offerId), "Offer has expired");
         require(!curOffer.fromAccepted, "Cannot regular cancel when from party has accepted");
         require(!curOffer.toAccepted, "Cannot regular cancel when to party has accepted");
@@ -182,7 +188,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         // Remove offer from global mapping of offers
         delete offers[_offerId];
 
-        emit CancelledOffer(curOffer.offerId, _msgSender(), true);
+        emit CancelledOffer(curOffer.offerId, msg.sender, true);
     }
 
     function doOfferingPartiesOwnContents(Offer storage _curOffer) private view {
@@ -242,7 +248,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     function acceptOfferWithERC20(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
 
-        require(curOffer.to == _msgSender(), "Only offered account can accept offer");
+        require(curOffer.to == msg.sender, "Only offered account can accept offer");
         require(!hasOfferExpired(_offerId), "Offer has expired");
 
         Offer[] storage curUserOffers = userOffers[curOffer.to];
@@ -270,7 +276,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
         doOfferingPartiesOwnContents(curOffer);
 
-        // if(!IERC721(viridianNFT).isApprovedForAll(_msgSender(), address(this))) {
+        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
         // }
 
@@ -282,6 +288,6 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         curOffer.pending = false;
         setOffer.pending = false;
         setOfferO.pending = false;
-        emit AcceptedOffer(_offerId, _msgSender(), true);
+        emit AcceptedOffer(_offerId, msg.sender, true);
     }
 }

@@ -33014,12 +33014,12 @@
         }
       },
       "links": {},
-      "address": "0x61C51886bEB7bd4CcE1536009C9E0C63164F698c",
-      "transactionHash": "0x0a48e8f075ebd674392860ec1948e0d8e5453d01bb4926e8ba741a8c380826a5"
+      "address": "0xcc0165bC7419F58213f0e14efb808841C931Ea4a",
+      "transactionHash": "0xe9f2a12b0503afd534bf79e63e6dde0d1f6565e8bfa6e06a9fcd93a61ec2b894"
     }
   },
   "schemaVersion": "3.4.1",
-  "updatedAt": "2021-12-30T22:31:53.311Z",
+  "updatedAt": "2022-01-01T21:48:31.846Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

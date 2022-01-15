@@ -33,7 +33,7 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
+contract ERC20TokenGasless is Context, IERC20, Ownable, IERC20Metadata, BaseRelayRecipient {
 
     using SafeMath for uint256;
 
@@ -55,23 +55,30 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor() public {
+    constructor(address _forwarder) {
+        _setTrustedForwarder(_forwarder);
         _name = "Viridian Exchange Token";
         _symbol = "VEXT";
         _decimals = 18;
         uint amount = 200000000000000000000000000; // 200 Million Tokens w/ 18 Decimals
         _totalSupply = amount;
-        _balances[msg.sender] = amount;
-        emit Transfer(address(0), msg.sender, amount);
+        _balances[_msgSender()] = amount;
+        emit Transfer(address(0), _msgSender(), amount);
     }
 
-    // function msg.sender internal view override(Context, BaseRelayRecipient) returns (address) {
-    //     return BaseRelayRecipient.msg.sender;
-    // }
+    string public override versionRecipient = "2.2.0";
 
-    // function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
-    //     return BaseRelayRecipient._msgData();
-    // }
+    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
+        sender = BaseRelayRecipient._msgSender();
+    }
+
+    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
+        return BaseRelayRecipient._msgData();
+    }
+
+    function setTrustedForwarder(address _forwarder) public onlyOwner() {
+        _setTrustedForwarder(_forwarder);
+    }
 
     /**
      * @dev Returns the name of the token.
@@ -128,7 +135,7 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
      * - the caller must have a balance of at least `amount`.
      */
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        _transfer(msg.sender, recipient, amount);
+        _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
@@ -147,7 +154,7 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
      * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        _approve(msg.sender, spender, amount);
+        _approve(_msgSender(), spender, amount);
         return true;
     }
 
@@ -171,10 +178,10 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
     ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
 
-        uint256 currentAllowance = _allowances[sender][msg.sender];
+        uint256 currentAllowance = _allowances[sender][_msgSender()];
         require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
         unchecked {
-            _approve(sender, msg.sender, currentAllowance - amount);
+            _approve(sender, _msgSender(), currentAllowance - amount);
         }
 
         return true;
@@ -193,7 +200,7 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
      * - `spender` cannot be the zero address.
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
         return true;
     }
 
@@ -212,10 +219,10 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        uint256 currentAllowance = _allowances[msg.sender][spender];
+        uint256 currentAllowance = _allowances[_msgSender()][spender];
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
-            _approve(msg.sender, spender, currentAllowance - subtractedValue);
+            _approve(_msgSender(), spender, currentAllowance - subtractedValue);
         }
 
         return true;
@@ -327,7 +334,7 @@ contract ViridianToken is Context, IERC20, Ownable, IERC20Metadata {
     ) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
-        require(!((amount != 0) && (_allowances[msg.sender][spender] != 0)), "Can't approve due not being reduced to 0");
+        require(!((amount != 0) && (_allowances[_msgSender()][spender] != 0)), "Can't approve due not being reduced to 0");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);

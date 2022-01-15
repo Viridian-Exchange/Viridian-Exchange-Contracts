@@ -40097,12 +40097,12 @@
         }
       },
       "links": {},
-      "address": "0x942A1193371402A3926975134222486CD950c5d1",
-      "transactionHash": "0x9b82a3719c9ffc6a3840ee6231ab3db4bf9fcf5368330fa7c4f327c8b9580233"
+      "address": "0x2C3c114101980CA07495ecbDA3B50263B0428454",
+      "transactionHash": "0x22c80b848e3f46ef12349711886f5a09a71daf0722b9a341868ff36c49696228"
     }
   },
   "schemaVersion": "3.4.1",
-  "updatedAt": "2021-12-30T22:31:53.378Z",
+  "updatedAt": "2022-01-01T21:48:31.910Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

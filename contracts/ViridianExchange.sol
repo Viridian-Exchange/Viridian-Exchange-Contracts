@@ -14,7 +14,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
 
     event ItemListed(uint256 tokenId, string uri, address wallet, bool listed);
     event ItemUnlisted(uint256 tokenId, string uri, address wallet, bool listed);
-    event PurchasedListing(uint256 tokenId, string uri, address wallet, bool purchased);
+    event PurchasedListing(uint256 tokenId, uint256 price, string uri, address wallet, bool purchased);
 
     using Counters for Counters.Counter;
     Counters.Counter private _listingIds;
@@ -45,12 +45,12 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
     address public viridianPack;
     mapping (address => bool) public approvedTokens;
 
-    constructor(address _erc20Token, address _viridianNFT, address _viridianPack) {//, address _forwarder) {
+    constructor(address _erc20Token, address _viridianNFT, address _viridianPack, address _forwarder) {
         require(address(_erc20Token) != address(0), "Token address must not be the 0 address");
         require(address(_viridianNFT) != address(0), "Token address must not be the 0 address");
         require(address(_viridianPack) != address(0), "Token address must not be the 0 address");
 
-        //_setTrustedForwarder(_forwarder);
+        setTrustedForwarder(_forwarder);
 
         approvedTokens[_erc20Token] = true;
         viridianNFT = _viridianNFT;
@@ -249,6 +249,6 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
             IERC721(viridianPack).safeTransferFrom(curListing.owner, _msgSender(), curListing.tokenId);
             pullFromSaleOnBuy(_listingId);
         }
-        emit PurchasedListing(curListing.tokenId, vNFT.tokenURI(curListing.tokenId), _msgSender(), true);
+        emit PurchasedListing(curListing.tokenId, curListing.price, vNFT.tokenURI(curListing.tokenId), _msgSender(), true);
     }
 }

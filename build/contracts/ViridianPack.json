@@ -60439,12 +60439,12 @@
         }
       },
       "links": {},
-      "address": "0xD1D0293e366F07bc4dc5C8A0769855a71Ff78aBD",
-      "transactionHash": "0xc9ef6d146de4e2113c89c78af42006e199267e6d308def3e7f36d4be4e850f4d"
+      "address": "0xc0f97ABED9740118481A9D1E6bA1120d7337223A",
+      "transactionHash": "0x4666c9c1c311d1ac4f3a20e221501da5f50583310bcfaf53fc09729ec89221b7"
     }
   },
   "schemaVersion": "3.4.1",
-  "updatedAt": "2021-12-30T22:31:53.343Z",
+  "updatedAt": "2022-01-01T21:48:31.877Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

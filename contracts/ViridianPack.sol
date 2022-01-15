@@ -108,6 +108,14 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return BaseRelayRecipient._msgData();
     }
 
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view override returns (bool) {
+        if (admins[_msgSender()]) {
+            return true;
+        }
+
+        return super._isApprovedOrOwner(spender, tokenId);
+    }
+
     function addAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = true;
     }
