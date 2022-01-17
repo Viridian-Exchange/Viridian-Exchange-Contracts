@@ -33,13 +33,13 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
 
     using Strings for uint256;
 
-    constructor(address _viridianNFT/*, address _forwarder*/) ERC721("Viridian Pack", "VP") {
+    constructor(address _viridianNFT, address _forwarder) ERC721("Viridian Pack", "VP") {
 
         require(address(_viridianNFT) != address(0));
 
         viridianNFTAddr = _viridianNFT;
 
-        //_setTrustedForwarder(_forwarder);
+        _setTrustedForwarder(_forwarder);
 
         vNFT = ViridianNFT(viridianNFTAddr);
 
