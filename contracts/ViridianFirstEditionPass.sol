@@ -5,22 +5,21 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping(string => uint8) hashes;
     
     mapping(address => bool) admins;
-    
-    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(_msgSender(), _imx) {
-    //     admins[_msgSender()] = true;
-    // }
+    address treasury;
+    string defaultURI;
 
-    constructor(address _forwarder) ERC721("Viridian NFT", "VNFT") {
+    constructor(string memory _defaultURI, address _forwarder) ERC721("Viridian 1st Edition Pass", "V1EP") {
         _setTrustedForwarder(_forwarder);
-        
+        treasury = payable(_msgSender());
         admins[_msgSender()] = true;
+        defaultURI = _defaultURI;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -31,19 +30,9 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
     using Strings for uint256;
 
-    //TODO: Maybe add restrictions to NFT usage when it is listed on the exchange, do not allow ownership transfer 
-    // while it is listed for sale or offer to avoid issues with invalid purchasing, or just protect from transactions going through
-    // on exchange, ask someone about this scenario.
-
 
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
-
-    //mapping(uint256 => bytes) public blueprints;
-
-    mapping (uint256 => bool) private _tokensListed;
-
-    //address private viridianExchangeAddress;
 
     // Base URI
     string private _baseURIextended;
@@ -51,14 +40,6 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     modifier onlyAdmin() {
         require(admins[_msgSender()] == true);
             _;
-    }
-
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
-        sender = BaseRelayRecipient._msgSender();
-    }
-
-    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
-        return BaseRelayRecipient._msgData();
     }
 
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view override returns (bool) {
@@ -69,6 +50,14 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         return super._isApprovedOrOwner(spender, tokenId);
     }
 
+    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
+        sender = BaseRelayRecipient._msgSender();
+    }
+
+    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
+        return BaseRelayRecipient._msgData();
+    }
+
     function addAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = true;
     }
@@ -76,18 +65,23 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     function removeAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = false;
     }
-
-    // function setExchangeAddress(address ea) public onlyOwner() {
-    //     viridianExchangeAddress = ea;
-    // }
     
     function setBaseURI(string memory baseURI_) external onlyAdmin() {
         _baseURIextended = baseURI_;
     }
+
+    function setDefaultURI(string memory _defURI) public onlyAdmin() {
+        defaultURI = _defURI;
+    }
     
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) private {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "Must be owner or admin to change tokenURI");
         _tokenURIs[tokenId] = _tokenURI;
+    }
+
+    function _setTokenURIAdmin(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
+        _setTokenURI(tokenId, _tokenURI);
     }
     
     function _baseURI() internal view virtual override returns (string memory) {
@@ -148,20 +142,20 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         return _tokens;
     }
 
-    function mint(
-        address _to,
-        string memory tokenURI_
-    ) external onlyAdmin() {
-        _tokenIds.increment();
-        uint256 _tokenId = _tokenIds.current();
+    function mint(uint numMint) external payable {
+        require(numMint != 0, 'Cannot mint 0 nfts.');
+        require(1000000000000000000 * numMint == msg.value, "Must send correct amount of ETH to treasury address.");
+        (payable(treasury)).transfer(msg.value);
+        require(_tokenIds.current() + numMint <= 396, 'Minting over the pass limit');
 
-        _safeMint(_to, _tokenId);
-        _tokensListed[_tokenId] = false;
-        _setTokenURI(_tokenId, tokenURI_);
-    }
+        for (uint i = 0; i < numMint; i++) {
+            _tokenIds.increment();
+            uint256 _tokenId = _tokenIds.current();
+            require(_tokenId <= 396, 'All passes have been minted.');
 
-    function isListed(uint256 tokenId) public view returns (bool) {
-        return _tokensListed[tokenId];
+            _safeMint(_msgSender(), _tokenId);
+            _setTokenURI(_tokenId, defaultURI);
+        }
     }
 
     function burn(uint256 tokenId) public {
@@ -170,25 +164,11 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         _burn(tokenId);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
+    function bridge(uint256[] memory _bridgeTokenIds) public {
+        for (uint256 i = 0; i < _bridgeTokenIds.length; i++) {
+            require(_isApprovedOrOwner(_msgSender(), _bridgeTokenIds[i]));
 
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    function transferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
-
-        super.transferFrom(from, to, tokenId);
-    }
-
-    function listToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
-        _tokensListed[_tokenId] = true;
-    }
-
-    function unlistToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
-        _tokensListed[_tokenId] = false;
+            _burn(_bridgeTokenIds[i]);
+        }
     }
 }
