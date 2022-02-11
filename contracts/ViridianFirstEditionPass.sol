@@ -4,22 +4,26 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
-    mapping(string => uint8) hashes;
+    mapping(string => uint) hashes;
     
     mapping(address => bool) admins;
     address treasury;
     string defaultURI;
+    uint _mintPrice;
 
-    constructor(string memory _defaultURI, address _forwarder) ERC721("Viridian 1st Edition Pass", "V1EP") {
+    constructor(string memory _defaultURI, address _forwarder, address _treasury) ERC721("Viridian 1st Edition Pass", "V1EP") {
         _setTrustedForwarder(_forwarder);
-        treasury = payable(_msgSender());
+        treasury = payable(_treasury);
         admins[_msgSender()] = true;
         defaultURI = _defaultURI;
+        _mintPrice = 750000000000000000;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -28,11 +32,12 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
         _setTrustedForwarder(_forwarder);
     }
 
-    using Strings for uint256;
-
+    using Strings for uint;
+    using SafeMath for uint;
+    using SafeMath for uint8;
 
     // Optional mapping for token URIs
-    mapping (uint256 => string) private _tokenURIs;
+    mapping (uint => string) private _tokenURIs;
 
     // Base URI
     string private _baseURIextended;
@@ -42,7 +47,7 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
             _;
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view override returns (bool) {
+    function _isApprovedOrOwner(address spender, uint tokenId) internal view override returns (bool) {
         if (admins[_msgSender()]) {
             return true;
         }
@@ -56,6 +61,14 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
 
     function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
         return BaseRelayRecipient._msgData();
+    }
+
+    function setTreasury(address _newTreasury) public {
+        treasury = _newTreasury;
+    }
+
+    function setMintPrice(uint _newMintPrice) public onlyAdmin() {
+        _mintPrice = _newMintPrice;
     }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
@@ -74,13 +87,13 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
         defaultURI = _defURI;
     }
     
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) private {
+    function _setTokenURI(uint tokenId, string memory _tokenURI) private {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "Must be owner or admin to change tokenURI");
+        //require(_isApprovedOrOwner(_msgSender(), tokenId), "Must be owner or admin to change tokenURI");
         _tokenURIs[tokenId] = _tokenURI;
     }
 
-    function _setTokenURIAdmin(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
+    function _setTokenURIAdmin(uint tokenId, string memory _tokenURI) public virtual onlyAdmin() {
         _setTokenURI(tokenId, _tokenURI);
     }
     
@@ -88,7 +101,7 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
         return _baseURIextended;
     }
     
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(uint tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory _tokenURI = _tokenURIs[tokenId];
@@ -106,14 +119,14 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
-    function getNumNFTs() public view returns (uint256 n) {
+    function getNumNFTs() public view returns (uint n) {
         return _tokenIds.current();
     }
 
-    function getNumOwnedNFTs() public view virtual returns (uint256) {
-        uint256 numOwnedNFTs = 0;
+    function getNumOwnedNFTs() public view virtual returns (uint) {
+        uint16 numOwnedNFTs = 0;
 
-        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
+        for (uint16 i = 1; i <= _tokenIds.current(); i++) {
             if (_exists(i)) {
                 if (ownerOf(i) == _msgSender()) {
                     numOwnedNFTs++;
@@ -142,30 +155,56 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
         return _tokens;
     }
 
-    function mint(uint numMint) external payable {
-        require(numMint != 0, 'Cannot mint 0 nfts.');
-        require(1000000000000000000 * numMint == msg.value, "Must send correct amount of ETH to treasury address.");
-        (payable(treasury)).transfer(msg.value);
-        require(_tokenIds.current() + numMint <= 396, 'Minting over the pass limit');
+    function append(string memory a, string memory b, string memory c) internal pure returns (string memory) {
 
-        for (uint i = 0; i < numMint; i++) {
+        return string(abi.encodePacked(a, b, c));
+
+    }
+
+    function mintTo(address to, uint8 numMint) external onlyAdmin() {
+        require(numMint != 0, 'Cannot mint 0 nfts.');
+        require(numMint.add(_tokenIds.current()) <= 396, 'Minting over the pass limit');
+
+        for (uint8 i = 0; i < numMint; i++) {
             _tokenIds.increment();
             uint256 _tokenId = _tokenIds.current();
-            require(_tokenId <= 396, 'All passes have been minted.');
+            string memory _tokenIdStr = Strings.toString(_tokenId);
+            string memory defUriMem = defaultURI;
+            string memory fileType = ".json";
+            string memory _curTokenURI = append(defUriMem, _tokenIdStr, fileType);
 
-            _safeMint(_msgSender(), _tokenId);
-            _setTokenURI(_tokenId, defaultURI);
+            _safeMint(to, _tokenId);
+            _setTokenURI(_tokenId, _curTokenURI);
         }
     }
 
-    function burn(uint256 tokenId) public {
+    function mint(uint8 numMint) external payable {
+        require(numMint != 0, 'Cannot mint 0 nfts.');
+        require(numMint.mul(_mintPrice) == msg.value, "Must send correct amount of ETH to treasury address.");
+        (payable(treasury)).transfer(msg.value);
+        require(numMint.add(_tokenIds.current()) <= 396, 'Minting over the pass limit');
+
+        for (uint8 i = 0; i < numMint; i++) {
+            _tokenIds.increment();
+            uint256 _tokenId = _tokenIds.current();
+            string memory _tokenIdStr = Strings.toString(_tokenId);
+            string memory defUriMem = defaultURI;
+            string memory fileType = ".json";
+            string memory _curTokenURI = append(defUriMem, _tokenIdStr, fileType);
+
+            _safeMint(_msgSender(), _tokenId);
+            _setTokenURI(_tokenId, _curTokenURI);
+        }
+    }
+
+    function burn(uint tokenId) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId));
 
         _burn(tokenId);
     }
 
-    function bridge(uint256[] memory _bridgeTokenIds) public {
-        for (uint256 i = 0; i < _bridgeTokenIds.length; i++) {
+    function bridge(uint[] memory _bridgeTokenIds) public {
+        for (uint i = 0; i < _bridgeTokenIds.length; i++) {
             require(_isApprovedOrOwner(_msgSender(), _bridgeTokenIds[i]));
 
             _burn(_bridgeTokenIds[i]);

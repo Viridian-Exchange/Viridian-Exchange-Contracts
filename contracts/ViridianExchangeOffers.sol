@@ -49,6 +49,10 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     uint256[] private offerIds;
     mapping (uint256 => uint256) highestCardOffer;
 
+    address private treasuryAddress;
+    uint256 private baseRoyalty;
+    uint256 private whitelistRoyalty;
+
     address public viridianNFT;
     address public viridianPack;
     mapping (address => bool) public approvedTokens;
@@ -59,6 +63,10 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         require(address(_viridianPack) != address(0));
 
         _setTrustedForwarder(_forwarder);
+
+        treasuryAddress = _msgSender();
+        baseRoyalty = 5;
+        whitelistRoyalty = 0;
 
         approvedTokens[_erc20Token] = true;
         //address _ETH, ETH = _ETH;
@@ -73,6 +81,14 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
     function setTrustedForwarder(address _forwarder) public onlyOwner() {
         _setTrustedForwarder(_forwarder);
+    }
+
+    function setRoyalty(uint256 _newRoyalty) public onlyOwner() {
+        baseRoyalty = _newRoyalty;
+    }
+
+    function setWhitelistRoyalty(uint256 _newRoyalty) public onlyOwner() {
+        baseRoyalty = _newRoyalty;
     }
 
     function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
@@ -280,8 +296,11 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
         // }
 
-        IERC20(curOffer.erc20Address).transferFrom(curOffer.from, curOffer.to, curOffer.toAmt);
-        IERC20(curOffer.erc20Address).transferFrom(curOffer.to, curOffer.from, curOffer.fromAmt);
+        IERC20(curOffer.erc20Address).transferFrom(curOffer.from, treasuryAddress, (curOffer.toAmt / 100) * baseRoyalty);
+        IERC20(curOffer.erc20Address).transferFrom(curOffer.from, curOffer.to, curOffer.toAmt - ((curOffer.toAmt / 100) * baseRoyalty));
+
+        IERC20(curOffer.erc20Address).transferFrom(curOffer.to, treasuryAddress, (curOffer.fromAmt / 100) * baseRoyalty);
+        IERC20(curOffer.erc20Address).transferFrom(curOffer.to, curOffer.from, curOffer.fromAmt - ((curOffer.fromAmt / 100) * baseRoyalty));
 
         transferAllOfferContents(curOffer);
 

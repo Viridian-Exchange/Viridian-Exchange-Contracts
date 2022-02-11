@@ -23,5 +23,5 @@ module.exports = async function(deployer) {
   await deployer.deploy(ViridianExchange, tokenAddr, nftAddr, packAddr, forwarderAddress).then(c => excAddr = c.address);
   await deployer.deploy(ViridianExchangeOffers, tokenAddr, nftAddr, packAddr, forwarderAddress).then(c => excOffAddr = c.address);
   await deployer.deploy(RandomNumber, packAddr, forwarderAddress).then(c => vrfAddr = c.address);
-  await deployer.deploy(ViridianPass, 'https://d4xub33rt3s5u.cloudfront.net/v1ep.json', passForwarderAddress).then(c => passAddr = c.address);
+  await deployer.deploy(ViridianPass, 'https://d4xub33rt3s5u.cloudfront.net/v1ep.json', passForwarderAddress, '0x341Ab3097C45588AF509db745cE0823722E5Fb19').then(c => passAddr = c.address);
 };

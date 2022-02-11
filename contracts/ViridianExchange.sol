@@ -28,7 +28,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         address owner;
         uint256 price;
         bool purchased;
-        uint256 royalty;
+        uint256 baseRoyalty;
         uint256 endTime;
         bool sold;
         address erc20Address;
@@ -41,6 +41,11 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
     address[] private userAddresses;
     uint256[] private listingIds;
 
+    uint256 private baseRoyalty;
+    uint256 private whitelistRoyalty;
+
+    address private treasuryAddress;
+
     address public viridianNFT;
     address public viridianPack;
     mapping (address => bool) public approvedTokens;
@@ -49,6 +54,10 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         require(address(_erc20Token) != address(0), "Token address must not be the 0 address");
         require(address(_viridianNFT) != address(0), "Token address must not be the 0 address");
         require(address(_viridianPack) != address(0), "Token address must not be the 0 address");
+
+        treasuryAddress = _msgSender();
+        baseRoyalty = 5;
+        whitelistRoyalty = 0;
 
         setTrustedForwarder(_forwarder);
 
@@ -66,13 +75,20 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         _setTrustedForwarder(_forwarder);
     }
 
-
     function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
         sender = BaseRelayRecipient._msgSender();
     }
 
     function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
         return BaseRelayRecipient._msgData();
+    }
+
+    function setRoyalty(uint256 _newRoyalty) public onlyOwner() {
+        baseRoyalty = _newRoyalty;
+    }
+
+    function setWhitelistRoyalty(uint256 _newRoyalty) public onlyOwner() {
+        baseRoyalty = _newRoyalty;
     }
 
     function addERC20Token(address _erc20Address) public onlyOwner() {
@@ -109,6 +125,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, address _erc20Address, bool _isVNFT) public {
         require(approvedTokens[_erc20Address], "Must be listed price in approved token");
+
         if (_isVNFT) {
             require(getNftOwner(_nftId) == _msgSender(), "Must be owner to list vnft");
             require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
@@ -135,7 +152,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         saleListing.owner = _msgSender();
         saleListing.price = _price;
         saleListing.purchased = false;
-        saleListing.royalty = _royalty;
+        saleListing.baseRoyalty = _royalty;
         saleListing.endTime = _endTime;
         saleListing.sold = false;
         saleListing.erc20Address = _erc20Address;
@@ -234,7 +251,8 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         if(curListing.isVNFT) {
             vNFT.unlistToken(curListing.tokenId);
 
-            IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, curListing.price);
+            IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, (curListing.price / 100) * baseRoyalty);
+            IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, curListing.price - ((curListing.price / 100) * baseRoyalty));
 
             IERC721(viridianNFT).approve(_msgSender(), curListing.tokenId);
             IERC721(viridianNFT).safeTransferFrom(curListing.owner, _msgSender(), curListing.tokenId);
@@ -243,7 +261,8 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         else {
             vPack.unlistToken(curListing.tokenId);
 
-            IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, curListing.price);
+            IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, (curListing.price / 100) * baseRoyalty);
+            IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, curListing.price - ((curListing.price / 100) * baseRoyalty));
 
             IERC721(viridianPack).approve(_msgSender(), curListing.tokenId);
             IERC721(viridianPack).safeTransferFrom(curListing.owner, _msgSender(), curListing.tokenId);
