@@ -38,8 +38,10 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
 
     mapping (address => Listing[]) userListings;
     mapping (uint256 => Listing) listings;
+    mapping (uint256 => Listing) soldListings;
     address[] private userAddresses;
     uint256[] private listingIds;
+    uint256[] private soldListingIds;
 
     uint256 private baseRoyalty;
     uint256 private whitelistRoyalty;
@@ -242,6 +244,10 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
             }
         }
 
+        //TODO: Make sure this is correct
+        soldListings[_listingId] = curListing;
+        soldListingIds.push(_listingId);
+
         delete listings[_listingId];
     }
 
@@ -269,5 +275,12 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
             pullFromSaleOnBuy(_listingId);
         }
         emit PurchasedListing(curListing.tokenId, curListing.price, vNFT.tokenURI(curListing.tokenId), _msgSender(), true);
+    }
+
+    function rollbackSales(uint256 _tokenId) external onlyOwner() {
+        // Loop through all previous sales that contain the _tokenId
+        // Put then in order in a list
+        // Loop through in-order, reimburse the current holder the full amount they paid, and reimburse the
+        // initial purchase price - final sale price if the final sale is lower than the purchase/
     }
 }
