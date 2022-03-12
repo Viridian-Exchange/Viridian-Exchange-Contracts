@@ -48,6 +48,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     mapping (uint256 => Offer) offers;
     uint256[] private offerIds;
     mapping (uint256 => uint256) highestCardOffer;
+    mapping (uint256 => bool) tokenIdBlacklist;
 
     address private treasuryAddress;
     uint256 private baseRoyalty;
