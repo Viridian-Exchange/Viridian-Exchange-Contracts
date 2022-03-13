@@ -58,14 +58,14 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     address public viridianPack;
     mapping (address => bool) public approvedTokens;
 
-    constructor(address _erc20Token, address _viridianNFT, address _viridianPack, address _forwarder) {
+    constructor(address _erc20Token, address _viridianNFT, address _viridianPack, address _forwarder, address _treasuryAddress) {
         require(address(_erc20Token) != address(0));
         require(address(_viridianNFT) != address(0));
         require(address(_viridianPack) != address(0));
 
         _setTrustedForwarder(_forwarder);
 
-        treasuryAddress = _msgSender();
+        treasuryAddress = _treasuryAddress;
         baseRoyalty = 5;
         whitelistRoyalty = 0;
 
