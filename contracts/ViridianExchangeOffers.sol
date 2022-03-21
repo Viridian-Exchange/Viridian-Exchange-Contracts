@@ -70,7 +70,6 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         whitelistRoyalty = 0;
 
         approvedTokens[_erc20Token] = true;
-        //address _ETH, ETH = _ETH;
         viridianNFT = _viridianNFT;
         viridianPack = _viridianPack;
 
