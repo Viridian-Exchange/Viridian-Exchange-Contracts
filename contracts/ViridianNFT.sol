@@ -33,17 +33,11 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
     using Strings for uint256;
 
-    //TODO: Maybe add restrictions to NFT usage when it is listed on the exchange, do not allow ownership transfer 
-    // while it is listed for sale or offer to avoid issues with invalid purchasing, or just protect from transactions going through
-    // on exchange, ask someone about this scenario.
-
 
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
     //mapping(uint256 => bytes) public blueprints;
-
-    mapping (uint256 => bool) private _tokensListed;
 
     //address private viridianExchangeAddress;
 
@@ -158,39 +152,12 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 _tokenId = _tokenIds.current();
 
         _safeMint(_to, _tokenId);
-        _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
-    }
-
-    function isListed(uint256 tokenId) public view returns (bool) {
-        return _tokensListed[tokenId];
     }
 
     function burn(uint256 tokenId) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId));
 
         _burn(tokenId);
-    }
-
-    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
-
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    function transferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
-
-        super.transferFrom(from, to, tokenId);
-    }
-
-    function listToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
-        _tokensListed[_tokenId] = true;
-    }
-
-    function unlistToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
-        _tokensListed[_tokenId] = false;
     }
 }

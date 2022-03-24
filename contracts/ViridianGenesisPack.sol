@@ -200,4 +200,10 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
         emit Open(_newTokenURI);
     }
+
+    function burn(uint256 tokenId) public {
+        require(_isApprovedOrOwner(_msgSender(), tokenId));
+
+        _burn(tokenId);
+    }
 }

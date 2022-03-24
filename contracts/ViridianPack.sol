@@ -19,7 +19,6 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
     mapping(uint256 => mapping(uint256 => uint256)) private rarityOdds;
     mapping(uint256 => uint256) private numNFTs;
     //mapping(uint256 => string) private unmintedURIs;
-    mapping(uint256 => bool) private _tokensListed;
     mapping(uint256 => uint256) tokenRarity;
     mapping(uint256 => string[]) private uriRarityPools;
     int private maxRarityIndex;
@@ -201,10 +200,6 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         rarityOdds[_rarity][_rarityOdd] = _newOdds;
     }
 
-    function isListed(uint256 tokenId) public view returns (bool) {
-        return _tokensListed[tokenId];
-    }
-
     function mint(
         address _to,
         string memory tokenURI_
@@ -213,7 +208,6 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         uint256 _tokenId = _tokenIds.current();
 
         _safeMint(_to, _tokenId);
-        _tokensListed[_tokenId] = false;
         _setTokenURI(_tokenId, tokenURI_);
     }
 
@@ -335,29 +329,5 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         require(_isApprovedOrOwner(_msgSender(), tokenId));
 
         _burn(tokenId);
-    }
-
-    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
-        require(!packResultDecided[tokenId], "Viridian NFT: Can only open pack once result is decided");
-
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    function transferFrom(address from, address to, uint256 tokenId) public override {
-        require(!_tokensListed[tokenId], "Viridian NFT: Cannot transfer while listed on Viridian Exchange");
-        require(!packResultDecided[tokenId], "Viridian NFT: Can only open pack once result is decided");
-
-        super.transferFrom(from, to, tokenId);
-    }
-
-    function listToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
-        _tokensListed[_tokenId] = true;
-    }
-
-    function unlistToken(uint256 _tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), _tokenId));
-        _tokensListed[_tokenId] = false;
     }
 }

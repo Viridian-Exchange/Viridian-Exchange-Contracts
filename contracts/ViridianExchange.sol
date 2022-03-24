@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -128,14 +130,14 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, address _erc20Address, bool _isVNFT) public {
         require(approvedTokens[_erc20Address], "Must be listed price in approved token");
-        
+
         if (_isVNFT) {
             require(getNftOwner(_nftId) == _msgSender(), "Must be owner to list vnft");
-            require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
+            //require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
         }
         else {
             require(getPackOwner(_nftId) == _msgSender(), "Must be owner to list pack");
-            require(!vPack.isListed(_nftId), "Cannot create multiple listings for one pack");
+            //require(!vPack.isListed(_nftId), "Cannot create multiple listings for one pack");
         }
         
         //TODO: Maybe put this back
@@ -167,12 +169,12 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         listings[_listingId] = saleListing;
         listingIds.push(saleListing.listingId);
 
-        if (_isVNFT) {
-            vNFT.listToken(_nftId);
-        }
-        else {
-            vPack.listToken(_nftId);
-        }
+        // if (_isVNFT) {
+        //     vNFT.listToken(_nftId);
+        // }
+        // else {
+        //     vPack.listToken(_nftId);
+        // }
 
         //ERC20(viridianToken).approve(address(this), _price);
 
@@ -190,12 +192,12 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         Listing memory curListing = listings[_listingId];
         require(curListing.owner == _msgSender(), "Must be the owner to pull from sale");
         //IERC721(viridianNFT).safeTransferFrom(address(this), _msgSender(), curListing.tokenId);
-        if(curListing.isVNFT) {
-            vNFT.unlistToken(curListing.tokenId);
-        }
-        else {
-            vPack.unlistToken(curListing.tokenId);
-        }
+        // if(curListing.isVNFT) {
+        //     vNFT.unlistToken(curListing.tokenId);
+        // }
+        // else {
+        //     vPack.unlistToken(curListing.tokenId);
+        // }
 
         Listing[] storage curUserListings = userListings[_msgSender()];
         for (uint i = 0; i < curUserListings.length; i++) {
@@ -256,7 +258,8 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         Listing memory curListing = listings[_listingId];
 
         if(curListing.isVNFT) {
-            vNFT.unlistToken(curListing.tokenId);
+            //vNFT.unlistToken(curListing.tokenId);
+            require(curListing.owner == IERC721(viridianNFT).ownerOf(curListing.tokenId), "Listing inactive: listing creator not longer owns the token.");
 
             IERC20(curListing.erc20Address).transferFrom(_msgSender(), treasuryAddress, (curListing.price / 100) * baseRoyalty);
             IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, curListing.price - ((curListing.price / 100) * baseRoyalty));
@@ -266,7 +269,8 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
             pullFromSaleOnBuy(_listingId);
         }
         else {
-            vPack.unlistToken(curListing.tokenId);
+            //vPack.unlistToken(curListing.tokenId);
+             require(curListing.owner == IERC721(viridianPack).ownerOf(curListing.tokenId), "Listing inactive: listing creator not longer owns the token.");
 
             IERC20(curListing.erc20Address).transferFrom(_msgSender(), treasuryAddress, (curListing.price / 100) * baseRoyalty);
             IERC20(curListing.erc20Address).transferFrom(_msgSender(), curListing.owner, curListing.price - ((curListing.price / 100) * baseRoyalty));
