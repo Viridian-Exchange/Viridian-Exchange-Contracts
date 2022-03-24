@@ -17,7 +17,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     mapping(string => uint8) hashes;
     mapping(uint256 => string) private _mintURIs;
     string public packURI;
-    string public mintURIPrefix;
+    string private mintURIPrefix;
+    uint private mintURIPrefixLen;
 
     mapping(address => bool) admins;
 
@@ -42,6 +43,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         packURI = _packURI;
 
         mintURIPrefix = "https://d4xub33rt3s5u.cloudfront.net";
+        mintURIPrefixLen = 36;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -96,6 +98,10 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     function setMintURIPrefix(string memory _newMintURIPrefix) external onlyAdmin() {
         mintURIPrefix = _newMintURIPrefix;
+    }
+
+    function setMintURIPrefixLen(uint _newMintURIPrefixLen) external onlyAdmin() {
+        mintURIPrefixLen = _newMintURIPrefixLen;
     }
     
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
@@ -161,10 +167,19 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return _tokens;
     }
 
+    function getSlice(uint256 begin, uint256 end, string memory text) public pure returns (string memory) {
+        bytes memory a = new bytes(end-begin+1);
+        for(uint i=0;i<=end-begin;i++){
+            a[i] = bytes(text)[i+begin-1];
+        }
+        return string(a);    
+    }
+
     function mint(
         address _to,
         string memory _mintURI
     ) external onlyAdmin() {
+        require(keccak256(abi.encodePacked(getSlice(0, mintURIPrefixLen, _mintURI))) == keccak256(abi.encodePacked(mintURIPrefix)), "The prefix of the uri does not match.");
         _tokenIds.increment();
         uint256 _tokenId = _tokenIds.current();
 
