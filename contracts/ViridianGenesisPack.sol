@@ -17,6 +17,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     mapping(string => uint8) hashes;
     mapping(uint256 => string) private _mintURIs;
     string public packURI;
+    string public mintURIPrefix;
 
     mapping(address => bool) admins;
 
@@ -39,6 +40,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         admins[_msgSender()] = true;
 
         packURI = _packURI;
+
+        mintURIPrefix = "https://d4xub33rt3s5u.cloudfront.net";
     }
 
     string public override versionRecipient = "2.2.0";
@@ -89,6 +92,10 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     
     function setBaseURI(string memory baseURI_) external onlyAdmin() {
         _baseURIextended = baseURI_;
+    }
+
+    function setMintURIPrefix(string memory _newMintURIPrefix) external onlyAdmin() {
+        mintURIPrefix = _newMintURIPrefix;
     }
     
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
