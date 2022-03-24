@@ -7,35 +7,32 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-import "./RandomNumber.sol";
+import "./RandomNumberGP.sol";
 import "./ViridianNFT.sol";
 
-contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     Counters.Counter private _unmintedTokenIds;
     mapping(string => uint8) hashes;
-    mapping(uint256 => mapping(uint256 => uint256)) private rarityOdds;
-    mapping(uint256 => uint256) private numNFTs;
-    //mapping(uint256 => string) private unmintedURIs;
     mapping(uint256 => bool) private _tokensListed;
-    mapping(uint256 => uint256) tokenRarity;
-    mapping(uint256 => string[]) private uriRarityPools;
-    int private maxRarityIndex;
+    string[] unmintedURIs;
 
     mapping(uint256 => bool) private packResultDecided;
 
     mapping(address => bool) admins;
 
+    uint256 numNFTsInPacks;
+
     address public viridianNFTAddr;
 
     ViridianNFT vNFT;
-    RandomNumberConsumer vrf;
+    RandomNumberConsumerGenesis vrf;
 
     using Strings for uint256;
 
-    constructor(address _viridianNFT, address _forwarder) ERC721("Viridian Pack", "VP") {
+    constructor(address _viridianNFT, address _forwarder, uint256 _numNFTsInPacks) ERC721("Viridian Genesis Pack", "VGP") {
 
         require(address(_viridianNFT) != address(0));
 
@@ -45,39 +42,9 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
 
         vNFT = ViridianNFT(viridianNFTAddr);
 
-        //Set all beginning rarities
-
-        // Legendary rarity and cards in pack
-        rarityOdds[0][0] = 25;
-        rarityOdds[0][1] = 100;
-        rarityOdds[0][2] = 300;
-        rarityOdds[0][3] = 1000;
-        numNFTs[0] = 3;
-
-        // Mystical rarity and cards in pack
-        rarityOdds[1][0] = 1;
-        rarityOdds[1][1] = 50;
-        rarityOdds[1][2] = 200;
-        rarityOdds[1][3] = 1000;
-        numNFTs[0] = 3;
-
-        // Rare rarity and cards in pack
-        rarityOdds[2][0] = 0;
-        rarityOdds[2][1] = 50;
-        rarityOdds[2][2] = 100;
-        rarityOdds[2][3] = 1000;
-        numNFTs[0] = 3;
-
-        // Common rarity and cards in pack
-        rarityOdds[3][0] = 0;
-        rarityOdds[3][1] = 10;
-        rarityOdds[3][2] = 50;
-        rarityOdds[3][3] = 1000;
-        numNFTs[0] = 3;
-
-        maxRarityIndex = 3;
-
         admins[_msgSender()] = true;
+
+        numNFTsInPacks = _numNFTsInPacks;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -157,8 +124,8 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
-    function getUriRarityPools(uint256 _rarity) public view onlyAdmin() returns (string[] memory) {
-        return uriRarityPools[_rarity];
+    function softMintNFT(string memory uri) public onlyAdmin() {
+        unmintedURIs.push(uri);
     }
 
     function getNumNFTs() public view returns (uint256 n) {
@@ -197,10 +164,6 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return _tokens;
     }
 
-    function setRarityOdds(uint256 _rarity, uint256 _rarityOdd, uint256 _newOdds) external onlyAdmin() {
-        rarityOdds[_rarity][_rarityOdd] = _newOdds;
-    }
-
     function isListed(uint256 tokenId) public view returns (bool) {
         return _tokensListed[tokenId];
     }
@@ -217,43 +180,12 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         _setTokenURI(_tokenId, tokenURI_);
     }
 
-    //TODO: THIS IS NOT TO BE USED IN FINAL DEPLOYED IMPLEMENTATION, convert to LINK VRF for TESTNET and ESPECIALLY MAINNET!!!
-    uint nonce;
-
-    function calculateWeightedOdds(uint256 randomNum, mapping(uint256 => uint256) storage rarityOdd) private view returns (uint) {
-        uint256 n;
-
-        for (n = 0; int(n) < int(maxRarityIndex); n++) {
-            if (randomNum <= rarityOdd[n]) {
-                return n;
-            }
-        }
-
-        return n;
-    }
-
-    function softMintNFT(string memory uri, uint256 rarity) public onlyAdmin() {
-        uriRarityPools[rarity].push(uri);
-    }
-
-    function burnSoftMintedNFTAtRarityIndex(uint256 rarity, uint256 index) public onlyAdmin() {
-        string[] memory curRarityPool = uriRarityPools[rarity];
-            for (uint i = 0; i < uriRarityPools[rarity].length; i++) {
-                if (i == index) {
-                    curRarityPool[i] = curRarityPool[curRarityPool.length - 1];
-                    uriRarityPools[rarity] = curRarityPool;
-                    uriRarityPools[rarity].pop();
-                    break;
-                }
-            }
-    }
-
     function compareStrings(string memory _s, string memory _s1) public pure returns (bool) {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
 
     function configureVRF(address _vrfAddress) public {
-        vrf = RandomNumberConsumer(_vrfAddress);
+        vrf = RandomNumberConsumerGenesis(_vrfAddress);
     }
 
     function lockInPackResult(uint256 _tokenId) public {
@@ -269,61 +201,43 @@ contract ViridianPack is ERC721, Ownable, BaseRelayRecipient {
         return packResultDecided[_tokenId];
     }
 
-    function getRandIndexPercentOdds(uint256 _tokenId) public view onlyAdmin() returns (uint256) {
-        uint256 randRes = vrf.getRandomResultForToken(_tokenId);
-        uint256 tr = tokenRarity[_tokenId];
-        uint256 randIndexWithPercentOdds = calculateWeightedOdds(randRes, rarityOdds[tr]);
-        return randIndexWithPercentOdds;
-    }
-
-    function getRandIndexRarity(uint256 _tokenId) public view onlyAdmin() returns (uint256) {
-        uint256 rawRandRes = vrf.getRandomRawResultForToken(_tokenId);
-
-        uint256 randRes = vrf.getRandomResultForToken(_tokenId);
-        uint256 tr = tokenRarity[_tokenId];
-        uint256 randIndexWithPercentOdds = calculateWeightedOdds(randRes, rarityOdds[tr]);
-
-        uint256 randIndexInRarity = rawRandRes % (uriRarityPools[randIndexWithPercentOdds].length - 1);
-
-        return randIndexInRarity;
-    }
-
     function openPack(uint256 _tokenId) public {
         // Randomly 
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "Viridian Pack: must be approved or owner to open");
         require(packResultDecided[_tokenId], "Viridian Pack: pack result not decided yet");
 
-        uint256 rawRandRes = vrf.getRandomRawResultForToken(_tokenId);
-        uint256 randRes = vrf.getRandomResultForToken(_tokenId);
+        uint256[3] memory randRes = vrf.getRandomResultForToken(_tokenId);
 
-        require(rawRandRes > 0, "Viridian Pack: VRF hasn't generated random raw result yet");
-        require(randRes > 0, "Viridian Pack: VRF hasn't generated random result yet");
-
-        uint256 tr = tokenRarity[_tokenId];
+        //require(rawRandRes > 0, "Viridian Pack: VRF hasn't generated random raw result yet");
+        require(randRes[0] > 0, "Viridian Pack: VRF hasn't generated random result yet");
+        require(randRes[1] > 0, "Viridian Pack: VRF hasn't generated random result yet");
+        require(randRes[2] > 0, "Viridian Pack: VRF hasn't generated random result yet");
 
         string[10] memory newUris;
 
-        //Need to delete the item from the rarity pool before minting happens again
-        for (uint8 n = 0; n < numNFTs[tr]; n++) {
-            uint256 randIndexWithPercentOdds = calculateWeightedOdds(randRes, rarityOdds[tr]);
-            uint256 randIndexInRarity = rawRandRes % (uriRarityPools[randIndexWithPercentOdds].length - 1);
-
-            string memory newURI = uriRarityPools[randIndexWithPercentOdds][randIndexInRarity];
+        // Need to delete the item from the unmintedNFTs minting happens again
+        // Loop through the number of NFTs in the packs and then mint each random result
+        for (uint8 n = 0; n < numNFTsInPacks; n++) {
+        
+            string memory newURI = unmintedURIs[randRes[n]];
 
             vNFT.mint(_msgSender(), newURI);
 
-            newUris[n] = newURI;
+            newUris[randRes[n]] = newURI;
+        
+            string[] memory unmintedURIsCopy = unmintedURIs;
 
-            string[] memory curRarityPool = uriRarityPools[randIndexWithPercentOdds];
-            for (uint i = 0; i < uriRarityPools[randIndexWithPercentOdds].length; i++) {
-                string memory uri = uriRarityPools[randIndexWithPercentOdds][i];
+            for (uint i = 0; i < unmintedURIs.length; i++) {
+                string memory uri = unmintedURIs[i];
                 if (compareStrings(uri, newURI)) {
-                    curRarityPool[i] = curRarityPool[curRarityPool.length - 1];
-                    uriRarityPools[randIndexWithPercentOdds] = curRarityPool;
-                    uriRarityPools[randIndexWithPercentOdds].pop();
+                    unmintedURIsCopy[i] = unmintedURIsCopy[unmintedURIsCopy.length - 1];
+                    unmintedURIs = unmintedURIsCopy;
+                    unmintedURIs.pop();
                     break;
                 }
             }
+
+            vrf.setMaxRange(unmintedURIs.length);
         }
 
         burn(_tokenId);

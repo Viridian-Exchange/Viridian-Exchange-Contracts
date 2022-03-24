@@ -128,7 +128,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
 
     function putUpForSale(uint256 _nftId, uint256 _price, uint256 _royalty, uint256 _endTime, address _erc20Address, bool _isVNFT) public {
         require(approvedTokens[_erc20Address], "Must be listed price in approved token");
-
+        
         if (_isVNFT) {
             require(getNftOwner(_nftId) == _msgSender(), "Must be owner to list vnft");
             require(!vNFT.isListed(_nftId), "Cannot create multiple listings for one nft");
