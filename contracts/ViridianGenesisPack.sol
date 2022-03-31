@@ -176,16 +176,17 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     }
 
     function mint(
-        address _to,
-        string memory _mintURI
-    ) external onlyAdmin() {
-        require(keccak256(abi.encodePacked(getSlice(0, mintURIPrefixLen, _mintURI))) == keccak256(abi.encodePacked(mintURIPrefix)), "The prefix of the uri does not match.");
-        _tokenIds.increment();
-        uint256 _tokenId = _tokenIds.current();
+        uint256 _numMint
+    ) public {
+        for (uint i; i < _numMint; i++) {
+            _tokenIds.increment();
+            uint256 _tokenId = _tokenIds.current();
 
-        _safeMint(_to, _tokenId);
-        _setTokenURI(_tokenId, packURI);
-        _mintURIs[_tokenId] = _mintURI;
+            require(keccak256(abi.encodePacked(getSlice(0, mintURIPrefixLen, _mintURIs[_tokenId]))) == keccak256(abi.encodePacked(mintURIPrefix)), "The prefix of the uri does not match.");
+            _safeMint(_msgSender(), _tokenId);
+            _setTokenURI(_tokenId, packURI);
+            _mintURIs[_tokenId] = _mintURIs[_tokenId];
+        }
     }
 
     function compareStrings(string memory _s, string memory _s1) public pure returns (bool) {
