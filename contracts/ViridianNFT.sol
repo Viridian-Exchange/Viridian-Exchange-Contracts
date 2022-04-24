@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
@@ -14,15 +15,9 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     mapping(string => uint8) hashes;
     
     mapping(address => bool) admins;
-    
-    // constructor(address _imx) ERC721("Viridian NFT", "VNFT") Mintable(_msgSender(), _imx) {
-    //     admins[_msgSender()] = true;
-    // }
 
     constructor(address _forwarder) ERC721("Viridian NFT", "VNFT") {
         _setTrustedForwarder(_forwarder);
-        
-        admins[_msgSender()] = true;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -36,10 +31,6 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
 
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
-
-    //mapping(uint256 => bytes) public blueprints;
-
-    //address private viridianExchangeAddress;
 
     // Base URI
     string private _baseURIextended;
@@ -57,12 +48,15 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         return BaseRelayRecipient._msgData();
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view override returns (bool) {
-        if (admins[_msgSender()]) {
+    function isApprovedForAll(
+        address _owner,
+        address _operator
+    ) public override view returns (bool isOperator) {
+       if (admins[_msgSender()]) {
             return true;
         }
-
-        return super._isApprovedOrOwner(spender, tokenId);
+        // otherwise, use the default ERC721.isApprovedForAll()
+        return ERC721.isApprovedForAll(_owner, _operator);
     }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
@@ -72,10 +66,6 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     function removeAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = false;
     }
-
-    // function setExchangeAddress(address ea) public onlyOwner() {
-    //     viridianExchangeAddress = ea;
-    // }
     
     function setBaseURI(string memory baseURI_) external onlyAdmin() {
         _baseURIextended = baseURI_;
@@ -144,19 +134,49 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         return _tokens;
     }
 
+    function exists(uint256 _tokenId) public view returns (bool) {
+        return _exists(_tokenId);
+    }
+
+    function append(string memory a, string memory b, string memory c) internal pure returns (string memory) {
+
+        return string(abi.encodePacked(a, b, c));
+
+    }
+
     function mint(
         address _to,
-        string memory tokenURI_
+        string memory _fingerprint
     ) external onlyAdmin() {
-        _tokenIds.increment();
-        uint256 _tokenId = _tokenIds.current();
+        uint256 _tokenId = uint256(keccak256(abi.encode(_fingerprint)));
+        string memory _bUri = _baseURIextended;
+        string memory tokenURI_ = append(_bUri, Strings.toString(_tokenId), "");
 
         _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, tokenURI_);
     }
 
-    function burn(uint256 tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), tokenId));
+    function mintFromPack(
+        address _to,
+        uint256 _tokenId
+    ) external onlyAdmin() {
+        string memory _bUri = _baseURIextended;
+        string memory tokenURI_ = append(_bUri, Strings.toString(_tokenId), "");
+
+        _safeMint(_to, _tokenId);
+        _setTokenURI(_tokenId, tokenURI_);
+    }
+
+    function generateProofOfIntegrity(string memory base, uint256 salt) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(base, salt));
+    }
+
+    function verifyProofOfIntegrity(uint256 _tokenId, string memory base, uint256 salt) public pure returns (bool) {
+        return bytes32(_tokenId) == generateProofOfIntegrity(base, salt);
+    }
+
+    function burn(uint256 tokenId) public virtual {
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved to burn");
 
         _burn(tokenId);
     }

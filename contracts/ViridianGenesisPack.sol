@@ -9,16 +9,24 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
 import "./ViridianNFT.sol";
 
+
 contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
-    Counters.Counter private _unmintedTokenIds;
-    mapping(string => uint8) hashes;
-    mapping(uint256 => string) private _mintURIs;
+    Counters.Counter private numMinted;
+    Counters.Counter private fingerprintIndex;
+
     string public packURI;
-    string private mintURIPrefix;
-    uint private mintURIPrefixLen;
+
+    bool private openingLocked = true;
+    bool private allowWhitelistMinting = false;
+    bool private allowPublicMinting = false;
+
+    mapping(address => uint8) private _whitelist;
+
+    uint256 public maxMinted = 2000;
+
+    mapping(uint256 => uint256) private hashedTokenIds;
 
     mapping(address => bool) admins;
 
@@ -38,12 +46,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
         vNFT = ViridianNFT(viridianNFTAddr);
 
-        admins[_msgSender()] = true;
-
         packURI = _packURI;
-
-        mintURIPrefix = "https://d4xub33rt3s5u.cloudfront.net";
-        mintURIPrefixLen = 36;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -53,7 +56,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     }
 
     event Open(string newUris);
-    event PackResultDecided(uint256 tokenId);
+    event PackResultDecided(uint16 tokenId);
     
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
@@ -66,6 +69,18 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     modifier onlyAdmin() {
         require(admins[_msgSender()] == true);
             _;
+    }
+    
+    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            _whitelist[addresses[i]] = numAllowedToMint;
+        }
+    }
+
+    function setHashedTokenIds(uint256[] memory _hashedTokenIds, uint256 _minIndex, uint256 _maxIndex) external onlyOwner {
+        for (uint256 i = _minIndex; i <= _maxIndex; i++) {
+            hashedTokenIds[i] = _hashedTokenIds[i - 1];
+        }
     }
 
     function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
@@ -96,15 +111,11 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         _baseURIextended = baseURI_;
     }
 
-    function setMintURIPrefix(string memory _newMintURIPrefix) external onlyAdmin() {
-        mintURIPrefix = _newMintURIPrefix;
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) private {
+        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
+        _tokenURIs[tokenId] = _tokenURI;
     }
-
-    function setMintURIPrefixLen(uint _newMintURIPrefixLen) external onlyAdmin() {
-        mintURIPrefixLen = _newMintURIPrefixLen;
-    }
-    
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
+    function _setTokenURIAdmin(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
@@ -131,14 +142,14 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return string(abi.encodePacked(base, tokenId.toString()));
     }
 
-    function getNumNFTs() public view returns (uint256 n) {
-        return _tokenIds.current();
+    function totalSupply() public view returns (uint256 n) {
+        return numMinted.current();
     }
 
     function getNumOwnedNFTs() public view virtual returns (uint256) {
         uint256 numOwnedNFTs = 0;
 
-        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
+        for (uint256 i = 1; i <= numMinted.current(); i++) {
             if (_exists(i)) {
                 if (ownerOf(i) == _msgSender()) {
                     numOwnedNFTs++;
@@ -149,13 +160,14 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return numOwnedNFTs;
     }
  
+    ///TODO: This doesn't work with new tokenId system, maybe convert it back to old system to make it work again
     function getOwnedNFTs() public view virtual returns (uint256[] memory) {
 
         uint256[] memory _tokens = new uint256[](getNumOwnedNFTs());
 
         uint256 curIndex = 0;
 
-        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
+        for (uint256 i = 1; i <= numMinted.current(); i++) {
             if (_exists(i)) {
                 if (ownerOf(i) == _msgSender()) {
                     _tokens[curIndex] = i;
@@ -172,20 +184,48 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         for(uint i=0;i<=end-begin;i++){
             a[i] = bytes(text)[i+begin-1];
         }
-        return string(a);    
+        return string(a);
+    }
+
+    function setWhitelistMinting(bool _allowed) external onlyOwner() {
+        allowWhitelistMinting = _allowed;
+    }
+
+    function setPublicMinting(bool _allowed) external onlyOwner() {
+        allowPublicMinting = _allowed;
+    }
+
+    function isWhitelistMintingEnabled() public view returns (bool) {
+        return allowWhitelistMinting;
+    }
+
+    function isPublicMintingEnabled() public view returns (bool) {
+        return allowPublicMinting;
+    }
+
+    function append(string memory a, string memory b, string memory c) internal pure returns (string memory) {
+
+        return string(abi.encodePacked(a, b, c));
+
     }
 
     function mint(
         uint256 _numMint
     ) public {
-        for (uint i; i < _numMint; i++) {
-            _tokenIds.increment();
-            uint256 _tokenId = _tokenIds.current();
+        require((totalSupply() + _numMint) <= maxMinted, "Mint amount is causing total supply to exceed 2000");
+        require((allowWhitelistMinting && _whitelist[_msgSender()] > 0) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist");
 
-            require(keccak256(abi.encodePacked(getSlice(0, mintURIPrefixLen, _mintURIs[_tokenId]))) == keccak256(abi.encodePacked(mintURIPrefix)), "The prefix of the uri does not match.");
-            _safeMint(_msgSender(), _tokenId);
-            _setTokenURI(_tokenId, packURI);
-            _mintURIs[_tokenId] = _mintURIs[_tokenId];
+        //TODO: Add sending WETH
+
+        for (uint256 i; i < _numMint; i++) {
+            numMinted.increment();
+            uint256 _tokenId = numMinted.current();
+
+            string memory tokenURI_ = append(packURI, Strings.toString(_tokenId), "");
+
+            _safeMint(_msgSender(), hashedTokenIds[_tokenId]);
+            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
         }
     }
 
@@ -193,9 +233,19 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
 
-    function openPack(uint256 _tokenId, string memory _newTokenURI) public {
+    function allowOpening() public onlyAdmin() {
+        openingLocked = false;
+    }
 
-        vNFT.mint(_msgSender(), _newTokenURI);
+    function isOpeningLocked() public view returns (bool) {
+        return openingLocked;
+    }
+
+    function openPack(uint256 _tokenId, string memory _newTokenURI) public {
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
+        require(!openingLocked, "Opening is not alllowed yet");
+
+        vNFT.mintFromPack(_msgSender(), _tokenId);
 
         _burn(_tokenId);
 

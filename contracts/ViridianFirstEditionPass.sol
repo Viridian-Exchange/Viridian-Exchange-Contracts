@@ -188,6 +188,7 @@ contract ViridianPass is ERC721, Ownable, BaseRelayRecipient {
             _tokenIds.increment();
             uint256 _tokenId = _tokenIds.current();
             string memory _tokenIdStr = Strings.toString(_tokenId);
+            // http://api.viridianexchange.com/nft/ -> 6 -> {...} if the tokenId doesn't exist -> "Token Id has not been minted"
             string memory defUriMem = defaultURI;
             string memory fileType = ".json";
             string memory _curTokenURI = append(defUriMem, _tokenIdStr, fileType);

@@ -10,7 +10,7 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "./RandomNumberGP.sol";
 import "./ViridianNFT.sol";
 
-contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianGenesisPackRand is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
