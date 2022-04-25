@@ -67,7 +67,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         admins[_newAdmin] = false;
     }
     
-    function setBaseURI(string memory baseURI_) external onlyAdmin() {
+    function setBaseURI(string memory baseURI_) external onlyOwner() {
         _baseURIextended = baseURI_;
     }
     
@@ -150,7 +150,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     ) external onlyAdmin() {
         uint256 _tokenId = uint256(keccak256(abi.encode(_fingerprint)));
         string memory _bUri = _baseURIextended;
-        string memory tokenURI_ = append(_bUri, Strings.toString(_tokenId), "");
+        string memory tokenURI_ = Strings.toString(_tokenId);
 
         _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, tokenURI_);
@@ -161,7 +161,7 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         uint256 _tokenId
     ) external onlyAdmin() {
         string memory _bUri = _baseURIextended;
-        string memory tokenURI_ = append(_bUri, Strings.toString(_tokenId), "");
+        string memory tokenURI_ = Strings.toString(_tokenId);
 
         _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, tokenURI_);

@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./ViridianNFT.sol";
 
@@ -55,7 +56,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         _setTrustedForwarder(_forwarder);
     }
 
-    event Open(string newUris);
+    event Open(uint256 newTokenId);
     event PackResultDecided(uint16 tokenId);
     
     // Optional mapping for token URIs
@@ -210,11 +211,18 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     }
 
     function mint(
-        uint256 _numMint
-    ) public {
+        uint8 _numMint,
+        address _to
+    ) public payable {
         require((totalSupply() + _numMint) <= maxMinted, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_msgSender()] > 0) || 
+        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist");
+
+        require(_numMint != 0, 'Cannot mint 0 nfts.');
+
+        //TODO: Remove this after testing
+        require(_numMint * 100000000000000000 == msg.value, "Must send correct amount of ETH to treasury address.");
+        (payable(owner())).transfer(msg.value);
 
         //TODO: Add sending WETH
 
@@ -224,7 +232,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
             string memory tokenURI_ = append(packURI, Strings.toString(_tokenId), "");
 
-            _safeMint(_msgSender(), hashedTokenIds[_tokenId]);
+            _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
         }
     }
@@ -233,15 +241,19 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return (keccak256(abi.encodePacked((_s))) == keccak256(abi.encodePacked((_s1))));
     }
 
-    function allowOpening() public onlyAdmin() {
+    function allowOpening() public onlyOwner() {
         openingLocked = false;
+    }
+
+    function freezeOpening() public onlyOwner() {
+        openingLocked = true;
     }
 
     function isOpeningLocked() public view returns (bool) {
         return openingLocked;
     }
 
-    function openPack(uint256 _tokenId, string memory _newTokenURI) public {
+    function openPack(uint256 _tokenId) public {
         require(_isApprovedOrOwner(_msgSender(), _tokenId));
         require(!openingLocked, "Opening is not alllowed yet");
 
@@ -249,7 +261,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
         _burn(_tokenId);
 
-        emit Open(_newTokenURI);
+        emit Open(_tokenId);
     }
 
     function burn(uint256 tokenId) public {

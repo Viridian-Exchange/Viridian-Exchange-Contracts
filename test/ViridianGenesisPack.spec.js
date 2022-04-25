@@ -29,7 +29,7 @@ contract('Testing ERC721 contract', function(accounts) {
 
     beforeEach(async () => {
         //console.log(ViridianNFT);
-        token = await ViridianNFT.new(accounts[0]);
+        token = await ViridianNFT.new(accounts[2]);
         pack = await ViridianPack.new(token.address, token.address, "https://api.viridianexchange.com/pack/");
         //vrf = await VRF.new(pack.address);
         //token.addAdmin(pack.address, {from: accounts[0]});
@@ -48,7 +48,7 @@ contract('Testing ERC721 contract', function(accounts) {
     //     expect(await pack.name()).to.equal(name)
     // })
 
-    it('should be able to open pack', async () => {
+    it('should be able to mint pack', async () => {
         console.log("OWNER: " + accounts[0]);
         await pack.setPublicMinting(true, {from: accounts[0]});
         await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
@@ -58,34 +58,82 @@ contract('Testing ERC721 contract', function(accounts) {
 
         let ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
 
-        expect(ownedPacks).to.equal(2);
+        expect(Number.parseInt(ownedPacks)).to.equal(2);
     })
 
-    // it(' should be unique', async () => {
-    //     const duplicateTokenID = token.mint(account2, tokenId1, tokenUri2, {from: accounts[0]}) //tokenId
-    //     console.log("Create " + JSON.stringify(await duplicateTokenID));
-    //     await truffleAssert.reverts(duplicateTokenID, '/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/');
-    //     //console.log(JSON.stringify(duplicateTokenID));
-    //     //expect(duplicateTokenID).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
-    // })
+    it('should allow safe transfers', async () => {
+        console.log("OWNER: " + accounts[0]);
+        await pack.setPublicMinting(true, {from: accounts[0]});
+        await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        await pack.mint(2, {from: accounts[0]}); //tokenId
 
-    // it(' should allow safe transfers', async () => {
-    //     //const unownedTokenId = token.safeTransferFrom(account2, account3, tokenId1, {from: accounts[2]}) // tokenId
-    //     await truffleAssert.reverts(token.safeTransferFrom(account2, account3, tokenId1, {from: accounts[2]}), 'ERC721: operator query for nonexistent token');
-    //     //console.log(unownedTokenId);
-    //     //expect(unownedTokenId).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: owner query for nonexistent token/)
-    //     //expect(await token.ownerOf(tokenId2)).to.equal(account2)
+        //await pack.lockInPackResult(1, {from: accounts[0]});
 
-    //     //const wrongOwner = token.safeTransferFrom(account1, account3, tokenId2, {from: accounts[1]}) // wrong owner
-    //     //expect(wrongOwner).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: operator query for nonexistent token -- Reason given: ERC721: operator query for nonexistent token./)
-    //     //expect(await token.ownerOf(tokenId2)).to.equal(account1)
+        let ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
 
-    //     // Noticed that the from gas param needs to be the token owners or it fails
-    //     //const wrongFromGas = token.safeTransferFrom(account2, account3, tokenId2, {from: accounts[1]}) // wrong owner
-    //     //expect(wrongFromGas).to.be.rejectedWith(/VM Exception while processing transaction: revert ERC721: operator query for nonexistent token -- Reason given: ERC721: operator query for nonexistent token./)
-    //     //expect(await token.ownerOf(tokenId2)).to.equal(account2)
+        expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-    //     await token.safeTransferFrom(account2, account3, tokenId2, {from: accounts[2]})
-    //     expect(await token.ownerOf(tokenId2)).to.equal(account3)
-    // })
+        await pack.safeTransferFrom(accounts[0], accounts[1], 123, {from: accounts[0]})
+        expect(await pack.ownerOf(123)).to.equal(accounts[1])
+    })
+
+    it('should be able open pack and recieve viridian nft', async () => {
+        console.log("OWNER: " + await token.owner());
+
+        await token.addAdmin(pack.address, {from: accounts[0]});
+        await pack.setPublicMinting(true, {from: accounts[0]});
+        await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        await pack.mint(2, {from: accounts[0]}); //tokenId
+
+        //await pack.lockInPackResult(1, {from: accounts[0]});
+
+        let ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        await pack.allowOpening();
+
+        await pack.openPack(123);
+
+        ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedPacks)).to.equal(1);
+
+        let ownedVNFTs = await token.balanceOf(accounts[0], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedVNFTs)).to.equal(1);
+    })
+
+    it('token URI of nft should follow correct format', async () => {
+        console.log("OWNER: " + await token.owner());
+        
+        await token.addAdmin(pack.address, {from: accounts[0]});
+        await pack.setPublicMinting(true, {from: accounts[0]});
+        await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        await pack.mint(2, {from: accounts[0]}); //tokenId
+
+        await token.setBaseURI("https://api.viridianexchange.com/vnft/");
+
+        //await pack.lockInPackResult(1, {from: accounts[0]});
+
+        let ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        await pack.allowOpening();
+
+        await pack.openPack(123);
+
+        ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedPacks)).to.equal(1);
+
+        let ownedVNFTs = await token.balanceOf(accounts[0], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedVNFTs)).to.equal(1);
+
+        console.log(await token.tokenURI(123));
+
+        expect(await token.tokenURI(123)).to.equal("https://api.viridianexchange.com/vnft/123");
+    })
 })
