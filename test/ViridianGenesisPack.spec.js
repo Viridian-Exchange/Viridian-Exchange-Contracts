@@ -52,7 +52,7 @@ contract('Testing ERC721 contract', function(accounts) {
         console.log("OWNER: " + accounts[0]);
         await pack.setPublicMinting(true, {from: accounts[0]});
         await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await pack.mint(2, {from: accounts[0]}); //tokenId
+        await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
 
         //await pack.lockInPackResult(1, {from: accounts[0]});
 
@@ -61,11 +61,42 @@ contract('Testing ERC721 contract', function(accounts) {
         expect(Number.parseInt(ownedPacks)).to.equal(2);
     })
 
+    it('should be able to see what NFTs are owned', async () => {
+        console.log("OWNER: " + accounts[0]);
+        await pack.setPublicMinting(true, {from: accounts[0]});
+        await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
+
+        //await pack.lockInPackResult(1, {from: accounts[0]});
+
+        let ownedPacks = await pack.getOwnedNFTs({from: accounts[0]});
+
+        expect(Number.parseInt(ownedPacks[0])).to.equal(123);
+        expect(Number.parseInt(ownedPacks[1])).to.equal(124);
+    })
+
+    it('pack URI should have correct index', async () => {
+        console.log("OWNER: " + accounts[0]);
+        await pack.setPublicMinting(true, {from: accounts[0]});
+        await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
+
+        //await pack.lockInPackResult(1, {from: accounts[0]});
+
+        let ownedPacks = await pack.getOwnedNFTs({from: accounts[0]});
+
+        expect(await pack.tokenURI(Number.parseInt(ownedPacks[0]))).to
+        .equal("https://api.viridianexchange.com/pack/1");
+        
+        expect(await pack.tokenURI(Number.parseInt(ownedPacks[1]))).to
+        .equal("https://api.viridianexchange.com/pack/2");
+    })
+
     it('should allow safe transfers', async () => {
         console.log("OWNER: " + accounts[0]);
         await pack.setPublicMinting(true, {from: accounts[0]});
         await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await pack.mint(2, {from: accounts[0]}); //tokenId
+        await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
 
         //await pack.lockInPackResult(1, {from: accounts[0]});
 
@@ -83,7 +114,7 @@ contract('Testing ERC721 contract', function(accounts) {
         await token.addAdmin(pack.address, {from: accounts[0]});
         await pack.setPublicMinting(true, {from: accounts[0]});
         await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await pack.mint(2, {from: accounts[0]}); //tokenId
+        await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
 
         //await pack.lockInPackResult(1, {from: accounts[0]});
 
@@ -110,7 +141,7 @@ contract('Testing ERC721 contract', function(accounts) {
         await token.addAdmin(pack.address, {from: accounts[0]});
         await pack.setPublicMinting(true, {from: accounts[0]});
         await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await pack.mint(2, {from: accounts[0]}); //tokenId
+        await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
 
         await token.setBaseURI("https://api.viridianexchange.com/vnft/");
 

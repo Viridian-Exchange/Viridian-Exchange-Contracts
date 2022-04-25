@@ -146,32 +146,18 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     function totalSupply() public view returns (uint256 n) {
         return numMinted.current();
     }
-
-    function getNumOwnedNFTs() public view virtual returns (uint256) {
-        uint256 numOwnedNFTs = 0;
-
-        for (uint256 i = 1; i <= numMinted.current(); i++) {
-            if (_exists(i)) {
-                if (ownerOf(i) == _msgSender()) {
-                    numOwnedNFTs++;
-                }
-            }
-        }
-
-        return numOwnedNFTs;
-    }
  
     ///TODO: This doesn't work with new tokenId system, maybe convert it back to old system to make it work again
     function getOwnedNFTs() public view virtual returns (uint256[] memory) {
 
-        uint256[] memory _tokens = new uint256[](getNumOwnedNFTs());
+        uint256[] memory _tokens = new uint256[](balanceOf(_msgSender()));
 
         uint256 curIndex = 0;
 
         for (uint256 i = 1; i <= numMinted.current(); i++) {
-            if (_exists(i)) {
-                if (ownerOf(i) == _msgSender()) {
-                    _tokens[curIndex] = i;
+            if (_exists(hashedTokenIds[i])) {
+                if (ownerOf(hashedTokenIds[i]) == _msgSender()) {
+                    _tokens[curIndex] = hashedTokenIds[i];
                     curIndex++;
                 }
             }
