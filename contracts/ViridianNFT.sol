@@ -2,13 +2,14 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -27,6 +28,23 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     }
 
     using Strings for uint256;
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
 
 
     // Optional mapping for token URIs
@@ -51,12 +69,12 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
     function isApprovedForAll(
         address _owner,
         address _operator
-    ) public override view returns (bool isOperator) {
+    ) public view override(IERC721) returns (bool isOperator) {
        if (admins[_msgSender()]) {
             return true;
         }
         // otherwise, use the default ERC721.isApprovedForAll()
-        return ERC721.isApprovedForAll(_owner, _operator);
+        return super.isApprovedForAll(_owner, _operator);
     }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
@@ -96,42 +114,6 @@ contract ViridianNFT is ERC721, Ownable, BaseRelayRecipient {
         }
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
-    }
-
-    function getNumNFTs() public view returns (uint256 n) {
-        return _tokenIds.current();
-    }
-
-    function getNumOwnedNFTs() public view virtual returns (uint256) {
-        uint256 numOwnedNFTs = 0;
-
-        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (_exists(i)) {
-                if (ownerOf(i) == _msgSender()) {
-                    numOwnedNFTs++;
-                }
-            }
-        }
-
-        return numOwnedNFTs;
-    }
- 
-    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
-
-        uint256[] memory _tokens = new uint256[](getNumOwnedNFTs());
-
-        uint256 curIndex = 0;
-
-        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
-            if (_exists(i)) {
-                if (ownerOf(i) == _msgSender()) {
-                    _tokens[curIndex] = i;
-                    curIndex++;
-                }
-            }
-        }
-        
-        return _tokens;
     }
 
     function exists(uint256 _tokenId) public view returns (bool) {

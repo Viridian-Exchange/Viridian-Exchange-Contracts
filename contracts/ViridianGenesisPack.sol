@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
@@ -25,7 +26,9 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     mapping(address => uint8) private _whitelist;
 
-    uint256 public maxMinted = 2000;
+    uint256 public maxMintAmt = 2000;
+
+    uint256 private ethToMaticConv = 285;
 
     mapping(uint256 => uint256) private hashedTokenIds;
 
@@ -33,15 +36,21 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     address public viridianNFTAddr;
 
+    address payable treasury;
+
+    address erc20Addr;
+
     ViridianNFT vNFT;
 
     using Strings for uint256;
 
-    constructor(address _viridianNFT, address _forwarder, string memory _packURI) ERC721("Viridian Genesis Pack", "VGP") {
+    constructor(address _viridianNFT, address _forwarder, address _treasury, address _erc20Addr, string memory _packURI) ERC721("Viridian Genesis Pack", "VGP") {
 
         require(address(_viridianNFT) != address(0));
 
         viridianNFTAddr = _viridianNFT;
+
+        erc20Addr = _erc20Addr;
 
         _setTrustedForwarder(_forwarder);
 
@@ -70,6 +79,18 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     modifier onlyAdmin() {
         require(admins[_msgSender()] == true);
             _;
+    }
+
+    function setERC20Addr(address payable _newERC20) external onlyOwner() {
+        erc20Addr = _newERC20;
+    }
+
+    function setTreasury(address payable _newTreasury) external onlyOwner() {
+        treasury = _newTreasury;
+    }
+
+    function setEthToMaticConv(uint256 _newETMC) external onlyOwner() {
+        ethToMaticConv = _newETMC;
     }
     
     function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
@@ -174,6 +195,10 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return string(a);
     }
 
+    function isAddressWhitelisted(address _addr) external view returns (bool) {
+        return _whitelist[_addr] > 0;
+    }
+
     function setWhitelistMinting(bool _allowed) external onlyOwner() {
         allowWhitelistMinting = _allowed;
     }
@@ -196,19 +221,46 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     }
 
-    function mint(
+    function maticMint(
         uint8 _numMint,
         address _to
     ) public payable {
-        require((totalSupply() + _numMint) <= maxMinted, "Mint amount is causing total supply to exceed 2000");
+        require((totalSupply() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
         require((allowWhitelistMinting && _whitelist[_to] > 0) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
         //TODO: Remove this after testing
-        require(_numMint * 100000000000000000 == msg.value, "Must send correct amount of ETH to treasury address.");
+        require(_numMint * ethToMaticConv * 100000000000000000 == msg.value, "Must send correct amount of MATIC to treasury address.");
         (payable(owner())).transfer(msg.value);
+
+        //TODO: Add sending WETH
+
+        for (uint256 i; i < _numMint; i++) {
+            numMinted.increment();
+            uint256 _tokenId = numMinted.current();
+
+            string memory tokenURI_ = append(packURI, Strings.toString(_tokenId), "");
+
+            _safeMint(_to, hashedTokenIds[_tokenId]);
+            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
+        }
+    }
+
+    function mint(
+        uint8 _numMint,
+        address _to
+    ) public payable {
+        require((totalSupply() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
+        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist");
+
+        require(_numMint != 0, 'Cannot mint 0 nfts.');
+
+        //TODO: Remove this after testing
+        (payable(owner())).transfer(msg.value);
+        IERC20(erc20Addr).transferFrom(_msgSender(), treasury, _numMint * 1000000000000000000);
 
         //TODO: Add sending WETH
 

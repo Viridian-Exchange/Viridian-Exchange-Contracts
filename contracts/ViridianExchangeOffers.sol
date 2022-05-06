@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
 import "./ViridianNFT.sol";
-import "./ViridianPack.sol";
+import "./ViridianGenesisPack.sol";
 
 contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
@@ -26,7 +26,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     Counters.Counter private _offerIds;
 
     ViridianNFT vNFT;
-    ViridianPack vPack;
+    ViridianGenesisPack vPack;
 
     struct Offer {
         uint256 offerId;
@@ -76,7 +76,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         viridianPack = _viridianPack;
 
         vNFT = ViridianNFT(_viridianNFT);
-        vPack = ViridianPack(_viridianPack);
+        vPack = ViridianGenesisPack(_viridianPack);
     }
 
     string public override versionRecipient = "2.2.0";

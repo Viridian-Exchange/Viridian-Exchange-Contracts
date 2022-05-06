@@ -10,10 +10,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
 import "./ViridianNFT.sol";
-import "./ViridianPack.sol";
+import "./ViridianGenesisPack.sol";
 
 contract ViridianExchange is BaseRelayRecipient, Ownable {
 
+    // https://api.viridianexchange.com/packs || vnft
     event ItemListed(uint256 tokenId, string uri, address wallet, bool listed);
     event ItemUnlisted(uint256 tokenId, string uri, address wallet, bool listed);
     event PurchasedListing(uint256 tokenId, uint256 price, string uri, address wallet, bool purchased);
@@ -22,7 +23,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
     Counters.Counter private _listingIds;
 
     ViridianNFT vNFT;
-    ViridianPack vPack;
+    ViridianGenesisPack vPack;
     
     struct Listing {
         uint256 listingId;
@@ -71,7 +72,7 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
         viridianPack = _viridianPack;
 
         vNFT = ViridianNFT(_viridianNFT);
-        vPack = ViridianPack(_viridianPack);
+        vPack = ViridianGenesisPack(_viridianPack);
     }
 
     string public override versionRecipient = "2.2.0";

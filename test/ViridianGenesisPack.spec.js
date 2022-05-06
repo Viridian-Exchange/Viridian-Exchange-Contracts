@@ -9,7 +9,7 @@ const { expect, assert } = chai
 
 var ViridianNFT = artifacts.require("ViridianNFT");
 var ViridianPack = artifacts.require("ViridianGenesisPack");
-//var VRF = artifacts.require("RandomNumberConsumer");
+var POI = artifacts.require("ProofOfIntegrity");
 
 contract('Testing ERC721 contract', function(accounts) {
 
@@ -31,6 +31,7 @@ contract('Testing ERC721 contract', function(accounts) {
         //console.log(ViridianNFT);
         token = await ViridianNFT.new(accounts[2]);
         pack = await ViridianPack.new(token.address, token.address, "https://api.viridianexchange.com/pack/");
+        proofOfIntegrity = await POI.new();
         //vrf = await VRF.new(pack.address);
         //token.addAdmin(pack.address, {from: accounts[0]});
         //pack.configureVRF(vrf.address);
@@ -87,7 +88,7 @@ contract('Testing ERC721 contract', function(accounts) {
 
         expect(await pack.tokenURI(Number.parseInt(ownedPacks[0]))).to
         .equal("https://api.viridianexchange.com/pack/1");
-        
+
         expect(await pack.tokenURI(Number.parseInt(ownedPacks[1]))).to
         .equal("https://api.viridianexchange.com/pack/2");
     })
@@ -166,5 +167,46 @@ contract('Testing ERC721 contract', function(accounts) {
         console.log(await token.tokenURI(123));
 
         expect(await token.tokenURI(123)).to.equal("https://api.viridianexchange.com/vnft/123");
+    })
+
+    it('Proof of integrity should work', async () => {
+        let poiInt = await proofOfIntegrity.generateProof("Pokemon | PSA | Breh | 1234421", 7843925748932754);
+
+        console.log("Proof of integrity tokenId: " + poiInt.toString());
+
+        expect(await proofOfIntegrity.verifyProof(poiInt, "Pokemon | PSA | Breh | 1234421", 7843925748932754)).to.equal(true);
+    });
+
+    it('Pack to card proof of integrity should be maintained after opening', async () => {
+        // console.log("OWNER: " + await token.owner());
+        
+        // await token.addAdmin(pack.address, {from: accounts[0]});
+        // await pack.setPublicMinting(true, {from: accounts[0]});
+        // await pack.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        // await pack.mint(2, accounts[0], {from: accounts[0], value: 200000000000000000}); //tokenId
+
+        // await token.setBaseURI("https://api.viridianexchange.com/vnft/");
+
+        // //await pack.lockInPackResult(1, {from: accounts[0]});
+
+        // let ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
+
+        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        // await pack.allowOpening();
+
+        // await pack.openPack(123);
+
+        // ownedPacks = await pack.balanceOf(accounts[0], {from: accounts[0]});
+
+        // expect(Number.parseInt(ownedPacks)).to.equal(1);
+
+        // let ownedVNFTs = await token.balanceOf(accounts[0], {from: accounts[0]});
+
+        // expect(Number.parseInt(ownedVNFTs)).to.equal(1);
+
+        // console.log(await token.tokenURI(123));
+
+        // expect(await token.tokenURI(123)).to.equal("https://api.viridianexchange.com/vnft/123");
     })
 })
