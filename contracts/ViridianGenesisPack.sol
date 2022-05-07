@@ -67,6 +67,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     event Open(uint256 newTokenId);
     event PackResultDecided(uint16 tokenId);
+    event Mint();
     
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
@@ -246,6 +247,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
             _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
         }
+
+        emit Mint();
     }
 
     function mint(
@@ -257,6 +260,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
                 allowPublicMinting, "Minting not enabled or not on whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
+
+
 
         //TODO: Remove this after testing
         (payable(owner())).transfer(msg.value);
@@ -273,6 +278,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
             _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
         }
+
+        emit Mint();
     }
 
     function compareStrings(string memory _s, string memory _s1) public pure returns (bool) {
