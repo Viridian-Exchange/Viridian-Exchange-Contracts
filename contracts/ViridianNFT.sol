@@ -66,16 +66,16 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
         return BaseRelayRecipient._msgData();
     }
 
-    function isApprovedForAll(
-        address _owner,
-        address _operator
-    ) public view override(IERC721) returns (bool isOperator) {
-       if (admins[_msgSender()]) {
-            return true;
-        }
-        // otherwise, use the default ERC721.isApprovedForAll()
-        return super.isApprovedForAll(_owner, _operator);
-    }
+    // function isApprovedForAll(
+    //     address _owner,
+    //     address _operator
+    // ) public view override(IERC721) returns (bool isOperator) {
+    //    if (admins[_msgSender()]) {
+    //         return true;
+    //     }
+    //     // otherwise, use the default ERC721.isApprovedForAll()
+    //     return super.isApprovedForAll(_owner, _operator);
+    // }
 
     function addAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = true;
