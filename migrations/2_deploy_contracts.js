@@ -1,28 +1,24 @@
-var ViridianToken = artifacts.require("ERC20TokenGasless");
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+//var ViridianToken = artifacts.require("ViridianToken");
 var ViridianNFT = artifacts.require("ViridianNFT");
 var ViridianPack = artifacts.require("ViridianPack");
 var ViridianExchange = artifacts.require("ViridianExchange");
 var ViridianExchangeOffers = artifacts.require("ViridianExchangeOffers");
-var RandomNumber = artifacts.require("RandomNumberConsumer");
-//var ViridianPass = artifacts.require("ViridianPass");
 
 
 module.exports = async function(deployer) {
-  let tokenAddr;
-  let forwarderAddress = '0x9399BB24DBB5C4b782C70c2969F58716Ebbd6a3b';
-  let passForwarderAddress = '0xFD4973FeB2031D4409fB57afEE5dF2051b171104';
-  let treasuryAddress = '0x341Ab3097C45588AF509db745cE0823722E5Fb19';
+  let tokenAddr = '0x6ee856ae55b6e1a249f04cd3b947141bc146273c';
   let nftAddr;
   let excAddr;
   let excOffAddr;
   let packAddr;
-  let vrfAddr;
-  let passAddr;
-  await deployer.deploy(ViridianToken, forwarderAddress).then(c => tokenAddr = c.address);
-  await deployer.deploy(ViridianNFT, forwarderAddress).then(c => nftAddr = c.address);
-  await deployer.deploy(ViridianPack, nftAddr, forwarderAddress).then(c => packAddr = c.address);
-  await deployer.deploy(ViridianExchange, tokenAddr, nftAddr, packAddr, forwarderAddress, treasuryAddress).then(c => excAddr = c.address);
-  await deployer.deploy(ViridianExchangeOffers, tokenAddr, nftAddr, packAddr, forwarderAddress, treasuryAddress).then(c => excOffAddr = c.address);
-  await deployer.deploy(RandomNumber, packAddr, forwarderAddress).then(c => vrfAddr = c.address);
-  //await deployer.deploy(ViridianPass, 'https://d4xub33rt3s5u.cloudfront.net/v1ep.json', passForwarderAddress, treasuryAddress).then(c => passAddr = c.address);
+  //await deployer.deploy(ViridianToken).then(c => tokenAddr = c.address);
+  const ViridianNFTDeploy = await deployProxy(ViridianNFT, [42], { deployer });
+
+  // const upgraded = await upgradeProxy(instance.address, BoxV2, { deployer });
+
+  await deployer.deploy(ViridianNFT).then(c => nftAddr = c.address);
+  await deployer.deploy(ViridianPack, nftAddr).then(c => packAddr = c.address);
+  await deployer.deploy(ViridianExchange, tokenAddr, nftAddr, packAddr).then(c => excAddr = c.address);
+  await deployer.deploy(ViridianExchangeOffers, tokenAddr, nftAddr, packAddr).then(c => excOffAddr = c.address);
 };

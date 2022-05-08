@@ -1,37 +1,33 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
 
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+contract ViridianNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, OwnableUpgradeable{
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+    CountersUpgradeable.Counter private _tokenIds;
     mapping(string => uint8) hashes;
-    
     mapping(address => bool) admins;
 
-    constructor(address _forwarder) ERC721("Viridian NFT", "VNFT") {
-        _setTrustedForwarder(_forwarder);
+    function initialize() public initializer {
+        __ERC721_init("Viridian NFT", "VNFT");
+        initialized = true;
     }
 
-    string public override versionRecipient = "2.2.0";
-
-    function setTrustedForwarder(address _forwarder) public onlyOwner() {
-        _setTrustedForwarder(_forwarder);
-    }
-
-    using Strings for uint256;
+    using StringsUpgradeable for uint256;
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
         internal
-        override(ERC721, ERC721Enumerable)
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
     {
         super._beforeTokenTransfer(from, to, tokenId);
     }
@@ -39,7 +35,7 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable)
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -58,18 +54,10 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
             _;
     }
 
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
-        sender = BaseRelayRecipient._msgSender();
-    }
-
-    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
-        return BaseRelayRecipient._msgData();
-    }
-
     function isApprovedForAll(
         address _owner,
         address _operator
-    ) public view override(IERC721) returns (bool isOperator) {
+    ) public view override(ERC721Upgradeable) returns (bool isOperator) {
        if (admins[_msgSender()]) {
             return true;
         }
@@ -84,26 +72,26 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
     function removeAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = false;
     }
-    
+
     function setBaseURI(string memory baseURI_) external onlyOwner() {
         _baseURIextended = baseURI_;
     }
-    
+
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
-    
+
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseURIextended;
     }
-    
+
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory _tokenURI = _tokenURIs[tokenId];
         string memory base = _baseURI();
-        
+
         // If there is no base URI, return the token URI.
         if (bytes(base).length == 0) {
             return _tokenURI;
@@ -132,7 +120,7 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
     ) external onlyAdmin() {
         uint256 _tokenId = uint256(keccak256(abi.encode(_fingerprint)));
         string memory _bUri = _baseURIextended;
-        string memory tokenURI_ = Strings.toString(_tokenId);
+        string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
 
         _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, tokenURI_);
@@ -143,7 +131,7 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
         uint256 _tokenId
     ) external onlyAdmin() {
         string memory _bUri = _baseURIextended;
-        string memory tokenURI_ = Strings.toString(_tokenId);
+        string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
 
         _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, tokenURI_);
