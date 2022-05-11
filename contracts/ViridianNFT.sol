@@ -14,7 +14,6 @@ contract ViridianNFT is ERC721, ERC721Enumerable, Ownable, BaseRelayRecipient {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping(string => uint8) hashes;
-    
     mapping(address => bool) admins;
 
     constructor(address _forwarder) ERC721("Viridian NFT", "VNFT") {

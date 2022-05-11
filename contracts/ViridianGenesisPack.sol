@@ -32,6 +32,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     mapping(uint256 => uint256) private hashedTokenIds;
 
+    mapping(uint256 => uint256) private intermHashMap;
+
     mapping(address => bool) admins;
 
     address public viridianNFTAddr;
@@ -44,7 +46,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     using Strings for uint256;
 
-    constructor(address _viridianNFT, address _forwarder, address _treasury, address _erc20Addr, string memory _packURI) ERC721("Viridian Genesis Pack", "VGP") {
+    constructor(address _viridianNFT, address _forwarder, address payable _treasury, address _erc20Addr, string memory _packURI) ERC721("Viridian Genesis Pack", "VGP") {
 
         require(address(_viridianNFT) != address(0));
 
@@ -57,6 +59,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         vNFT = ViridianNFT(viridianNFTAddr);
 
         packURI = _packURI;
+
+        treasury = _treasury;
     }
 
     string public override versionRecipient = "2.2.0";
