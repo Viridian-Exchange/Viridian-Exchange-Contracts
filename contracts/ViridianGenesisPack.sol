@@ -9,16 +9,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./ViridianNFT.sol";
+//import "./ViridianNFT.sol";
 
 
-contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
+contract ViridianGenesisNFT is ERC721, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private numMinted;
     Counters.Counter private fingerprintIndex;
-
-    string public packURI;
 
     bool private openingLocked = true;
     bool private allowWhitelistMinting = false;
@@ -26,9 +24,13 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     mapping(address => uint8) private _whitelist;
 
+    uint256 public mintPrice = 200000000000000000;
+
     uint256 public maxMintAmt = 2000;
 
     uint256 private ethToMaticConv = 285;
+
+    mapping(uint256 => bool) public isOpened;
 
     mapping(uint256 => uint256) private hashedTokenIds;
 
@@ -42,23 +44,24 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     address erc20Addr;
 
-    ViridianNFT vNFT;
+    //ViridianNFT vNFT;
 
     using Strings for uint256;
 
-    constructor(address _viridianNFT, address _forwarder, address payable _treasury, address _erc20Addr, string memory _packURI) ERC721("Viridian Genesis Pack", "VGP") {
+    constructor(/*address _viridianNFT,*/ address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) ERC721("Viridian Genesis Pack", "VGP") {
 
-        require(address(_viridianNFT) != address(0));
+        //require(address(_viridianNFT) != address(0));
 
-        viridianNFTAddr = _viridianNFT;
+        //viridianNFTAddr = _viridianNFT;
 
-        erc20Addr = _erc20Addr;
+        //erc20Addr = _erc20Addr;
 
         _setTrustedForwarder(_forwarder);
 
-        vNFT = ViridianNFT(viridianNFTAddr);
+        //vNFT = ViridianNFT(viridianNFTAddr);
 
-        packURI = _packURI;
+        _baseURIextended = _packURI;
+        _baseURIextendedOpened = _openURI;
 
         treasury = _treasury;
     }
@@ -80,6 +83,7 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     // Base URI
     string private _baseURIextended;
+    string private _baseURIextendedOpened;
 
     modifier onlyAdmin() {
         require(admins[_msgSender()] == true);
@@ -138,6 +142,10 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         _baseURIextended = baseURI_;
     }
 
+    function setBaseURIOpened(string memory baseURI_) external onlyAdmin() {
+        _baseURIextendedOpened = baseURI_;
+    }
+
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) private {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
@@ -150,12 +158,24 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseURIextended;
     }
+
+    function _baseURIOpened() internal view virtual returns (string memory) {
+        return _baseURIextendedOpened;
+    }
     
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory _tokenURI = _tokenURIs[tokenId];
-        string memory base = _baseURI();
+        string memory _tokenURI;
+        string memory base;
+        
+        if (isOpened[tokenId]) {
+            base = _baseURIOpened();
+        }
+        else {
+            base = _baseURI();
+            _tokenURI = _tokenURIs[tokenId];
+        }
         
         // If there is no base URI, return the token URI.
         if (bytes(base).length == 0) {
@@ -226,33 +246,8 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
     }
 
-    function maticMint(
-        uint8 _numMint,
-        address _to
-    ) public payable {
-        require((totalSupply() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist");
-
-        require(_numMint != 0, 'Cannot mint 0 nfts.');
-
-        //TODO: Remove this after testing
-        require(_numMint * ethToMaticConv * 100000000000000000 == msg.value, "Must send correct amount of MATIC to treasury address.");
-        (payable(owner())).transfer(msg.value);
-
-        //TODO: Add sending WETH
-
-        for (uint256 i; i < _numMint; i++) {
-            numMinted.increment();
-            uint256 _tokenId = numMinted.current();
-
-            string memory tokenURI_ = append(packURI, Strings.toString(_tokenId), "");
-
-            _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
-        }
-
-        emit Mint();
+    function setMintPrice(uint256 _newMintPrice) external onlyOwner() {
+        mintPrice = _newMintPrice;
     }
 
     function mint(
@@ -265,19 +260,16 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
-
-
         //TODO: Remove this after testing
-        (payable(owner())).transfer(msg.value);
-        IERC20(erc20Addr).transferFrom(_msgSender(), treasury, _numMint * 1000000000000000000);
+        require(_numMint * mintPrice == msg.value, "Must send correct amount of MATIC to treasury address.");
+        (payable(treasury)).transfer(msg.value);
 
-        //TODO: Add sending WETH
 
         for (uint256 i; i < _numMint; i++) {
             numMinted.increment();
             uint256 _tokenId = numMinted.current();
 
-            string memory tokenURI_ = append(packURI, Strings.toString(_tokenId), "");
+            string memory tokenURI_ = Strings.toString(_tokenId);
 
             _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
@@ -302,13 +294,22 @@ contract ViridianGenesisPack is ERC721, Ownable, BaseRelayRecipient {
         return openingLocked;
     }
 
-    function openPack(uint256 _tokenId) public {
+    function open(uint256 _tokenId) public {
         require(_isApprovedOrOwner(_msgSender(), _tokenId));
         require(!openingLocked, "Opening is not alllowed yet");
 
-        vNFT.mintFromPack(_msgSender(), _tokenId);
+        isOpened[_tokenId] = true;
 
-        _burn(_tokenId);
+        emit Open(_tokenId);
+    }
+
+    function openTo(uint256 _tokenId, address _to) public {
+        require(_isApprovedOrOwner(_msgSender(), _tokenId));
+        require(!openingLocked, "Opening is not alllowed yet");
+
+        isOpened[_tokenId] = true;
+
+        safeTransferFrom(_msgSender(), _to, _tokenId);
 
         emit Open(_tokenId);
     }

@@ -1408,7 +1408,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
 // File: contracts/NonblockingReceiver.sol
 
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.0;
 
 abstract contract NonblockingReceiver is Ownable, ILayerZeroReceiver {
     ILayerZeroEndpoint internal endpoint;
@@ -1534,18 +1534,18 @@ abstract contract NonblockingReceiver is Ownable, ILayerZeroReceiver {
 
 // File: contracts/tinydinos-eth.sol
 
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
 contract ViridianGenesisPack is Ownable, ERC721, NonblockingReceiver {
     address public _owner;
     string private baseURI;
     uint256 nextTokenId = 6512;
-    uint256 MAX_MINT_ETHEREUM = 10000;
+    uint256 MAX_MINT_ETHEREUM = 2000;
 
     uint256 gasForDestinationLzReceive = 350000;
 
     constructor(string memory baseURI_, address _layerZeroEndpoint)
-        ERC721("tiny dinos", "dino")
+        ERC721("Viridian Genesis Packs", "VGP")
     {
         _owner = msg.sender;
         endpoint = ILayerZeroEndpoint(_layerZeroEndpoint);
