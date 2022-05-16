@@ -1569,7 +1569,7 @@ contract ViridianGenesisPack is Ownable, ERC721, NonblockingReceiver {
 
     // This function transfers the nft from your address on the
     // source chain to the same address on the destination chain
-    function traverseChains(uint16 _chainId, uint256 tokenId) public payable {
+    function traverseChainsTo(uint16 _chainId, uint256 tokenId) public payable {
         require(
             msg.sender == ownerOf(tokenId),
             "You must own the token to traverse"
@@ -1603,7 +1603,7 @@ contract ViridianGenesisPack is Ownable, ERC721, NonblockingReceiver {
         );
 
         require(
-            msg.value >= messageFee,
+            msg.value >= messageFee, // $30 in ETH -> POLYgon $20 on ethereum and $0.5 on polygon, $5.50 + 1 ETH -> seller
             "tiny dinos: msg.value not enough to cover messageFee. Send gas for message fees"
         );
 

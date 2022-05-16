@@ -48,7 +48,7 @@ contract ViridianGenesisNFT is ERC721, Ownable, BaseRelayRecipient {
 
     using Strings for uint256;
 
-    constructor(/*address _viridianNFT,*/ address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) ERC721("Viridian Genesis Pack", "VGP") {
+    constructor(/*address _viridianNFT,*/ address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) ERC721("Viridian Genesis NFT", "VG") {
 
         //require(address(_viridianNFT) != address(0));
 
