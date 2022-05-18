@@ -16,9 +16,11 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUpgrad
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIds;
     mapping(string => uint8) hashes;
+    bool private initialized;
     mapping(address => bool) admins;
 
-    function initialize() public initializer {
+    function initialize() initializer public  {
+        require(!initialized, "Contract instance has already been initialized");
         __ERC721_init("Viridian NFT", "VNFT");
         initialized = true;
     }
