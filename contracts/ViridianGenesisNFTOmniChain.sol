@@ -3285,8 +3285,8 @@ contract ViridianGenesisNFT is ERC721A, Ownable, NonblockingReceiver, BaseRelayR
         );
 
         require(
-            msg.value >= messageFee, // $30 in ETH -> POLYgon $20 on ethereum and $0.5 on polygon, $5.50 + 1 ETH -> seller
-            "tiny dinos: msg.value not enough to cover messageFee. Send gas for message fees"
+            msg.value >= messageFee,
+            "Viridian NFT: msg.value not enough to cover messageFee. Send gas for message fees"
         );
 
         endpoint.send{value: msg.value}(
