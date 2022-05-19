@@ -231,13 +231,6 @@ contract ViridianExchange is BaseRelayRecipient, Ownable {
     function pullFromSale(uint256 _listingId) public {
         Listing memory curListing = listings[_listingId];
         require(curListing.owner == _msgSender(), "Must be the owner to pull from sale");
-        //IERC721(viridianNFT).safeTransferFrom(address(this), _msgSender(), curListing.tokenId);
-        // if(curListing.isVNFT) {
-        //     vNFT.unlistToken(curListing.tokenId);
-        // }
-        // else {
-        //     vPack.unlistToken(curListing.tokenId);
-        // }
 
         Listing[] storage curUserListings = userListings[_msgSender()];
         for (uint i = 0; i < curUserListings.length; i++) {
