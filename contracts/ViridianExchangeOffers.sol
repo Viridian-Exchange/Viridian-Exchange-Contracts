@@ -10,31 +10,33 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-import "./ViridianNFT.sol";
-import "./ViridianGenesisPack.sol";
+import "./ViridianGenesisNFT.sol";
 
+/**
+ * Exchange contract that helps facilitate the bartering and offering of Viridian NFTs and ERC20 tokens between users.
+ * Will support cross-chain offers whether the NFT or listing is on that chain or not.
+ */
 contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
-    //EVENTS
+    // Events to assist offer creating, accepting, and cancelling visuals on front-end.
     event CreatedOffer(uint256 offerId, address wallet, bool created);
     event CreatedCounterOffer(uint256 offerId, uint256 oldOfferId, address wallet, bool created);
     event CancelledOffer(uint256 offerId, address wallet, bool cancelled);
     event AcceptedOffer(uint256 offerId, address wallet, bool accepted);
 
-
+    // Incrementing counter for offer Ids
     using Counters for Counters.Counter;
     Counters.Counter private _offerIds;
 
-    ViridianNFT vNFT;
-    ViridianGenesisPack vPack;
+    // Viridian Genesis NFT instance
+    ViridianGenesisNFT vNFT;
 
+    // Struct with all information for an offer
     struct Offer {
         uint256 offerId;
         uint256[] toNftIds;
-        uint256[] toPackIds;
         uint toAmt;
         uint256[] fromNftIds;
-        uint256[] fromPackIds;
         uint fromAmt;
         address to;
         address from;
@@ -46,25 +48,36 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         uint256 endTime;
     }
 
+    // All offers that an individual user has made (Maybe remove for gas optimization on Ethereum)
     mapping (address => Offer[]) userOffers;
+    // All offers on the exchange
     mapping (uint256 => Offer) offers;
+    // All offer ids on the site (Maybe remove for gas optimization)
     uint256[] private offerIds;
-    mapping (uint256 => uint256) highestCardOffer;
+    // Highest current offer for an NFT on the site
+    mapping (uint256 => uint256) highestNFTOffer;
+    // All tokens that are not allowed to be offered on the platform
     mapping (uint256 => bool) tokenIdBlacklist;
 
+    // Treasury address where royalty payments are sent to
     address private treasuryAddress;
+    // Base royalty amount for site transactions
     uint256 private baseRoyalty;
+    // Royalty for users who are recieving promotional rates
     uint256 private whitelistRoyalty;
 
+    // The current address for the Viridian NFT Contract
     address public viridianNFT;
-    address public viridianPack;
+
+    // All approved ERC20 tokens that can be used on the site.
     mapping (address => bool) public approvedTokens;
 
-    constructor(address _erc20Token, address _viridianNFT, address _viridianPack, address _forwarder, address _treasuryAddress) {
+    /**
+     * @dev Set the default ERC20Token address, Viridian NFT address, forwarder for gasless, and treasury for royalty payments.
+     */
+    constructor(address _erc20Token, address _viridianNFT, address _forwarder, address _treasuryAddress) {
         require(address(_erc20Token) != address(0));
         require(address(_viridianNFT) != address(0));
-        require(address(_viridianPack) != address(0));
-
         _setTrustedForwarder(_forwarder);
 
         treasuryAddress = _treasuryAddress;
@@ -73,50 +86,85 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
         approvedTokens[_erc20Token] = true;
         viridianNFT = _viridianNFT;
-        viridianPack = _viridianPack;
 
-        vNFT = ViridianNFT(_viridianNFT);
-        vPack = ViridianGenesisPack(_viridianPack);
+        vNFT = ViridianGenesisNFT(_viridianNFT);
     }
 
     string public override versionRecipient = "2.2.0";
 
+    /**
+     * @dev Owner can change the trusted forwarder used for gasless.
+     */
     function setTrustedForwarder(address _forwarder) public onlyOwner() {
         _setTrustedForwarder(_forwarder);
     }
 
+    /**
+     * @dev Owner can set a new default royalty value for the exchange.
+     */
     function setRoyalty(uint256 _newRoyalty) public onlyOwner() {
         baseRoyalty = _newRoyalty;
     }
 
+    /**
+     * @dev Owner can set a new promotional royalty value for the exchange.
+     */
     function setWhitelistRoyalty(uint256 _newRoyalty) public onlyOwner() {
         baseRoyalty = _newRoyalty;
     }
 
+    /**
+     * @dev Replaces msg.sender for gasless support.
+     */
     function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
         sender = BaseRelayRecipient._msgSender();
     }
 
+    /**
+     * @dev Replaces msg.data for gasless support.
+     */
     function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
         return BaseRelayRecipient._msgData();
     }
 
+    /**
+     * @dev Owner can add support for a new ERC20 token on the exchange.
+     */
     function addERC20Token(address _erc20Address) public onlyOwner() {
         approvedTokens[_erc20Address] = true;
     }
 
+    /**
+     * @dev Owner can remove support for an ERC20 token on the exchange.
+     */
+    function removeERC20Token(address _erc20Address) public onlyOwner() {
+        approvedTokens[_erc20Address] = false;
+    }
+
+    /**
+     * @dev Returns the Ids of all offers on the exchange.
+     */
     function getOffers() public view returns (uint256[] memory) {
         return offerIds;
     }
 
+    /**
+     * @dev Returns the offer struct associated with the given Id.
+     */
     function getOffersFromId(uint256 _offerId) public view returns (Offer memory) {
         return offers[_offerId];
     }
 
+    /**
+     * @dev Returns all offers made by the given address.
+     */
     function getOffersFromUser(address _userAddr) public view returns (Offer[] memory) {
         return userOffers[_userAddr];
     }
 
+    /**
+     * @dev Returns whether an offer has expired.
+     */
     function hasOfferExpired(uint256 _offerId) public view returns (bool) {
         Offer storage curOffer = offers[_offerId];
 
@@ -133,20 +181,20 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         }
     }
 
-    function makeOffer(address payable _to, uint256[] memory _nftIds, uint256[] memory _packIds, uint256 _amount, uint256[] memory _recNftIds, uint256[] memory _recPackIds, uint256 _recAmount, address _erc20Address, uint256 _daysValid, bool _isCounterOffer, uint256 _oldOfferId) public {
+    /**
+     * @dev Make an offer to a user for a combination of their ERC20 tokens and NFTS for a combination of your ERC20 tokens and NFTs.
+     */
+    function makeOffer(address payable _to, uint256[] memory _nftIds, uint256 _amount, uint256[] memory _recNftIds, uint256 _recAmount, address _erc20Address, uint256 _daysValid, bool _isCounterOffer, uint256 _oldOfferId) public {
         require(approvedTokens[_erc20Address], "Must be listed price in approved token");
-        require(_to != msg.sender);
+        require(_to != msg.sender, "Cannot send an offer to yourself");
 
-        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
-        //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
-        // }
-
+        // Create offer struct with all the inputted specifications
         _offerIds.increment();
         uint256 _offerId = _offerIds.current();
 
         uint256 endTime = block.timestamp + (_daysValid * 1 days);
 
-        Offer memory newOffer = Offer(_offerId, _nftIds, _packIds, _amount, _recNftIds, _recPackIds, _recAmount, _to, payable(msg.sender), _erc20Address, true, false, false, block.timestamp, endTime);
+        Offer memory newOffer = Offer(_offerId, _nftIds, _amount, _recNftIds, _recAmount, _to, payable(msg.sender), _erc20Address, true, false, false, block.timestamp, endTime);
         
         userOffers[_to].push(newOffer);
         userOffers[msg.sender].push(newOffer);
@@ -155,6 +203,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         doOfferingPartiesOwnContents(offers[_offerId]);
         offerIds.push(_offerId);
 
+        // Emit a different event if it is a counter offer or not for front-end handling.
         if (_isCounterOffer) {
             emit CreatedCounterOffer(_offerId, _oldOfferId, msg.sender, true);
         }
@@ -163,6 +212,9 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         }
     }
 
+    /**
+     * @dev Remove an offer from the exchange.
+     */
     function removeOffer(Offer storage curOffer, Offer[] storage curUserOffers) private {
         for (uint i = 0; i < curUserOffers.length; i++) {
             Offer memory offer = curUserOffers[i];
@@ -175,6 +227,9 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         } 
     }
  
+    /**
+     * @dev Cancel an offer if you are the party making the offer or are the party recieveing the offer.
+     */
     function cancelOffer(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
         require(curOffer.from == msg.sender || curOffer.to == msg.sender, "Cannot be cancelled by non involved parties");
@@ -209,6 +264,9 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         emit CancelledOffer(curOffer.offerId, msg.sender, true);
     }
 
+    /**
+     * @dev Assure that all the same parties own the offer contents from when the offer was originally made.
+     */
     function doOfferingPartiesOwnContents(Offer storage _curOffer) private view {
         for (uint i = 0; i < _curOffer.toNftIds.length; i++) {
             require(IERC721(viridianNFT).ownerOf(_curOffer.toNftIds[i]) == _curOffer.from, "Offered account must own all requested NFTs");
@@ -217,16 +275,11 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         for (uint i = 0; i < _curOffer.fromNftIds.length; i++) {
             require(IERC721(viridianNFT).ownerOf(_curOffer.fromNftIds[i]) == _curOffer.to, "Offering account must own all offered NFTs");
         }
-
-        for (uint i = 0; i < _curOffer.toPackIds.length; i++) {
-            require(IERC721(viridianPack).ownerOf(_curOffer.toPackIds[i]) == _curOffer.from, "Offered account must own all requested NFTs");
-        }
-
-        for (uint i = 0; i < _curOffer.fromPackIds.length; i++) {
-            require(IERC721(viridianPack).ownerOf(_curOffer.fromPackIds[i]) == _curOffer.to, "Offering account must own all offered NFTs");
-        }
     }
 
+    /**
+     * @dev Transfer all offer contents to their intended destinations.
+     */
     function transferAllOfferContents(Offer storage _curOffer) private {
         // Loop through all of the to items in the offer.
         for (uint i = 0; i < _curOffer.toNftIds.length; i++) {
@@ -236,22 +289,14 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
 
         // Loop through all of the from items in the offer.
         for (uint i = 0; i < _curOffer.fromNftIds.length; i++) {
-            //IERC721(viridianNFT).approve(curOffer.to, curOffer.fromNftIds[i]);
+            // IERC721(viridianNFT).approve(curOffer.to, curOffer.fromNftIds[i]);
             IERC721(viridianNFT).safeTransferFrom(_curOffer.to, _curOffer.from, _curOffer.fromNftIds[i]);
-        }
-
-        for (uint i = 0; i < _curOffer.toPackIds.length; i++) {
-            //IERC721(viridianNFT).approve(curOffer.to, curOffer.fromNftIds[i]);
-            IERC721(viridianPack).safeTransferFrom(_curOffer.from, _curOffer.to, _curOffer.toPackIds[i]);
-        }
-
-        // Loop through all of the from items in the offer.
-        for (uint i = 0; i < _curOffer.fromPackIds.length; i++) {
-            //IERC721(viridianNFT).approve(curOffer.to, curOffer.fromNftIds[i]);
-            IERC721(viridianPack).safeTransferFrom(_curOffer.to, _curOffer.from, _curOffer.fromPackIds[i]);
         }
     }
 
+    /**
+     * @dev Gets the current offer from the users current offers.
+     */
     function getCurOffer(Offer storage curOffer, Offer[] storage curUserOffers) private view returns (Offer storage) {
         for (uint i = 0; i < curUserOffers.length; i++) {
             Offer memory offer = curUserOffers[i];
@@ -263,6 +308,9 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         return curUserOffers[0];
     }
     
+    /**
+     * @dev Accepts the offer and moves all respecting ERC20 and ERC721 contents to the destinations laid out in the offer.
+     */
     function acceptOfferWithERC20(uint256 _offerId) public {
         Offer storage curOffer = offers[_offerId];
 
@@ -272,43 +320,26 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         Offer[] storage curUserOffers = userOffers[curOffer.to];
         Offer[] storage otherUserOffers = userOffers[curOffer.from];
 
-        // for (uint i = 0; i < curUserOffers.length; i++) {
-        //     Offer memory offer = curUserOffers[i];
-        //     if (offer.offerId == curOffer.offerId) {
-        //         curUserOffers[i].pending = false;
-        //         break;
-        //     }
-        // }
-
         Offer storage setOffer = getCurOffer(curOffer, curUserOffers);
-
-        // for (uint i = 0; i < otherUserOffers.length; i++) {
-        //     Offer memory offer = otherUserOffers[i];
-        //     if (offer.offerId == curOffer.offerId) {
-        //         otherUserOffers[i].pending = false;
-        //         break;
-        //     }
-        // }
-
-        Offer storage setOfferO = getCurOffer(curOffer, otherUserOffers);
+        Offer storage setOfferOther = getCurOffer(curOffer, otherUserOffers);
 
         doOfferingPartiesOwnContents(curOffer);
 
-        // if(!IERC721(viridianNFT).isApprovedForAll(msg.sender, address(this))) {
-        //     IERC721(viridianNFT).setApprovalForAll(address(this), true);
-        // }
-
+        // Transfer all ERC20 tokens to correct respective parties.
         IERC20(curOffer.erc20Address).transferFrom(curOffer.from, treasuryAddress, (curOffer.toAmt / 100) * baseRoyalty);
         IERC20(curOffer.erc20Address).transferFrom(curOffer.from, curOffer.to, curOffer.toAmt - ((curOffer.toAmt / 100) * baseRoyalty));
 
         IERC20(curOffer.erc20Address).transferFrom(curOffer.to, treasuryAddress, (curOffer.fromAmt / 100) * baseRoyalty);
         IERC20(curOffer.erc20Address).transferFrom(curOffer.to, curOffer.from, curOffer.fromAmt - ((curOffer.fromAmt / 100) * baseRoyalty));
 
+        // Transfer all ERC721 tokens to correct respective parties.
         transferAllOfferContents(curOffer);
 
+        // Disable all offers and set them as no longer pending
         curOffer.pending = false;
         setOffer.pending = false;
-        setOfferO.pending = false;
+        setOfferOther.pending = false;
+
         emit AcceptedOffer(_offerId, msg.sender, true);
     }
 }

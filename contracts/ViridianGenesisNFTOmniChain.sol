@@ -3249,7 +3249,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, NonblockingReceiver, BaseRelayR
     /** 
     * @dev This function transfers the nft from your address on the source chain to the _to address on the destination chain.
     */
-    function traverseChainsTo(uint16 _chainId, uint256 tokenId, address _to) public payable {
+    function safeTransferFromOmniChain(uint16 _chainId, uint256 tokenId, address _to) public payable {
         bool isApprovedOrOwner = (_msgSender() == ownerOf(tokenId) ||
                 isApprovedForAll(ownerOf(tokenId), _msgSender()));
         require(
