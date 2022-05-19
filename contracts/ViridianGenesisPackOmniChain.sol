@@ -1645,7 +1645,7 @@ contract ViridianGenesisPack is Ownable, ERC721, NonblockingReceiver {
         bytes memory _srcAddress,
         uint64 _nonce,
         bytes memory _payload
-    ) internal override {
+    ) internal override {            
         // decode
         (address toAddr, uint256 tokenId) = abi.decode(
             _payload,

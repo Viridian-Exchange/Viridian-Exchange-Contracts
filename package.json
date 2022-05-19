@@ -20,6 +20,7 @@
     "assert": "^2.0.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
+    "erc721a": "^3.3.0",
     "eth-sig-util": "^3.0.1",
     "ethereumjs-util": "^7.0.10",
     "ethereumjs-wallet": "^1.0.1",
