@@ -25,12 +25,13 @@
 
 pragma solidity ^0.8.0;
 
-import "erc721a/contracts/ERC721A.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
 * Viridian Genesis NFT
@@ -39,12 +40,13 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 * 
 * If this contract can be upgradable and/or be upgradable it could be converted to our main infrastructure contract.
 */
-contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
+contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, BaseRelayRecipient {
 
     // Keeps track of the current minted NFT for setting the pack URI correctly
-    using Counters for Counters.Counter;
-    Counters.Counter private numMinted;
-    Counters.Counter private dropId;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+    CountersUpgradeable.Counter private numMinted;
+    CountersUpgradeable.Counter private dropId;
+    bool private initialized;
 
     mapping(uint256 => uint256) private tokenDropId;
 
@@ -73,12 +75,15 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     // Treasury address where minting payments are sent
     address payable treasury;
 
-    using Strings for uint256;
+    using StringsUpgradeable for uint256;
 
     /**
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
-    constructor(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) ERC721A("Viridian Genesis NFT", "VG") {
+     function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) initializer public  {
+        require(!initialized, "Contract instance has already been initialized");
+        __ERC721_init("Viridian NFT", "VNFT");
+        initialized = true;
 
         _setTrustedForwarder(_forwarder);
 
@@ -89,9 +94,6 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         _baseURIextendedOpened[_dropId] = _openURI;
 
         treasury = _treasury;
-
-        allowWhitelistMinting = false;
-        allowPublicMinting = false;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -162,20 +164,21 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     function setHashedTokenIds(uint256[] memory _hashedTokenIds, uint256 _minIndex, uint256 _maxIndex) external onlyOwner {
         for (uint256 i = _minIndex; i <= _maxIndex; i++) {
             hashedTokenIds[i] = _hashedTokenIds[i - 1];
+            tokenDropId[_hashedTokenIds[i - 1]] = dropId.current();
         }
     }
 
     /**
      * @dev Replaces msg.sender for gasless support.
      */
-    function _msgSender() internal view override(Context, BaseRelayRecipient) returns (address sender) {
+    function _msgSender() internal view override(ContextUpgradeable, BaseRelayRecipient) returns (address sender) {
         sender = BaseRelayRecipient._msgSender();
     }
 
     /**
      * @dev Replaces msg.data for gasless support.
      */
-    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
+    function _msgData() internal view override(ContextUpgradeable, BaseRelayRecipient) returns (bytes calldata) {
         return BaseRelayRecipient._msgData();
     }
 
@@ -278,56 +281,6 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     }
 
     /**
-     * Total existing supply of NFTs in circulation (Already integrated into ERC721A) 
-     */
-    // function totalSupply() public view returns (uint256 n) {
-    //     return numMinted.current();
-    // }
- 
-    //TODO: This doesn't work with new tokenId system, maybe convert it back to old system to make it work again
-    /**
-     * @dev Returns message senders owned NFTs as a list of token Ids.
-     */
-    function getOwnedNFTs() public view virtual returns (uint256[] memory) {
-
-        uint256[] memory _tokens = new uint256[](balanceOf(_msgSender()));
-
-        uint256 curIndex = 0;
-
-        for (uint256 i = 1; i <= numMinted.current(); i++) {
-            if (_exists(hashedTokenIds[i])) {
-                if (ownerOf(hashedTokenIds[i]) == _msgSender()) {
-                    _tokens[curIndex] = hashedTokenIds[i];
-                    curIndex++;
-                }
-            }
-        }
-        
-        return _tokens;
-    }
-
-    /**
-     * @dev Returns the addresses owned NFTs as a list of token Ids.
-     */
-    function getOwnedNFTs(address addr) public view virtual returns (uint256[] memory) {
-
-        uint256[] memory _tokens = new uint256[](balanceOf(addr));
-
-        uint256 curIndex = 0;
-
-        for (uint256 i = 1; i <= numMinted.current(); i++) {
-            if (_exists(hashedTokenIds[i])) {
-                if (ownerOf(hashedTokenIds[i]) == _msgSender()) {
-                    _tokens[curIndex] = hashedTokenIds[i];
-                    curIndex++;
-                }
-            }
-        }
-        
-        return _tokens;
-    }
-
-    /**
      * @dev Returns whether the address is on the whitelist.
      */
     function isAddressWhitelisted(address _addr) external view returns (bool) {
@@ -387,7 +340,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     /**
      * @dev Admin addresses can manually mint NFTs either unrevealed or revealed. This will primarily be used for getting submissions onto the exchange.
      */
-    function mint(
+    function adminMint(
         uint256[] calldata _tokenIds,
         address _to,
         bool opened
@@ -402,13 +355,11 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         for (uint256 i; i < _tokenIds.length; i++) {
             uint256 _tokenId = _tokenIds[i];
 
-            tokenDropId[_tokenId] = dropId.current();
-
             if (opened) {
                 isOpened[_tokenId] = true;
             }
 
-            string memory tokenURI_ = Strings.toString(_tokenId);
+            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
 
             _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
@@ -422,7 +373,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         uint8 _numMint,
         address _to
     ) public payable {
-        require((_totalMinted() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
+        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
         require((allowWhitelistMinting && _whitelist[_to] > 0) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist");
 
@@ -437,9 +388,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
             numMinted.increment();
             uint256 _tokenId = numMinted.current();
 
-            tokenDropId[_tokenId] = dropId.current();
-
-            string memory tokenURI_ = Strings.toString(_tokenId);
+            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
 
             _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
@@ -453,7 +402,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         uint8 _numMint,
         address _to
     ) public payable {
-        require((_totalMinted() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
+        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
         require((allowWhitelistMinting && _whitelist[_to] > 0) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist");
 
@@ -468,9 +417,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
             numMinted.increment();
             uint256 _tokenId = numMinted.current();
 
-            tokenDropId[_tokenId] = dropId.current();
-
-            string memory tokenURI_ = Strings.toString(_tokenId);
+            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
 
             _safeMint(_to, hashedTokenIds[_tokenId]);
             _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
@@ -540,6 +487,6 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
      * Destroy the NFT with the given token Id.
      */
     function burn(uint256 tokenId) public {
-        _burn(tokenId, true);
+        _burn(tokenId);
     }
 }

@@ -33,7 +33,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
-import "./ViridianGenesisNFT.sol";
+import "./ViridianNFT.sol";
 
 /**
  * Exchange contract that helps facilitate the bartering and offering of Viridian NFTs and ERC20 tokens between users.
@@ -52,7 +52,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     Counters.Counter private _offerIds;
 
     // Viridian Genesis NFT instance
-    ViridianGenesisNFT vNFT;
+    ViridianNFT vNFT;
 
     // Struct with all information for an offer
     struct Offer {
@@ -110,7 +110,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
         approvedTokens[_erc20Token] = true;
         viridianNFT = _viridianNFT;
 
-        vNFT = ViridianGenesisNFT(_viridianNFT);
+        vNFT = ViridianNFT(_viridianNFT);
     }
 
     string public override versionRecipient = "2.2.0";
@@ -146,7 +146,7 @@ contract ViridianExchangeOffers is BaseRelayRecipient, Ownable {
     /**
      * @dev Replaces msg.data for gasless support.
      */
-    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
+    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes calldata) {
         return BaseRelayRecipient._msgData();
     }
 
