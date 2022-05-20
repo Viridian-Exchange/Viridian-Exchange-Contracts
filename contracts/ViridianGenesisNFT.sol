@@ -35,7 +35,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 /**
 * Viridian Genesis NFT
 * 
-* This contract is designed to be used on our genesis Ethereum mint, it is extremely gas efficient for minting multiple packs and potentially run multiple drops.
+* This contract is designed to be used on our genesis Ethereum mint and future drops on the same contract, it is extremely gas efficient for minting multiple packs.
 * 
 * If this contract can be upgradable and/or be upgradable it could be converted to our main infrastructure contract.
 */
@@ -44,19 +44,22 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     // Keeps track of the current minted NFT for setting the pack URI correctly
     using Counters for Counters.Counter;
     Counters.Counter private numMinted;
+    Counters.Counter private dropId;
+
+    mapping(uint256 => uint256) private tokenDropId;
 
     // Mint and Opening control booleans
-    bool private openingLocked = true;
+    mapping(uint256 => bool) private openingUnlocked;
     bool private allowWhitelistMinting = false;
     bool private allowPublicMinting = false;
 
     mapping(address => uint8) private _whitelist;
 
+    // Default number of NFTs that can be minted in the Genesis drop
+    uint16 public maxMintAmt = 2000;
+
     // Default cost for minting one NFT in the Genesis drop
     uint256 public mintPrice = 200000000000000000;
-
-    // Default number of NFTs that can be minted in the Genesis drop
-    uint256 public maxMintAmt = 2000;
 
     // Mapping for determining whether an unrevealed pack has been opened yet
     mapping(uint256 => bool) public isOpened;
@@ -79,10 +82,16 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
 
         _setTrustedForwarder(_forwarder);
 
-        _baseURIextended = _packURI;
-        _baseURIextendedOpened = _openURI;
+        dropId.increment();
+        uint256 _dropId = dropId.current();
+
+        _baseURIextended[_dropId] = _packURI;
+        _baseURIextendedOpened[_dropId] = _openURI;
 
         treasury = _treasury;
+
+        allowWhitelistMinting = false;
+        allowPublicMinting = false;
     }
 
     string public override versionRecipient = "2.2.0";
@@ -104,15 +113,31 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     //address private viridianExchangeAddress;
 
     // Base URI for unopened NFTs
-    string private _baseURIextended;
+    mapping (uint256 => string) private _baseURIextended;
 
     // Base URI for opened NFTs
-    string private _baseURIextendedOpened;
+    mapping (uint256 => string) private _baseURIextendedOpened;
 
     // Enfornces only admins calling a function
     modifier onlyAdmin() {
         require(admins[_msgSender()] == true);
             _;
+    }
+
+    /**
+     * @dev Start a new drop while leaving the previous drops alone.
+     */
+    function newDrop(uint16 _numMints, uint256 _mintPrice, string memory _newUnrevealedBaseURI, string memory _newRevealedBaseURI) external onlyOwner() {
+        numMinted.reset();
+        maxMintAmt = _numMints;
+
+        dropId.increment();
+        uint256 _dropId = dropId.current();
+
+        _baseURIextended[_dropId] = _newUnrevealedBaseURI;
+        _baseURIextendedOpened[_dropId] = _newRevealedBaseURI;
+
+        mintPrice = _mintPrice;
     }
 
     /**
@@ -183,14 +208,14 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
      * @dev Admin can change base URI for unopened NFTs.
      */
     function setBaseURI(string memory baseURI_) external onlyAdmin() {
-        _baseURIextended = baseURI_;
+        _baseURIextended[dropId.current()] = baseURI_;
     }
 
     /**
      * @dev Admin can change base URI for openend NFTs.
      */
     function setBaseURIOpened(string memory baseURI_) external onlyAdmin() {
-        _baseURIextendedOpened = baseURI_;
+        _baseURIextendedOpened[dropId.current()] = baseURI_;
     }
 
     /**
@@ -212,15 +237,15 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
     /**
      * @dev Returns the baseURI for unopened NFTs.
      */
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseURIextended;
+    function _baseURI(uint256 _dropId) internal view virtual returns (string memory) {
+        return _baseURIextended[_dropId];
     }
 
     /**
      * @dev Returns the baseURI for opened NFTs.
      */
-    function _baseURIOpened() internal view virtual returns (string memory) {
-        return _baseURIextendedOpened;
+    function _baseURIOpened(uint256 _dropId) internal view virtual returns (string memory) {
+        return _baseURIextendedOpened[_dropId];
     }
     
     /**
@@ -233,10 +258,10 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         string memory base;
         
         if (isOpened[tokenId]) {
-            base = _baseURIOpened();
+            base = _baseURIOpened(tokenDropId[tokenId]);
         }
         else {
-            base = _baseURI();
+            base = _baseURI(tokenDropId[tokenId]);
             _tokenURI = _tokenURIs[tokenId];
         }
         
@@ -377,6 +402,8 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         for (uint256 i; i < _tokenIds.length; i++) {
             uint256 _tokenId = _tokenIds[i];
 
+            tokenDropId[_tokenId] = dropId.current();
+
             if (opened) {
                 isOpened[_tokenId] = true;
             }
@@ -410,6 +437,8 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
             numMinted.increment();
             uint256 _tokenId = numMinted.current();
 
+            tokenDropId[_tokenId] = dropId.current();
+
             string memory tokenURI_ = Strings.toString(_tokenId);
 
             _safeMint(_to, hashedTokenIds[_tokenId]);
@@ -439,6 +468,8 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
             numMinted.increment();
             uint256 _tokenId = numMinted.current();
 
+            tokenDropId[_tokenId] = dropId.current();
+
             string memory tokenURI_ = Strings.toString(_tokenId);
 
             _safeMint(_to, hashedTokenIds[_tokenId]);
@@ -450,21 +481,28 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
      * @dev Enables users to be able to open their NFTs.
      */
     function allowOpening() public onlyOwner() {
-        openingLocked = false;
+        openingUnlocked[dropId.current()] = true;
     }
 
     /**
      * @dev Disables the ability to open NFTs.
      */
     function freezeOpening() public onlyOwner() {
-        openingLocked = true;
+        openingUnlocked[dropId.current()] = false;
     }
 
     /**
      * @dev Returns whether users are able to open their NFTs.
      */
-    function isOpeningLocked() public view returns (bool) {
-        return openingLocked;
+    function isOpeningUnlocked() public view returns (bool) {
+        return openingUnlocked[dropId.current()];
+    }
+
+    /**
+     * @dev Returns whether users are able to open their NFTs.
+     */
+    function isTokenOpeningUnlocked(uint256 _tokenId) public view returns (bool) {
+        return openingUnlocked[tokenDropId[_tokenId]];
     }
 
     /**
@@ -474,7 +512,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         bool isApprovedOrOwner = (_msgSender() == ownerOf(_tokenId) ||
                 isApprovedForAll(ownerOf(_tokenId), _msgSender()));
         require(isApprovedOrOwner, "Caller is not approved or owner");
-        require(!openingLocked, "Opening is not alllowed yet");
+        require(isTokenOpeningUnlocked(_tokenId), "Opening is not alllowed yet");
 
         isOpened[_tokenId] = true;
 
@@ -489,7 +527,7 @@ contract ViridianGenesisNFT is ERC721A, Ownable, BaseRelayRecipient {
         bool isApprovedOrOwner = (_msgSender() == ownerOf(_tokenId) ||
                 isApprovedForAll(ownerOf(_tokenId), _msgSender()));
         require(isApprovedOrOwner, "Caller is not approved or owner");
-        require(!openingLocked, "Opening is not alllowed yet");
+        require(isTokenOpeningUnlocked(_tokenId), "Opening is not alllowed yet");
 
         isOpened[_tokenId] = true;
 
