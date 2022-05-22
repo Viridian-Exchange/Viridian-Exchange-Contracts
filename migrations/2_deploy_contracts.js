@@ -1,3 +1,4 @@
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 var ViridianToken = artifacts.require("ERC20TokenGasless");
 var ViridianNFT = artifacts.require("ViridianNFT");
 //var ViridianPack = artifacts.require("ViridianPack");
@@ -20,8 +21,10 @@ module.exports = async function(deployer) {
   //let packAddr;
   //let vrfAddr;
   //let passAddr;
+  const ViridianNFTDeploy = await deployProxy(ViridianNFT, [42], { deployer });
+  console.log('Deployed', ViridianNFTDeploy.address);
   await deployer.deploy(ViridianToken, forwarderAddress).then(c => tokenAddr = c.address);
-  await deployer.deploy(ViridianNFT, forwarderAddress, treasuryAddress, packURI, openedURI).then(c => nftAddr = c.address);
+  // await deployer.deploy(ViridianNFT, forwarderAddress, treasuryAddress, packURI, openedURI).then(c => nftAddr = c.address);
   await deployer.deploy(ViridianExchange, tokenAddr, nftAddr, forwarderAddress, treasuryAddress).then(c => excAddr = c.address);
   await deployer.deploy(ViridianExchangeOffers, tokenAddr, nftAddr, forwarderAddress, treasuryAddress).then(c => excOffAddr = c.address);
   ////await deployer.deploy(RandomNumber, packAddr, forwarderAddress).then(c => vrfAddr = c.address);

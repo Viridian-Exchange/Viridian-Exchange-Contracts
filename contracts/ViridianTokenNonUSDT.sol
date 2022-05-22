@@ -72,7 +72,7 @@ contract ERC20TokenGasless is Context, IERC20, Ownable, IERC20Metadata, BaseRela
         sender = BaseRelayRecipient._msgSender();
     }
 
-    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes memory) {
+    function _msgData() internal view override(Context, BaseRelayRecipient) returns (bytes calldata) {
         return BaseRelayRecipient._msgData();
     }
 
