@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *****    .*****************************************     *****.                                                                                                                                         
-  *****     ***************************************    .*****                                                                                                                                           
-   ******    ******                                   ******                                                                                                                                            
-     *****     *****                                ******        ***       ****    ***,      **********      ****      ***********       .***         .***          ***       ***                      
-      ******    ******                             *****           ***.    ****     ***,      ***     ***.    ****      ***      ****     .***        ******         *****     ***                      
-        *****     **************************,    ******             ***,  ***       ***,      ***    ****     ****      ***       ****    .***       **** ***        *** ****  ***                      
-         ,*****    ************************     *****                *******        ***,      ********.       ****      ***       ***     .***      ***,   ***       ***   *******                      
-           *****     *****                    ******                  *****         ***,      ***   ***,      ****      ***     ****,     .***     ************      ***     *****                      
-            ,*****    ******                ,*****                     .**          ***,      ***    ****     ****      **********        .***    ***        ***     ***       ***                      
-              *****     ******             ******                                                                                                                                                       
-                *****     ***********    ,*****                                                                                                                                                         
-                 ******    ********     ******                                                                                                                                                          
+ *****    .*****************************************     *****.
+  *****     ***************************************    .*****
+   ******    ******                                   ******
+     *****     *****                                ******        ***       ****    ***,      **********      ****      ***********       .***         .***          ***       ***
+      ******    ******                             *****           ***.    ****     ***,      ***     ***.    ****      ***      ****     .***        ******         *****     ***
+        *****     **************************,    ******             ***,  ***       ***,      ***    ****     ****      ***       ****    .***       **** ***        *** ****  ***
+         ,*****    ************************     *****                *******        ***,      ********.       ****      ***       ***     .***      ***,   ***       ***   *******
+           *****     *****                    ******                  *****         ***,      ***   ***,      ****      ***     ****,     .***     ************      ***     *****
+            ,*****    ******                ,*****                     .**          ***,      ***    ****     ****      **********        .***    ***        ***     ***       ***
+              *****     ******             ******
+                *****     ***********    ,*****
+                 ******    ********     ******
                    *****     *****    ******                       **********     ****    ****      ,**********     ***       ***.          **.          **        ***        **********      **********
-                    ******    **     *****                         ***.            **** ****      .****      *      ***       ***.        .****,         *****     ***      ****      *,      ***.      
-                      *****        ******                          *********         ******       ***               *************.       ,*******        *******   ***     ****               ********* 
-                       .*****     *****                            *********         ******       ***               *************.      ****  ****       ***  ********     ***.     *****     ********* 
-                         *****. ******                             ***.            **** ****      ****.             ***       ***.     ************      ***     *****      ****      ***     ***.      
+                    ******    **     *****                         ***.            **** ****      .****      *      ***       ***.        .****,         *****     ***      ****      *,      ***.
+                      *****        ******                          *********         ******       ***               *************.       ,*******        *******   ***     ****               *********
+                       .*****     *****                            *********         ******       ***               *************.      ****  ****       ***  ********     ***.     *****     *********
+                         *****. ******                             ***.            **** ****      ****.             ***       ***.     ************      ***     *****      ****      ***     ***.
                           .*********                               **********     ****    ****      ***********     ***       ***.    ***.       ***     ***       ***        ***********     **********
-                            *******                                                                                                                                                                     
-                              ***                                                                                                                                                                       
+                            *******
+                              ***
  */
 
 pragma solidity ^0.8.0;
@@ -35,9 +35,9 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
 /**
 * Viridian Genesis NFT
-* 
+*
 * This contract is designed to be used on our genesis Ethereum mint and future drops on the same contract, it is extremely gas efficient for minting multiple packs.
-* 
+*
 * If this contract can be upgradable and/or be upgradable it could be converted to our main infrastructure contract.
 */
 contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, BaseRelayRecipient {
@@ -46,7 +46,6 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private numMinted;
     CountersUpgradeable.Counter private dropId;
-    bool private initialized;
 
     mapping(uint256 => uint256) private tokenDropId;
 
@@ -81,10 +80,9 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
      function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) initializer public  {
-        require(!initialized, "Contract instance has already been initialized");
-        __ERC721_init("Viridian NFT", "VNFT");
-        initialized = true;
-
+        /* require(!initialized, "Contract instance has already been initialized"); */
+        /* __ERC721_init("Viridian NFT", "VNFT"); */
+        /* __Ownable_init(); */
         _setTrustedForwarder(_forwarder);
 
         dropId.increment();
@@ -92,7 +90,6 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
 
         _baseURIextended[_dropId] = _packURI;
         _baseURIextendedOpened[_dropId] = _openURI;
-
         treasury = _treasury;
     }
 
@@ -108,7 +105,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     // Events for the pack opening experience
     event Open(uint256 newTokenId);
     event PackResultDecided(uint16 tokenId);
-    
+
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
@@ -148,7 +145,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     function setTreasury(address payable _newTreasury) external onlyOwner() {
         treasury = _newTreasury;
     }
-    
+
     /**
      * @dev Owner can set the whitelist addresses and how many NFTs each whitelist member can mint.
      */
@@ -206,7 +203,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     function removeAdmin(address _newAdmin) external onlyOwner() {
         admins[_newAdmin] = false;
     }
-    
+
     /**
      * @dev Admin can change base URI for unopened NFTs.
      */
@@ -236,7 +233,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
-    
+
     /**
      * @dev Returns the baseURI for unopened NFTs.
      */
@@ -250,7 +247,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     function _baseURIOpened(uint256 _dropId) internal view virtual returns (string memory) {
         return _baseURIextendedOpened[_dropId];
     }
-    
+
     /**
      * Returns the token URI which will be different dependent on whether the NFT has been opened.
      */
@@ -259,7 +256,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
 
         string memory _tokenURI;
         string memory base;
-        
+
         if (isOpened[tokenId]) {
             base = _baseURIOpened(tokenDropId[tokenId]);
         }
@@ -267,7 +264,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
             base = _baseURI(tokenDropId[tokenId]);
             _tokenURI = _tokenURIs[tokenId];
         }
-        
+
         // If there is no base URI, return the token URI.
         if (bytes(base).length == 0) {
             return _tokenURI;
@@ -323,7 +320,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     }
 
     /**
-     * @dev Appends three strings together. 
+     * @dev Appends three strings together.
      */
     function append(string memory a, string memory b, string memory c) internal pure returns (string memory) {
 
@@ -374,7 +371,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
+        require((allowWhitelistMinting && _whitelist[_to] > 0) ||
                 allowPublicMinting, "Minting not enabled or not on whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
@@ -403,7 +400,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
+        require((allowWhitelistMinting && _whitelist[_to] > 0) ||
                 allowPublicMinting, "Minting not enabled or not on whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
