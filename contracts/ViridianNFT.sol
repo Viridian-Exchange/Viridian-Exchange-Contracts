@@ -339,10 +339,18 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
 
     function decrementWhitelistMintLimit(address _to, uint8 _numMinted) private {
         uint8 curWhitelistMintLimit = _whitelist[_to];
+
+        // (2-1) - 1 == 0
+        uint8 decremented = (curWhitelistMintLimit - 1) - _numMinted;
+
+        // If allocation is 2 decrement it to 0
         if (curWhitelistMintLimit == 2) {
             _whitelist[_to] = 0;
         }
         else {
+            uint8 decremented = curWhitelistMintLimit - _numMinted;
+            if ((curWhitelistMintLimit - _numMinted) < )
+
             _whitelist[_to] = curWhitelistMintLimit - _numMinted;
         }
     }
@@ -379,7 +387,7 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] <= _numMint) || 
+        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] - 1) <= _numMint) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
