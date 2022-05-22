@@ -337,6 +337,16 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         mintPrice = _newMintPrice;
     }
 
+    function decrementWhitelistMintLimit(address _to, uint8 _numMinted) private {
+        uint8 curWhitelistMintLimit = _whitelist[_to];
+        if (curWhitelistMintLimit == 2) {
+            _whitelist[_to] = 0;
+        }
+        else {
+            _whitelist[_to] = curWhitelistMintLimit - _numMinted;
+        }
+    }
+
     /**
      * @dev Admin addresses can manually mint NFTs either unrevealed or revealed. This will primarily be used for getting submissions onto the exchange.
      */
@@ -346,11 +356,6 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         bool opened
     ) public payable onlyAdmin() {
         require(_tokenIds.length != 0, 'Cannot mint 0 nfts.');
-
-        //TODO: Remove this after testing
-        require(_tokenIds.length * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
-        (payable(treasury)).transfer(msg.value);
-
 
         for (uint256 i; i < _tokenIds.length; i++) {
             uint256 _tokenId = _tokenIds[i];
@@ -374,14 +379,17 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist");
+        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] <= _numMint) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
-        //TODO: Remove this after testing
-        require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
-        (payable(treasury)).transfer(msg.value);
+        if (_whitelist[_to] > 1) {
+            require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
+            (payable(treasury)).transfer(msg.value);
+
+            decrementWhitelistMintLimit(_to, _numMint);
+        }
 
 
         for (uint256 i; i < _numMint; i++) {
@@ -403,14 +411,17 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist");
+        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] <= _numMint) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
-        //TODO: Remove this after testing
-        require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
-        (payable(treasury)).transfer(msg.value);
+        if (_whitelist[_to] > 1) {
+            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
+            (payable(treasury)).transfer(msg.value);
+
+            decrementWhitelistMintLimit(_to, _numMint);
+        }
 
 
         for (uint256 i; i < _numMint; i++) {
