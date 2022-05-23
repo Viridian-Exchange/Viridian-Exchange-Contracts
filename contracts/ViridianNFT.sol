@@ -81,8 +81,8 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
      */
      function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) initializer public  {
         /* require(!initialized, "Contract instance has already been initialized"); */
-        /* __ERC721_init("Viridian NFT", "VNFT"); */
-        /* __Ownable_init(); */
+        __ERC721_init("Viridian NFT", "VNFT");
+        __Ownable_init();
         _setTrustedForwarder(_forwarder);
 
         dropId.increment();
@@ -337,19 +337,10 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
     function decrementWhitelistMintLimit(address _to, uint8 _numMinted) private {
         uint8 curWhitelistMintLimit = _whitelist[_to];
 
-        // (2-1) - 1 == 0
+        // (2-1) - 1 == 0 // | (3-1) - 1 = 1
         uint8 decremented = (curWhitelistMintLimit - 1) - _numMinted;
 
-        // If allocation is 2 decrement it to 0
-        if (curWhitelistMintLimit == 2) {
-            _whitelist[_to] = 0;
-        }
-        else {
-            uint8 decremented = curWhitelistMintLimit - _numMinted;
-            if ((curWhitelistMintLimit - _numMinted) < )
-
-            _whitelist[_to] = curWhitelistMintLimit - _numMinted;
-        }
+        _whitelist[_to] = decremented;
     }
 
     /**
@@ -384,25 +375,27 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-<<<<<<< HEAD
-        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] - 1) <= _numMint) || 
-=======
-<<<<<<< HEAD
-        require((allowWhitelistMinting && _whitelist[_to] > 0) ||
-                allowPublicMinting, "Minting not enabled or not on whitelist");
-=======
-        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] <= _numMint) || 
->>>>>>> 8fc36e4fb264ccf098f8849c76fd521a4e43eb6d
-                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
->>>>>>> b2cf368a8db54a806545f6c9c41d7986db4eb3b3
+        
 
+        // If a user is given a whitelist limit of 1 they can mint for free once.
+        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
-        if (_whitelist[_to] > 1) {
+        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
+        if (allowPublicMinting) {
+            require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
+            (payable(treasury)).transfer(msg.value);
+        }
+        else if (_whitelist[_to] > 1) {
+            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
             require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
             (payable(treasury)).transfer(msg.value);
 
             decrementWhitelistMintLimit(_to, _numMint);
+        }
+        else {
+            _whitelist[_to] = 0;
         }
 
 
@@ -425,21 +418,27 @@ contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, Ba
         address _to
     ) public payable {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-<<<<<<< HEAD
-        require((allowWhitelistMinting && _whitelist[_to] > 0) ||
-                allowPublicMinting, "Minting not enabled or not on whitelist");
-=======
-        require((allowWhitelistMinting && _whitelist[_to] > 0 && _whitelist[_to] <= _numMint) || 
+
+        // If a user is given a whitelist limit of 1 they can mint for free once.
+        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
->>>>>>> b2cf368a8db54a806545f6c9c41d7986db4eb3b3
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
-        if (_whitelist[_to] > 1) {
+        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
+        if (allowPublicMinting) {
+            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
+            (payable(treasury)).transfer(msg.value);
+        }
+        else if (_whitelist[_to] > 1) {
+            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
             require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
             (payable(treasury)).transfer(msg.value);
 
             decrementWhitelistMintLimit(_to, _numMint);
+        }
+        else {
+            _whitelist[_to] = 0;
         }
 
 
