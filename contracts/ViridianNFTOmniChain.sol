@@ -2764,8 +2764,8 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
     /**
      * @dev Owner can set the whitelist addresses and how many NFTs each whitelist member can mint.
      */
-    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
-        for (uint256 i = 0; i < addresses.length; i++) {
+    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint, uint256 startIndex) external onlyOwner {
+        for (uint256 i = startIndex; i < addresses.length; i++) {
             _whitelist[addresses[i]] = numAllowedToMint;
         }
     }
@@ -2958,29 +2958,29 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         _whitelist[_to] = decremented;
     }
 
-    // /**
-    //  * @dev Admin addresses can manually mint NFTs either unrevealed or revealed. This will primarily be used for getting submissions onto the exchange.
-    //  */
-    // function adminMint(
-    //     uint256[] calldata _tokenIds,
-    //     address _to,
-    //     bool opened
-    // ) public payable onlyAdmin() {
-    //     require(_tokenIds.length != 0, 'Cannot mint 0 nfts.');
+    /**
+     * @dev Admin addresses can manually mint NFTs either unrevealed or revealed. This will primarily be used for getting submissions onto the exchange.
+     */
+    function adminMint(
+        uint256[] calldata _tokenIds,
+        address _to,
+        bool opened
+    ) public payable onlyAdmin() {
+        require(_tokenIds.length != 0, 'Cannot mint 0 nfts.');
 
-    //     for (uint256 i; i < _tokenIds.length; i++) {
-    //         uint256 _tokenId = _tokenIds[i];
+        for (uint256 i; i < _tokenIds.length; i++) {
+            uint256 _tokenId = _tokenIds[i];
 
-    //         if (opened) {
-    //             isOpened[_tokenId] = true;
-    //         }
+            if (opened) {
+                isOpened[_tokenId] = true;
+            }
 
-    //         string memory tokenURI_ = Strings.toString(_tokenId);
+            string memory tokenURI_ = Strings.toString(_tokenId);
 
-    //         _safeMint(_to, hashedTokenIds[_tokenId]);
-    //         _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
-    //     }
-    // }
+            _safeMint(_to, hashedTokenIds[_tokenId]);
+            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
+        }
+    }
 
     /**
      * @dev Users can mint during the drop using the blockchains native currency (ex: Ether on Ethereum).
@@ -3005,6 +3005,49 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         else if (_whitelist[_to] > 1) {
             require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
             require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
+            (payable(treasury)).transfer(msg.value);
+
+            decrementWhitelistMintLimit(_to, _numMint);
+        }
+        else {
+            _whitelist[_to] = 0;
+        }
+
+
+        for (uint256 i; i < _numMint; i++) {
+            numMinted.increment();
+            uint256 _tokenId = numMinted.current();
+
+            string memory tokenURI_ = Strings.toString(_tokenId);
+
+            _safeMint(_to, hashedTokenIds[_tokenId]);
+            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
+        }
+    }
+
+    /**
+     * @dev Users can mint with USD on crossmint during the drop for a convenience fee (ex: Ether on Ethereum).
+     */
+    function crossmintMint(
+        uint8 _numMint,
+        address _to
+    ) public payable {
+        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
+
+        // If a user is given a whitelist limit of 1 they can mint for free once.
+        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
+
+        require(_numMint != 0, 'Cannot mint 0 nfts.');
+
+        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
+        if (allowPublicMinting) {
+            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
+            (payable(treasury)).transfer(msg.value);
+        }
+        else if (_whitelist[_to] > 1) {
+            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
+            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
             (payable(treasury)).transfer(msg.value);
 
             decrementWhitelistMintLimit(_to, _numMint);
