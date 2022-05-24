@@ -3155,7 +3155,7 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         _burn(tokenId);
 
         // abi.encode() the payload with the values to send
-        bytes memory payload = abi.encode(_to, tokenId, true);
+        bytes memory payload = abi.encode(_to, tokenId, isOpened[tokenId]);
 
         // encode adapterParams to specify more gas for the destination
         uint16 version = 1;
@@ -3209,20 +3209,21 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         bytes memory _payload
     ) internal override {            
         // decode
-        (address toAddr, uint256 tokenId, bool transfer) = abi.decode(
+        (address toAddr, uint256 tokenId, bool _isOpened) = abi.decode(
             _payload,
             (address, uint256, bool)
         );
 
         // mint the tokens back into existence on destination chain to complete standard cross-chain transfer
-        if (transfer) {
+        if (_isOpened) {
+            isOpened[tokenId] = true;
             _safeMint(toAddr, tokenId);
         }
         //TODO: Figure out if this is necessary this handling might be able to be done on the 
         // exchange contract.
         else {
             //Call safeTransferFromOmniChain here with _srcChainId as the destination chain
-            safeTransferFromOmniChain(tokenId, toAddr, _srcChainId);
+            _safeMint(toAddr, tokenId);
         }
     }
 
