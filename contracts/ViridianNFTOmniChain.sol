@@ -3010,6 +3010,7 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
             decrementWhitelistMintLimit(_to, _numMint);
         }
         else {
+            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
             _whitelist[_to] = 0;
         }
 
@@ -3053,6 +3054,7 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
             decrementWhitelistMintLimit(_to, _numMint);
         }
         else {
+            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
             _whitelist[_to] = 0;
         }
 
@@ -3216,7 +3218,8 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
             _safeMint(toAddr, tokenId);
         }
         else {
-            //Probably call safeTransferFromOmniChain here with _srcChainId as the destination chain
+            //Call safeTransferFromOmniChain here with _srcChainId as the destination chain
+            safeTransferFromOmniChain(tokenId, toAddr, _srcChainId);
         }
     }
 

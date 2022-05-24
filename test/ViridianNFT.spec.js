@@ -196,6 +196,78 @@ contract('Testing ERC721 contract', function(accounts) {
         expect(Number.parseInt(ownedPacks)).to.equal(2);
     })
 
+    it('Should revert if a Third NFT is minted over allocation', async () => {
+        console.log("OWNER: " + await vnft.owner());
+        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+        await vnft.setWhitelist([accounts[1]], 3, 0)
+        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+
+        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+
+        expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        await truffleAssert.reverts(
+            vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}),
+            "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist"
+        );
+    })
+
+    it('Should revert if a Third NFT is minted over allocation', async () => {
+        console.log("OWNER: " + await vnft.owner());
+        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+        await vnft.setWhitelist([accounts[1]], 3, 0)
+        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+
+        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+
+        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        await truffleAssert.reverts(
+            vnft.mint(3, accounts[1], {from: accounts[1], value: 200000000000000000}),
+            "Cannot mint more NFTs than your whitelist limit."
+        );
+    })
+
+    it('Should revert if a Third NFT is minted over allocation', async () => {
+        console.log("OWNER: " + await vnft.owner());
+        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+        await vnft.setWhitelist([accounts[1]], 2, 0)
+        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+
+        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+
+        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        await truffleAssert.reverts(
+            vnft.mint(2, accounts[1], {from: accounts[1], value: 200000000000000000}),
+            "Cannot mint more NFTs than your whitelist limit."
+        );
+    })
+
+    it('Should revert if a Third NFT is minted over allocation', async () => {
+        console.log("OWNER: " + await vnft.owner());
+        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+        await vnft.setWhitelist([accounts[1]], 1, 0)
+        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+
+        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+
+        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        await truffleAssert.reverts(
+            vnft.mint(2, accounts[1], {from: accounts[1]}),
+            "Cannot mint more than 1 NFT in the free minting tier."
+        );
+    })
+
     it('Proof of integrity should work', async () => {
         let poiInt = await proofOfIntegrity.generateProof("Pokemon | PSA | Breh | 1234421", 7843925748932754);
 
