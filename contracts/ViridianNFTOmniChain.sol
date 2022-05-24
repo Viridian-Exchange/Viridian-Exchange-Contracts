@@ -3189,7 +3189,8 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         );
     }
 
-    //TODO: Write a version of traverse chain that you call from a different chain than the NFT is on. Will have to be some kind of _LZReceive modification I think.
+    //TODO: (This might be able to be handled on the exchange contract) 
+    // Write a version of safeTransferFromOmniChain that you call from a different chain than the NFT is on. Will have to be some kind of _LZReceive modification I think.
     
 
     // just in case this fixed variable limits us from future integrations
@@ -3217,6 +3218,8 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         if (transfer) {
             _safeMint(toAddr, tokenId);
         }
+        //TODO: Figure out if this is necessary this handling might be able to be done on the 
+        // exchange contract.
         else {
             //Call safeTransferFromOmniChain here with _srcChainId as the destination chain
             safeTransferFromOmniChain(tokenId, toAddr, _srcChainId);
