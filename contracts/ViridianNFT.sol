@@ -26,6 +26,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -83,6 +85,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
      function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) public initializer  {
         /* require(!initialized, "Contract instance has already been initialized"); */
         __ERC721_init("Viridian NFT", "VNFT");
+        __ERC721Enumerable_init();
         __Ownable_init();
         _setTrustedForwarder(_forwarder);
 
@@ -154,8 +157,8 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Owner can set the whitelist addresses and how many NFTs each whitelist member can mint.
      */
-    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
-        for (uint256 i = 0; i < addresses.length; i++) {
+    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint, uint256 startIndex) external onlyOwner {
+        for (uint256 i = startIndex; i < addresses.length; i++) {
             _whitelist[addresses[i]] = numAllowedToMint;
         }
     }
@@ -187,7 +190,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Overridden version of isApprovedForAll where the admins (exchange addresses) are always approved
      */
-    function isApprovedForAll(address owner, address operator) public view override returns (bool) {
+    function isApprovedForAll(address owner, address operator) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (bool) {
         if (admins[_msgSender()]) {
             return true;
         }
@@ -318,13 +321,6 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     }
 
     /**
-     * @dev Adjusted mint price convenience fee for mintign with USD.
-     */
-    function convenienceFee() private view returns (uint256) {
-        return mintPrice / 8;
-    }
-
-    /**
      * @dev Appends three strings together.
      */
     function append(string memory a, string memory b, string memory c) internal pure returns (string memory) {
@@ -400,6 +396,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
             decrementWhitelistMintLimit(_to, _numMint);
         }
         else {
+            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
             _whitelist[_to] = 0;
         }
 
@@ -416,7 +413,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     }
 
     /**
-     * @dev Users can mint with USD on crossmint during the drop for a convenience fee (ex: Ether on Ethereum).
+     * @dev Users can mint with USD on crossmint during the drop.
      */
     function crossmintMint(
         uint8 _numMint,
@@ -432,17 +429,18 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
 
         // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
         if (allowPublicMinting) {
-            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
+            require(_numMint * (mintPrice) == msg.value, "Must pay correct amount of ETH to mint.");
             (payable(treasury)).transfer(msg.value);
         }
         else if (_whitelist[_to] > 1) {
             require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
-            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
+            require(_numMint * (mintPrice) == msg.value, "Must pay correct amount of ETH to mint.");
             (payable(treasury)).transfer(msg.value);
 
             decrementWhitelistMintLimit(_to, _numMint);
         }
         else {
+            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
             _whitelist[_to] = 0;
         }
 

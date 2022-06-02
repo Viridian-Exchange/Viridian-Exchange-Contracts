@@ -26,6 +26,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -83,6 +84,7 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
      function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) public initializer  {
         /* require(!initialized, "Contract instance has already been initialized"); */
         __ERC721_init("Viridian NFT", "VNFT");
+        __ERC721Enumerable_init();
         __Ownable_init();
         _setTrustedForwarder(_forwarder);
 
@@ -184,16 +186,16 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
         return BaseRelayRecipient._msgData();
     }
 
-    /**
-     * @dev Overridden version of isApprovedForAll where the admins (exchange addresses) are always approved
-     */
-    function isApprovedForAll(address owner, address operator) public view override returns (bool) {
-        if (admins[_msgSender()]) {
-            return true;
-        }
+    // /**
+    //  * @dev Overridden version of isApprovedForAll where the admins (exchange addresses) are always approved
+    //  */
+    // function isApprovedForAll(address owner, address operator) public view override(ERC721Upgradeable) returns (bool) {
+    //     if (admins[_msgSender()]) {
+    //         return true;
+    //     }
 
-        return super.isApprovedForAll(owner, operator);
-    }
+    //     return super.isApprovedForAll(owner, operator);
+    // }
 
     /**
      * @dev Owner can add new admins addresses if exchange is upgraded.
