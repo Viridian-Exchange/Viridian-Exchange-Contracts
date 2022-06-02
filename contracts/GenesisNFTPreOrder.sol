@@ -54,28 +54,25 @@ contract GenesisNFTPreOrder is Ownable {
         require(numPreOrders * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
         require(numOrders + numPreOrders <= maxPreOrders, "Cannot mint more than the max allocated pre-orders");
 
-        preOrders[msg.sender] = numPreOrders;
-
         numOrders += numPreOrders;
-        if (preOrders[msg.sender] == 0) {
-            numBuyers.increment();
-            uint256 curOrderIndex = numBuyers.current();
-            preOrderAddresses[curOrderIndex] = msg.sender;
-            preOrders[msg.sender] = numPreOrders;
-        }
-        else {
-            preOrders[msg.sender] += numPreOrders;
-        }
+        numBuyers.increment();
+        uint256 curOrderIndex = numBuyers.current();
+        preOrderAddresses[curOrderIndex] = msg.sender;
+        preOrders[msg.sender] += numPreOrders;
         
     }
 
     function preOrderAddressList() external view onlyOwner() returns (address[] memory addrs) {
+        addrs = new address[](numBuyers.current());
+        
         for(uint256 i = 1; i <= numBuyers.current(); i++) {
             addrs[i - 1] = preOrderAddresses[i];
         }
     }
 
     function preOrderAmountList() external view onlyOwner() returns (uint256[] memory amts) {
+        amts = new uint256[](numBuyers.current());
+        
         for(uint256 i = 1; i <= numBuyers.current(); i++) {
             amts[i - 1] = preOrders[preOrderAddresses[i]];
         }

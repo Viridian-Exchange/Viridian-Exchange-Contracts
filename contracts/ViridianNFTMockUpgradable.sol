@@ -40,7 +40,7 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 *
 * If this contract can be upgradable and/or be upgradable it could be converted to our main infrastructure contract.
 */
-contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, BaseRelayRecipient {
+contract ViridianNFTMockUpgradable is Initializable, ERC721Upgradeable, OwnableUpgradeable, BaseRelayRecipient {
 
     // Keeps track of the current minted NFT for setting the pack URI correctly
     using CountersUpgradeable for CountersUpgradeable.Counter;

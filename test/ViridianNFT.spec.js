@@ -1,14 +1,15 @@
 //import chai from 'chai'
 //import chaiAsPromised from 'chai-as-promised'
 const truffleAssert = require('truffle-assertions');
-//const { deployProxy } = require('@openzeppelin/truffle-upgrades');
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 //const vtJSON = require('../build/contracts/ViridianToken.json');
 chai.use(chaiAsPromised)
 const { expect, assert } = chai
 
-var ViridianNFT = artifacts.require("ViridianNFTOmniChain");
+var ViridianNFT = artifacts.require("ViridianNFT");
+var ViridianNFTMockUpgradable = artifacts.require("ViridianNFTMockUpgradable");
 var POI = artifacts.require("ProofOfIntegrity");
 
 contract('Testing ERC721 contract', function(accounts) {
@@ -32,241 +33,342 @@ contract('Testing ERC721 contract', function(accounts) {
         //vnft = await ViridianNFT.new();
         proofOfIntegrity = await POI.new();
 
-        vnft = await ViridianNFT.new(accounts[3], accounts[1], "https://api.viridianexchange.com/pack/", "https://api.viridianexchange.com/vnft/");
+        //vnft = await ViridianNFT.new(accounts[3], accounts[1], "https://api.viridianexchange.com/pack/", "https://api.viridianexchange.com/vnft/");
     })
 
-    it('should be able to deploy ERC721 Token', async () => {
-        expect(await vnft.symbol()).to.equal(symbol)
-        expect(await vnft.name()).to.equal(name)
-    })
+    it('upgrading is functional', async () => {
+        const box = await deployProxy(ViridianNFT, [accounts[3], accounts[1], "https://api.viridianexchange.com/pack/", "https://api.viridianexchange.com/vnft/"], {});
+        const box2 = await upgradeProxy(box.address, ViridianNFTMockUpgradable);
+    
+        const value = await box2.treasury();
+        assert.equal(value, accounts[1]);
+      });
 
-    it('should be able to mint vnft', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setPublicMinting(true, {from: await accounts[0]});
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+    // it('should be able to deploy ERC721 Token', async () => {
+    //     expect(await vnft.symbol()).to.equal(symbol)
+    //     expect(await vnft.name()).to.equal(name)
+    // })
 
-        //await vnft.lockInPackResult(1, {from: accounts[0]});
+    // it('should be able to mint vnft', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: await accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
+    //     //await vnft.lockInPackResult(1, {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
-    })
+    //     let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
-    it('ownership should be correctly enforced after minting', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setPublicMinting(true, {from: accounts[0]});
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
+    // })
 
-        //await vnft.lockInPackResult(1, {from: accounts[0]});
+    // it('ownership should be correctly enforced after minting', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
 
-        let owner1 = await vnft.ownerOf(123, {from: accounts[0]});
-        let owner2 = await vnft.ownerOf(124, {from: accounts[0]});
+    //     //await vnft.lockInPackResult(1, {from: accounts[0]});
 
-        expect(owner1).to.equal(accounts[0]);
-        expect(owner2).to.equal(accounts[0]);
-    })
+    //     let owner1 = await vnft.ownerOf(123, {from: accounts[0]});
+    //     let owner2 = await vnft.ownerOf(124, {from: accounts[0]});
 
-    it('vnft URI should have correct index', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setPublicMinting(true, {from: accounts[0]});
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+    //     expect(owner1).to.equal(accounts[0]);
+    //     expect(owner2).to.equal(accounts[0]);
+    // })
 
-        expect(await vnft.tokenURI(123)).to
-        .equal("https://api.viridianexchange.com/pack/1");
+    // it('vnft URI should have correct index', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
 
-        expect(await vnft.tokenURI(124)).to
-        .equal("https://api.viridianexchange.com/pack/2");
-    })
+    //     expect(await vnft.tokenURI(123)).to
+    //     .equal("https://api.viridianexchange.com/pack/1");
 
-    it('should allow safe transfers', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setPublicMinting(true, {from: accounts[0]});
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+    //     expect(await vnft.tokenURI(124)).to
+    //     .equal("https://api.viridianexchange.com/pack/2");
+    // })
 
-        let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
+    // it('should allow safe transfers', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
-        await vnft.safeTransferFrom(accounts[0], accounts[1], 123, {from: accounts[0]})
-        expect(await vnft.ownerOf(123)).to.equal(accounts[1])
-    })
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-    it('should be able open vnft', async () => {
-        console.log("OWNER: " + await vnft.owner());
+    //     await vnft.safeTransferFrom(accounts[0], accounts[1], 123, {from: accounts[0]})
+    //     expect(await vnft.ownerOf(123)).to.equal(accounts[1])
+    // })
 
-        await vnft.addAdmin(vnft.address, {from: accounts[0]});
-        await vnft.setPublicMinting(true, {from: accounts[0]});
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+    // it('should be able open vnft', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
 
-        //await vnft.lockInPackResult(1, {from: accounts[0]});
+    //     await vnft.addAdmin(vnft.address, {from: accounts[0]});
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
+    //     //await vnft.lockInPackResult(1, {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
-        await vnft.allowOpening();
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await vnft.open(123);
+    //     await vnft.allowOpening();
 
-        ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
+    //     await vnft.open(123);
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
-    })
+    //     ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
-    it('token URI of nft should follow correct format', async () => {
-        console.log("OWNER: " + await vnft.owner());
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
+    // })
+
+    // it('token URI of nft should follow correct format', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
         
-        await vnft.setPublicMinting(true, {from: accounts[0]});
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
 
-        //await vnft.setBaseURI("https://api.viridianexchange.com/pack/");
+    //     //await vnft.setBaseURI("https://api.viridianexchange.com/pack/");
 
-        //await vnft.lockInPackResult(1, {from: accounts[0]});
+    //     //await vnft.lockInPackResult(1, {from: accounts[0]});
 
-        let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
+    //     let ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await vnft.allowOpening();
+    //     await vnft.allowOpening();
 
-        await vnft.open(123);
+    //     await vnft.open(123);
 
-        ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
+    //     ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        console.log(await vnft.tokenURI(123));
+    //     console.log(await vnft.tokenURI(123));
 
-        expect(await vnft.tokenURI(123)).to.equal("https://api.viridianexchange.com/vnft/123");
-        expect(await vnft.tokenURI(124)).to.equal("https://api.viridianexchange.com/pack/2");
-    })
+    //     expect(await vnft.tokenURI(123)).to.equal("https://api.viridianexchange.com/vnft/123");
+    //     expect(await vnft.tokenURI(124)).to.equal("https://api.viridianexchange.com/pack/2");
+    // })
 
-    it('should be able to mint vnft on whitelist in free tier', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 1, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(1, accounts[1], {from: accounts[1]}); //tokenId
+    // it('should be able to mint vnft on whitelist in free tier', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 1, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(1, accounts[1], {from: accounts[1]}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(1);
-    })
+    //     expect(Number.parseInt(ownedPacks)).to.equal(1);
+    // })
 
-    it('should be able to mint one nft when allocated that in whitelist', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 2, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    // it('should be able to mint one nft when allocated that in whitelist', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 2, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(1);
-    })
+    //     expect(Number.parseInt(ownedPacks)).to.equal(1);
+    // })
 
-    it('should be able to mint two nfts when allocated two in whitelist', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 3, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(2, accounts[1], {from: accounts[1], value: 400000000000000000}); //tokenId
+    // it('should be able to mint two nfts when allocated two in whitelist', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 3, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[1], {from: accounts[1], value: 400000000000000000}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
-    })
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
+    // })
 
-    it('should be able to mint one nfts twice when allocated two in whitelist', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 3, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
-        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    // it('should be able to mint one nfts twice when allocated two in whitelist', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 3, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    //     await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
-    })
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
+    // })
 
-    it('Should revert if a Third NFT is minted over allocation', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 3, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
-        await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    // it('Should revert if a Third NFT is minted over allocation', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 3, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    //     await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
 
-        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await truffleAssert.reverts(
-            vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}),
-            "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist"
-        );
-    })
+    //     await truffleAssert.reverts(
+    //         vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}),
+    //         "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist"
+    //     );
+    // })
 
-    it('Should revert if a Third NFT is minted over allocation', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 3, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    // it('Should revert if a Third NFT is minted over allocation', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 3, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    //     // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
 
-        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     // expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await truffleAssert.reverts(
-            vnft.mint(3, accounts[1], {from: accounts[1], value: 200000000000000000}),
-            "Cannot mint more NFTs than your whitelist limit."
-        );
-    })
+    //     await truffleAssert.reverts(
+    //         vnft.mint(3, accounts[1], {from: accounts[1], value: 200000000000000000}),
+    //         "Cannot mint more NFTs than your whitelist limit."
+    //     );
+    // })
 
-    it('Should revert if a Third NFT is minted over allocation', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 2, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    // it('Should revert if a Third NFT is minted over allocation', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 2, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    //     // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
 
-        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     // expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await truffleAssert.reverts(
-            vnft.mint(2, accounts[1], {from: accounts[1], value: 200000000000000000}),
-            "Cannot mint more NFTs than your whitelist limit."
-        );
-    })
+    //     await truffleAssert.reverts(
+    //         vnft.mint(2, accounts[1], {from: accounts[1], value: 200000000000000000}),
+    //         "Cannot mint more NFTs than your whitelist limit."
+    //     );
+    // })
 
-    it('Should revert if a Third NFT is minted over allocation', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 1, 0)
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    // it('Should revert if a Third NFT is minted over allocation', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setWhitelistMinting(true, {from: await accounts[0]});
+    //     await vnft.setWhitelist([accounts[1]], 1, 0)
+    //     await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
+    //     // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
+    //     // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000}); //tokenId
 
-        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
+    //     // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
 
-        // expect(Number.parseInt(ownedPacks)).to.equal(2);
+    //     // expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await truffleAssert.reverts(
-            vnft.mint(2, accounts[1], {from: accounts[1]}),
-            "Cannot mint more than 1 NFT in the free minting tier."
-        );
-    })
+    //     await truffleAssert.reverts(
+    //         vnft.mint(2, accounts[1], {from: accounts[1]}),
+    //         "Cannot mint more than 1 NFT in the free minting tier."
+    //     );
+    // });
+
+    // it('new drop should change base URI', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125, 126], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+
+    //     await vnft.newDrop(2, "400000000000000000", "https://api.viridianexchange.com/v2/pack/", "https://api.viridianexchange.com/v2/vnft/", {from: accounts[0]});
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([125, 126], 1, 2, {from: accounts[0]});
+
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 800000000000000000}); //tokenId
+
+    //     expect(await vnft.tokenURI(123)).to
+    //     .equal("https://api.viridianexchange.com/pack/1");
+
+    //     expect(await vnft.tokenURI(124)).to
+    //     .equal("https://api.viridianexchange.com/pack/2");
+
+    //     expect(await vnft.tokenURI(125)).to
+    //     .equal("https://api.viridianexchange.com/v2/pack/1");
+
+    //     expect(await vnft.tokenURI(126)).to
+    //     .equal("https://api.viridianexchange.com/v2/pack/2");
+
+        
+    // })
+
+    // it('new drop should change base URI', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125, 126], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+
+    //     await vnft.newDrop(2, "400000000000000000", "https://api.viridianexchange.com/v2/pack/", "https://api.viridianexchange.com/v2/vnft/", {from: accounts[0]});
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([125, 126], 1, 2, {from: accounts[0]});
+
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 800000000000000000}); //tokenId
+
+    //     expect(await vnft.tokenURI(123)).to
+    //     .equal("https://api.viridianexchange.com/pack/1");
+
+    //     expect(await vnft.tokenURI(124)).to
+    //     .equal("https://api.viridianexchange.com/pack/2");
+
+    //     expect(await vnft.tokenURI(125)).to
+    //     .equal("https://api.viridianexchange.com/v2/pack/1");
+
+    //     expect(await vnft.tokenURI(126)).to
+    //     .equal("https://api.viridianexchange.com/v2/pack/2");
+
+        
+    // })
+
+    // it('should be able to do two drops after the first', async () => {
+    //     console.log("OWNER: " + await vnft.owner());
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([123, 124, 125, 126], 1, 3, {from: accounts[0]});
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
+
+    //     await vnft.newDrop(2, "400000000000000000", "https://api.viridianexchange.com/v2/pack/", "https://api.viridianexchange.com/v2/vnft/", {from: accounts[0]});
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([125, 126], 1, 2, {from: accounts[0]});
+
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 800000000000000000}); //tokenId
+
+    //     await vnft.newDrop(2, "800000000000000000", "https://api.viridianexchange.com/v3/pack/", "https://api.viridianexchange.com/v3/vnft/", {from: accounts[0]});
+    //     await vnft.setPublicMinting(true, {from: accounts[0]});
+    //     await vnft.setHashedTokenIds([127, 128], 1, 2, {from: accounts[0]});
+
+    //     await vnft.mint(2, accounts[0], {from: accounts[0], value: 1600000000000000000}); //tokenId
+
+    //     expect(await vnft.tokenURI(123)).to
+    //     .equal("https://api.viridianexchange.com/pack/1");
+
+    //     expect(await vnft.tokenURI(124)).to
+    //     .equal("https://api.viridianexchange.com/pack/2");
+
+    //     expect(await vnft.tokenURI(125)).to
+    //     .equal("https://api.viridianexchange.com/v2/pack/1");
+
+    //     expect(await vnft.tokenURI(126)).to
+    //     .equal("https://api.viridianexchange.com/v2/pack/2");
+
+    //     expect(await vnft.tokenURI(127)).to
+    //     .equal("https://api.viridianexchange.com/v3/pack/1");
+
+    //     expect(await vnft.tokenURI(128)).to
+    //     .equal("https://api.viridianexchange.com/v3/pack/2");
+
+        
+    // })
 
     it('Proof of integrity should work', async () => {
         let poiInt = await proofOfIntegrity.generateProof("Pokemon | PSA | Breh | 1234421", 7843925748932754);
@@ -277,7 +379,10 @@ contract('Testing ERC721 contract', function(accounts) {
     });
 })
 
-/* Layer Zero Testing with Mock example
+/* 
+***** Layer Zero Testing with Mock example *****
+*
+
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
 

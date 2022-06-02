@@ -2752,6 +2752,9 @@ contract ViridianNFTOmniChain is ERC721, Ownable, BaseRelayRecipient, Nonblockin
         _baseURIextendedOpened[_dropId] = _newRevealedBaseURI;
 
         mintPrice = _mintPrice;
+
+        allowPublicMinting = false;
+        allowWhitelistMinting = false;
     }
 
     /**

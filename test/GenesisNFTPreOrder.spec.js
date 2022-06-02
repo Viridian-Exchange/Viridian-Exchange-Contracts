@@ -28,8 +28,8 @@ contract('Testing ERC721 contract', function(accounts) {
 
     it('Should be able to pre order multiple to one account', async () => {
         await po.preOrder(3, {from: account1, value: 220000000000000000 * 3});
-        expect(await po.preOrderAddressList()).to.equal([account1])
-        expect(await po.preOrderAddressList()).to.equal([3])
+        expect(JSON.stringify(await po.preOrderAddressList())).to.equal(JSON.stringify([account1]))
+        expect(JSON.stringify(await po.preOrderAmountList())).to.equal(JSON.stringify(["3"]))
     })
 
     it('Should be able to preorder 1 to multiple accounts', async () => {
@@ -38,7 +38,21 @@ contract('Testing ERC721 contract', function(accounts) {
         await po.preOrder(1, {from: account2, value: 220000000000000000});
         await po.preOrder(1, {from: account3, value: 220000000000000000});
         await po.preOrder(1, {from: account4, value: 220000000000000000});
-        expect(await po.preOrderAddressList()).to.equal([account, account1, account2, account3, account4]);
-        expect(await po.preOrderAddressList()).to.equal([1, 1, 1, 1, 1])
+        console.log("POAdL: " + JSON.stringify(await po.preOrderAddressList()));
+        console.log("POAmL: " + JSON.stringify(await po.preOrderAmountList()))
+        expect(JSON.stringify(await po.preOrderAddressList())).to.equal(JSON.stringify([account, account1, account2, account3, account4]));
+        expect(JSON.stringify(await po.preOrderAmountList())).to.equal(JSON.stringify(["1", "1", "1", "1", "1"]))
+    })
+
+    it('Should be able to preorder different amounts to multiple accounts', async () => {
+        await po.preOrder(1, {from: account, value: 220000000000000000});
+        await po.preOrder(1, {from: account1, value: 220000000000000000});
+        await po.preOrder(3, {from: account2, value: 660000000000000000});
+        await po.preOrder(1, {from: account3, value: 220000000000000000});
+        await po.preOrder(1, {from: account4, value: 220000000000000000});
+        console.log("POAdL: " + JSON.stringify(await po.preOrderAddressList()));
+        console.log("POAmL: " + JSON.stringify(await po.preOrderAmountList()))
+        expect(JSON.stringify(await po.preOrderAddressList())).to.equal(JSON.stringify([account, account1, account2, account3, account4]));
+        expect(JSON.stringify(await po.preOrderAmountList())).to.equal(JSON.stringify(["1", "1", "3", "1", "1"]))
     })
 })
