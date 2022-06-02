@@ -49,6 +49,14 @@ contract('Testing ERC721 contract', function(accounts) {
         expect(await vnft.name()).to.equal(name)
     })
 
+    it('should be able to deploy ERC721 Token', async () => {
+        let approved = await vnft.isApprovedForAll(vnft.address, accounts[3]);
+        assert.equal(approved, false);
+        await vnft.addAdmin(accounts[3]);
+        approved = await vnft.isApprovedForAll(vnft.address, accounts[3]);
+        assert.equal(approved, true);
+    })
+
     it('should be able to mint vnft', async () => {
         console.log("OWNER: " + await vnft.owner());
         await vnft.setPublicMinting(true, {from: await accounts[0]});

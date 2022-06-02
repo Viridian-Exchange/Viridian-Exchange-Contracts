@@ -26,8 +26,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -190,8 +188,8 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Overridden version of isApprovedForAll where the admins (exchange addresses) are always approved
      */
-    function isApprovedForAll(address owner, address operator) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (bool) {
-        if (admins[_msgSender()]) {
+    function isApprovedForAll(address owner, address operator) public view override returns (bool) {
+        if (admins[operator]) {
             return true;
         }
 
