@@ -26,7 +26,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -40,7 +39,7 @@ import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 *
 * If this contract can be upgradable and/or be upgradable it could be converted to our main infrastructure contract.
 */
-contract ViridianNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, BaseRelayRecipient {
+contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgradeable, BaseRelayRecipient {
 
     // Keeps track of the current minted NFT for setting the pack URI correctly
     using CountersUpgradeable for CountersUpgradeable.Counter;
