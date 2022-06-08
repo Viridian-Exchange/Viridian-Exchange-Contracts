@@ -31,9 +31,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
-* Viridian Genesis NFT
+* Viridian NFT
 *
 * This contract is designed to be used on our genesis Ethereum mint and future drops on the same contract, it is extremely gas efficient for minting multiple packs.
 *
@@ -54,12 +55,16 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     bool private allowPublicMinting;
 
     mapping(address => uint8) private _whitelist;
+    mapping(address => bool) private _mintGiveawayWinners;
 
     // Default number of NFTs that can be minted in the Genesis drop
-    uint16 public maxMintAmt;
+    uint256 public maxMintAmt;
 
     // Default cost for minting one NFT in the Genesis drop
     uint256 public mintPrice;
+
+    // ERC20 address for ERC20 mint
+    address ERC20Addr;
 
     // Mapping for determining whether an unrevealed pack has been opened yet
     mapping(uint256 => bool) public isOpened;
@@ -75,17 +80,20 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
 
     string public override versionRecipient;
 
+    address crossChainForwarder;
+
     using StringsUpgradeable for uint256;
 
     /**
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
-     function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) public initializer  {
+     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI) public initializer  {
         /* require(!initialized, "Contract instance has already been initialized"); */
         __ERC721_init("Viridian NFT", "VNFT");
         __ERC721Enumerable_init();
         __Ownable_init();
         _setTrustedForwarder(_forwarder);
+        crossChainForwarder = _crossChainForwarder;
 
         dropId.increment();
         uint256 _dropId = dropId.current();
@@ -132,9 +140,8 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Start a new drop while leaving the previous drops alone.
      */
-    function newDrop(uint16 _numMints, uint256 _mintPrice, string memory _newUnrevealedBaseURI, string memory _newRevealedBaseURI) external onlyOwner() {
-        numMinted.reset();
-        maxMintAmt = _numMints;
+    function newDrop(uint256 _numMints, uint256 _mintPrice, string memory _newUnrevealedBaseURI, string memory _newRevealedBaseURI) external onlyOwner() {
+        maxMintAmt = _numMints + numMinted.current();
 
         dropId.increment();
         uint256 _dropId = dropId.current();
@@ -158,6 +165,12 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint, uint256 startIndex) external onlyOwner {
         for (uint256 i = startIndex; i < addresses.length; i++) {
             _whitelist[addresses[i]] = numAllowedToMint;
+        }
+    }
+
+    function setFreeMintlist(address[] memory freeMinters) external onlyOwner {
+        for (uint256 i = 0; i < freeMinters.length; i++) {
+            _mintGiveawayWinners[freeMinters[i]] = true;
         }
     }
 
@@ -366,38 +379,37 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         }
     }
 
-    /**
-     * @dev Users can mint during the drop using the blockchains native currency (ex: Ether on Ethereum).
-     */
-    function mint(
-        uint8 _numMint,
-        address _to
-    ) public payable {
+    function _handleMint(uint8 _numMint, address _to, bool _erc20, bool _crosschain) private {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
         
 
         // If a user is given a whitelist limit of 1 they can mint for free once.
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
+        require((allowWhitelistMinting && (_whitelist[_to] > 0 || _mintGiveawayWinners[_to])) || 
                 allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
-        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
-        if (allowPublicMinting) {
-            require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-        }
-        else if (_whitelist[_to] > 1) {
-            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
-            require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-
-            decrementWhitelistMintLimit(_to, _numMint);
-        }
-        else {
+        if (_mintGiveawayWinners[_to]) {
             require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
-            _whitelist[_to] = 0;
+            _mintGiveawayWinners[_to] = false;
         }
-
+        else if (allowPublicMinting || _whitelist[_to] > 0) {
+            if (_erc20)  {
+                require(_numMint * mintPrice <= IERC20(ERC20Addr).balanceOf(_msgSender()), "Must have enought ERC20 token to mint.");
+                IERC20(ERC20Addr).transfer(treasury, _numMint * mintPrice);
+            }
+            else if (!_erc20) {
+                require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
+                (payable(treasury)).transfer(msg.value);
+            }
+            else if (_crosschain) {
+                require(_msgSender() == crossChainForwarder, "Only approved forwarder can call crosschain mint");
+                require(0 != msg.value, "Must recieve any amount from crosschain provider.");
+            }
+        
+            if (_whitelist[_to] > 0) {
+                decrementWhitelistMintLimit(_to, _numMint);
+            }
+        }
 
         for (uint256 i; i < _numMint; i++) {
             numMinted.increment();
@@ -410,48 +422,31 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         }
     }
 
-    /**
-     * @dev Users can mint with USD on crossmint during the drop.
-     */
-    function crossmintMint(
+    function mint(
         uint8 _numMint,
         address _to
     ) public payable {
-        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
+        _handleMint(_numMint, _to, false, false);
+    }
 
-        // If a user is given a whitelist limit of 1 they can mint for free once.
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
+    /**
+     * @dev Users can mint during the drop using the blockchains native currency (ex: Ether on Ethereum).
+     */
+    function ERC20Mint(
+        uint8 _numMint,
+        address _to
+    ) public payable {
+        _handleMint(_numMint, _to, true, false);
+    }
 
-        require(_numMint != 0, 'Cannot mint 0 nfts.');
-
-        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
-        if (allowPublicMinting) {
-            require(_numMint * (mintPrice) == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-        }
-        else if (_whitelist[_to] > 1) {
-            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
-            require(_numMint * (mintPrice) == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-
-            decrementWhitelistMintLimit(_to, _numMint);
-        }
-        else {
-            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
-            _whitelist[_to] = 0;
-        }
-
-
-        for (uint256 i; i < _numMint; i++) {
-            numMinted.increment();
-            uint256 _tokenId = numMinted.current();
-
-            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
-
-            _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
-        }
+    /**
+     * @dev Users can mint with USD on crossmint during the drop.
+     */
+    function crossChainMint(
+        uint8 _numMint,
+        address _to
+    ) public payable {
+         _handleMint(_numMint, _to, false, true);
     }
 
     /**
