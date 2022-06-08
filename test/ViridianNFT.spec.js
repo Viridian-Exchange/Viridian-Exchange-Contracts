@@ -45,8 +45,8 @@ contract('Testing ERC721 contract', function(accounts) {
       });
 
     it('should be able to deploy ERC721 Token', async () => {
-        expect(await vnft.symbol()).to.equal(symbol)
-        expect(await vnft.name()).to.equal(name)
+        expect(await vnft.symbol()).to.equal(symbol);
+        expect(await vnft.name()).to.equal(name);
     })
 
     it('should be able to deploy ERC721 Token', async () => {
@@ -75,8 +75,6 @@ contract('Testing ERC721 contract', function(accounts) {
         await vnft.setPublicMinting(true, {from: accounts[0]});
         await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
         await vnft.mint(2, accounts[0], {from: accounts[0], value: 400000000000000000}); //tokenId
-
-        //await vnft.lockInPackResult(1, {from: accounts[0]});
 
         let owner1 = await vnft.ownerOf(123, {from: accounts[0]});
         let owner2 = await vnft.ownerOf(124, {from: accounts[0]});
@@ -110,7 +108,7 @@ contract('Testing ERC721 contract', function(accounts) {
 
         await vnft.safeTransferFrom(accounts[0], accounts[1], 123, {from: accounts[0]})
         expect(await vnft.ownerOf(123)).to.equal(accounts[1])
-    })
+    });
 
     it('should be able open vnft', async () => {
         console.log("OWNER: " + await vnft.owner());

@@ -89,8 +89,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
-     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI, uint256 _coinConvRate) public initializer  {
-        /* require(!initialized, "Contract instance has already been initialized"); */
+     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI, uint256 _coinConvRate) public initializer {
         __ERC721_init("Viridian NFT", "VNFT");
         __ERC721Enumerable_init();
         __Ownable_init();
@@ -125,8 +124,6 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
 
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
-
-    //address private viridianExchangeAddress;
 
     // Base URI for unopened NFTs
     mapping (uint256 => string) private _baseURIextended;
@@ -176,6 +173,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         return coinConvRate * mintPrice;
     }
 
+
     /**
      * @dev Owner can set the whitelist addresses and how many NFTs each whitelist member can mint.
      */
@@ -185,6 +183,9 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         }
     }
 
+    /**
+     * @dev Sets the list of accounts that can recieve a single free mint.
+     */
     function setFreeMintlist(address[] memory freeMinters) external onlyOwner {
         for (uint256 i = 0; i < freeMinters.length; i++) {
             _mintGiveawayWinners[freeMinters[i]] = true;
