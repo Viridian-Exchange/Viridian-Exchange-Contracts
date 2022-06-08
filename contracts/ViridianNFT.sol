@@ -63,6 +63,8 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     // Default cost for minting one NFT in the Genesis drop
     uint256 public mintPrice;
 
+    uint256 private coinConvRate;
+
     // ERC20 address for ERC20 mint
     address ERC20Addr;
 
@@ -87,7 +89,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
-     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI) public initializer  {
+     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI, uint256 _coinConvRate) public initializer  {
         /* require(!initialized, "Contract instance has already been initialized"); */
         __ERC721_init("Viridian NFT", "VNFT");
         __ERC721Enumerable_init();
@@ -106,6 +108,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         allowPublicMinting = false;
         maxMintAmt = 2000;
         mintPrice = 200000000000000000;
+        coinConvRate = _coinConvRate;
         versionRecipient = "2.2.0";
     }
 
@@ -157,6 +160,20 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
      */
     function setTreasury(address payable _newTreasury) external onlyOwner() {
         treasury = _newTreasury;
+    }
+
+    /**
+     * @dev Change the conversion rate from ERC20 token to native coin.
+     */
+    function setConvRate(uint256 _newConvRate) external onlyOwner() {
+        coinConvRate = _newConvRate;
+    }
+
+    /**
+     * @dev View the price to mint in native coin
+     */
+    function coinMintPrice() external view onlyOwner() returns (uint256) {
+        return coinConvRate * mintPrice;
     }
 
     /**
@@ -398,7 +415,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
                 IERC20(ERC20Addr).transfer(treasury, _numMint * mintPrice);
             }
             else if (!_erc20) {
-                require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
+                require((_numMint * mintPrice) * coinConvRate == msg.value, "Must pay correct amount of ETH to mint.");
                 (payable(treasury)).transfer(msg.value);
             }
             else if (_crosschain) {
@@ -417,8 +434,8 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
 
             string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
 
-            _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
+            _safeMint(_to, _tokenId);
+            _setTokenURI(_tokenId, tokenURI_);
         }
     }
 
