@@ -503,7 +503,10 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         require(isApprovedOrOwner, "Caller is not approved or owner");
         require(isTokenOpeningUnlocked(_tokenId), "Opening is not alllowed yet");
 
-        isOpened[_tokenId] = true;
+        burn(_tokenId);
+        _safeMint(_msgSender(), hashedTokenIds[_tokenId]);
+
+        isOpened[hashedTokenIds[_tokenId]] = true;
 
         emit Open(_tokenId);
     }
@@ -518,9 +521,10 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         require(isApprovedOrOwner, "Caller is not approved or owner");
         require(isTokenOpeningUnlocked(_tokenId), "Opening is not alllowed yet");
 
-        isOpened[_tokenId] = true;
+        burn(_tokenId);
+        _safeMint(_to, hashedTokenIds[_tokenId]);
 
-        safeTransferFrom(_msgSender(), _to, _tokenId);
+        isOpened[hashedTokenIds[_tokenId]] = true;
 
         emit Open(_tokenId);
     }
