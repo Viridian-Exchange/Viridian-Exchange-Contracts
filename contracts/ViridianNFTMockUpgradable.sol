@@ -26,15 +26,15 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
-* Viridian Genesis NFT
+* Viridian NFT
 *
 * This contract is designed to be used on our genesis Ethereum mint and future drops on the same contract, it is extremely gas efficient for minting multiple packs.
 *
@@ -55,12 +55,18 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     bool private allowPublicMinting;
 
     mapping(address => uint8) private _whitelist;
+    mapping(address => bool) private _mintGiveawayWinners;
 
     // Default number of NFTs that can be minted in the Genesis drop
-    uint16 public maxMintAmt;
+    uint256 public maxMintAmt;
 
     // Default cost for minting one NFT in the Genesis drop
     uint256 public mintPrice;
+
+    uint256 private coinConvRate;
+
+    // ERC20 address for ERC20 mint
+    address ERC20Addr;
 
     // Mapping for determining whether an unrevealed pack has been opened yet
     mapping(uint256 => bool) public isOpened;
@@ -76,17 +82,19 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
 
     string public override versionRecipient;
 
+    address crossChainForwarder;
+
     using StringsUpgradeable for uint256;
 
     /**
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
-     function initialize(address _forwarder, address payable _treasury, string memory _packURI, string memory _openURI) public initializer  {
-        /* require(!initialized, "Contract instance has already been initialized"); */
+     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI, uint256 _coinConvRate) public initializer {
         __ERC721_init("Viridian NFT", "VNFT");
         __ERC721Enumerable_init();
         __Ownable_init();
         _setTrustedForwarder(_forwarder);
+        crossChainForwarder = _crossChainForwarder;
 
         dropId.increment();
         uint256 _dropId = dropId.current();
@@ -99,6 +107,7 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
         allowPublicMinting = false;
         maxMintAmt = 2000;
         mintPrice = 200000000000000000;
+        coinConvRate = _coinConvRate;
         versionRecipient = "2.2.0";
     }
 
@@ -112,11 +121,6 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     // Events for the pack opening experience
     event Open(uint256 newTokenId);
     event PackResultDecided(uint16 tokenId);
-
-    // Optional mapping for token URIs
-    mapping (uint256 => string) private _tokenURIs;
-
-    //address private viridianExchangeAddress;
 
     // Base URI for unopened NFTs
     mapping (uint256 => string) private _baseURIextended;
@@ -133,9 +137,8 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     /**
      * @dev Start a new drop while leaving the previous drops alone.
      */
-    function newDrop(uint16 _numMints, uint256 _mintPrice, string memory _newUnrevealedBaseURI, string memory _newRevealedBaseURI) external onlyOwner() {
-        numMinted.reset();
-        maxMintAmt = _numMints;
+    function newDrop(uint256 _numMints, uint256 _mintPrice, string memory _newUnrevealedBaseURI, string memory _newRevealedBaseURI) external onlyOwner() {
+        maxMintAmt = _numMints + numMinted.current();
 
         dropId.increment();
         uint256 _dropId = dropId.current();
@@ -154,11 +157,35 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     }
 
     /**
+     * @dev Change the conversion rate from ERC20 token to native coin.
+     */
+    function setConvRate(uint256 _newConvRate) external onlyOwner() {
+        coinConvRate = _newConvRate;
+    }
+
+    /**
+     * @dev View the price to mint in native coin
+     */
+    function coinMintPrice() external view onlyOwner() returns (uint256) {
+        return coinConvRate * mintPrice;
+    }
+
+
+    /**
      * @dev Owner can set the whitelist addresses and how many NFTs each whitelist member can mint.
      */
-    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
-        for (uint256 i = 0; i < addresses.length; i++) {
+    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint, uint256 startIndex) external onlyOwner {
+        for (uint256 i = startIndex; i < addresses.length; i++) {
             _whitelist[addresses[i]] = numAllowedToMint;
+        }
+    }
+
+    /**
+     * @dev Sets the list of accounts that can recieve a single free mint.
+     */
+    function setFreeMintlist(address[] memory freeMinters) external onlyOwner {
+        for (uint256 i = 0; i < freeMinters.length; i++) {
+            _mintGiveawayWinners[freeMinters[i]] = true;
         }
     }
 
@@ -186,16 +213,16 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
         return BaseRelayRecipient._msgData();
     }
 
-    // /**
-    //  * @dev Overridden version of isApprovedForAll where the admins (exchange addresses) are always approved
-    //  */
-    // function isApprovedForAll(address owner, address operator) public view override(ERC721Upgradeable) returns (bool) {
-    //     if (admins[_msgSender()]) {
-    //         return true;
-    //     }
+    /**
+     * @dev Overridden version of isApprovedForAll where the admins (exchange addresses) are always approved
+     */
+    function isApprovedForAll(address owner, address operator) public view override returns (bool) {
+        if (admins[operator]) {
+            return true;
+        }
 
-    //     return super.isApprovedForAll(owner, operator);
-    // }
+        return super.isApprovedForAll(owner, operator);
+    }
 
     /**
      * @dev Owner can add new admins addresses if exchange is upgraded.
@@ -226,19 +253,17 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     }
 
     /**
-     * @dev Changes the tokenURI.
+     * @dev Admin can change base URI for unopened NFTs.
      */
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) private {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
+    function setBaseURI(string memory baseURI_, uint256 _dropId) external onlyAdmin() {
+        _baseURIextended[_dropId] = baseURI_;
     }
 
     /**
-     * @dev Admin can change the tokenURI.
+     * @dev Admin can change base URI for openend NFTs.
      */
-    function _setTokenURIAdmin(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
+    function setBaseURIOpened(string memory baseURI_, uint256 _dropId) external onlyAdmin() {
+        _baseURIextendedOpened[_dropId] = baseURI_;
     }
 
     /**
@@ -261,7 +286,6 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory _tokenURI;
         string memory base;
 
         if (isOpened[tokenId]) {
@@ -269,17 +293,8 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
         }
         else {
             base = _baseURI(tokenDropId[tokenId]);
-            _tokenURI = _tokenURIs[tokenId];
         }
 
-        // If there is no base URI, return the token URI.
-        if (bytes(base).length == 0) {
-            return _tokenURI;
-        }
-        // If both are set, concatenate the baseURI and tokenURI (via abi.encodePacked).
-        if (bytes(_tokenURI).length > 0) {
-            return string(abi.encodePacked(base, _tokenURI));
-        }
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
     }
@@ -320,13 +335,6 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
     }
 
     /**
-     * @dev Adjusted mint price convenience fee for mintign with USD.
-     */
-    function convenienceFee() private view returns (uint256) {
-        return mintPrice / 8;
-    }
-
-    /**
      * @dev Appends three strings together.
      */
     function append(string memory a, string memory b, string memory c) internal pure returns (string memory) {
@@ -343,9 +351,7 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
 
     function decrementWhitelistMintLimit(address _to, uint8 _numMinted) private {
         uint8 curWhitelistMintLimit = _whitelist[_to];
-
-        // (2-1) - 1 == 0 // | (3-1) - 1 = 1
-        uint8 decremented = (curWhitelistMintLimit - 1) - _numMinted;
+        uint8 decremented = curWhitelistMintLimit - _numMinted;
 
         _whitelist[_to] = decremented;
     }
@@ -355,6 +361,7 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
      */
     function adminMint(
         uint256[] calldata _tokenIds,
+        uint256 _dropId,
         address _to,
         bool opened
     ) public payable onlyAdmin() {
@@ -367,97 +374,77 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
                 isOpened[_tokenId] = true;
             }
 
-            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
-
             _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
+            tokenDropId[_tokenId] = _dropId;
         }
+    }
+
+    function _handleMint(uint8 _numMint, address _to, bool _erc20, bool _crosschain) private {
+        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
+        
+
+        // If a user is given a whitelist limit of 1 they can mint for free once.
+        require((allowWhitelistMinting && (_whitelist[_to] > 0 || _mintGiveawayWinners[_to])) || 
+                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
+        require(_numMint != 0, 'Cannot mint 0 nfts.');
+
+        if (_mintGiveawayWinners[_to]) {
+            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
+            _mintGiveawayWinners[_to] = false;
+        }
+        else if (allowPublicMinting || _whitelist[_to] > 0) {
+            if (_erc20)  {
+                require(_numMint * mintPrice <= IERC20(ERC20Addr).balanceOf(_msgSender()), "Must have enought ERC20 token to mint.");
+                IERC20(ERC20Addr).transfer(treasury, _numMint * mintPrice);
+            }
+            else if (!_erc20) {
+                require((_numMint * mintPrice) * coinConvRate == msg.value, "Must pay correct amount of ETH to mint.");
+                (payable(treasury)).transfer(msg.value);
+            }
+            else if (_crosschain) {
+                require(_msgSender() == crossChainForwarder, "Only approved forwarder can call crosschain mint");
+                require(0 != msg.value, "Must recieve any amount from crosschain provider.");
+            }
+        
+            if (_whitelist[_to] > 0) {
+                decrementWhitelistMintLimit(_to, _numMint);
+            }
+        }
+
+        for (uint256 i; i < _numMint; i++) {
+            numMinted.increment();
+            uint256 _tokenId = numMinted.current();
+
+            _safeMint(_to, _tokenId);
+            tokenDropId[_tokenId] = dropId.current();
+        }
+    }
+
+    function mint(
+        uint8 _numMint,
+        address _to
+    ) public payable {
+        _handleMint(_numMint, _to, false, false);
     }
 
     /**
      * @dev Users can mint during the drop using the blockchains native currency (ex: Ether on Ethereum).
      */
-    function mint(
+    function ERC20Mint(
         uint8 _numMint,
         address _to
     ) public payable {
-        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        
-
-        // If a user is given a whitelist limit of 1 they can mint for free once.
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
-        require(_numMint != 0, 'Cannot mint 0 nfts.');
-
-        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
-        if (allowPublicMinting) {
-            require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-        }
-        else if (_whitelist[_to] > 1) {
-            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
-            require(_numMint * mintPrice == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-
-            decrementWhitelistMintLimit(_to, _numMint);
-        }
-        else {
-            _whitelist[_to] = 0;
-        }
-
-
-        for (uint256 i; i < _numMint; i++) {
-            numMinted.increment();
-            uint256 _tokenId = numMinted.current();
-
-            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
-
-            _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
-        }
+        _handleMint(_numMint, _to, true, false);
     }
 
     /**
-     * @dev Users can mint with USD on crossmint during the drop for a convenience fee (ex: Ether on Ethereum).
+     * @dev Users can mint with USD on crossmint during the drop.
      */
-    function crossmintMint(
+    function crossChainMint(
         uint8 _numMint,
         address _to
     ) public payable {
-        require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-
-        // If a user is given a whitelist limit of 1 they can mint for free once.
-        require((allowWhitelistMinting && _whitelist[_to] > 0) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
-
-        require(_numMint != 0, 'Cannot mint 0 nfts.');
-
-        // Every whitelist limit above 1 has to pay to mint and they can mint the whitelist limit - 1.
-        if (allowPublicMinting) {
-            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-        }
-        else if (_whitelist[_to] > 1) {
-            require((_numMint <= (_whitelist[_to] - 1)), "Cannot mint more NFTs than your whitelist limit");
-            require(_numMint * (mintPrice + convenienceFee()) == msg.value, "Must pay correct amount of ETH to mint.");
-            (payable(treasury)).transfer(msg.value);
-
-            decrementWhitelistMintLimit(_to, _numMint);
-        }
-        else {
-            _whitelist[_to] = 0;
-        }
-
-
-        for (uint256 i; i < _numMint; i++) {
-            numMinted.increment();
-            uint256 _tokenId = numMinted.current();
-
-            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
-
-            _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
-        }
+         _handleMint(_numMint, _to, false, true);
     }
 
     /**
@@ -497,7 +484,10 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
         require(isApprovedOrOwner, "Caller is not approved or owner");
         require(isTokenOpeningUnlocked(_tokenId), "Opening is not alllowed yet");
 
-        isOpened[_tokenId] = true;
+        burn(_tokenId);
+        _safeMint(_msgSender(), hashedTokenIds[_tokenId]);
+
+        isOpened[hashedTokenIds[_tokenId]] = true;
 
         emit Open(_tokenId);
     }
@@ -512,9 +502,10 @@ contract ViridianNFTMockUpgradable is Initializable, ERC721EnumerableUpgradeable
         require(isApprovedOrOwner, "Caller is not approved or owner");
         require(isTokenOpeningUnlocked(_tokenId), "Opening is not alllowed yet");
 
-        isOpened[_tokenId] = true;
+        burn(_tokenId);
+        _safeMint(_to, hashedTokenIds[_tokenId]);
 
-        safeTransferFrom(_msgSender(), _to, _tokenId);
+        isOpened[hashedTokenIds[_tokenId]] = true;
 
         emit Open(_tokenId);
     }

@@ -122,9 +122,6 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     event Open(uint256 newTokenId);
     event PackResultDecided(uint16 tokenId);
 
-    // Optional mapping for token URIs
-    mapping (uint256 => string) private _tokenURIs;
-
     // Base URI for unopened NFTs
     mapping (uint256 => string) private _baseURIextended;
 
@@ -256,19 +253,17 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     }
 
     /**
-     * @dev Changes the tokenURI.
+     * @dev Admin can change base URI for unopened NFTs.
      */
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) private {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
+    function setBaseURI(string memory baseURI_, uint256 _dropId) external onlyAdmin() {
+        _baseURIextended[_dropId] = baseURI_;
     }
 
     /**
-     * @dev Admin can change the tokenURI.
+     * @dev Admin can change base URI for openend NFTs.
      */
-    function _setTokenURIAdmin(uint256 tokenId, string memory _tokenURI) public virtual onlyAdmin() {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
+    function setBaseURIOpened(string memory baseURI_, uint256 _dropId) external onlyAdmin() {
+        _baseURIextendedOpened[_dropId] = baseURI_;
     }
 
     /**
@@ -291,7 +286,6 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory _tokenURI;
         string memory base;
 
         if (isOpened[tokenId]) {
@@ -299,17 +293,8 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         }
         else {
             base = _baseURI(tokenDropId[tokenId]);
-            _tokenURI = _tokenURIs[tokenId];
         }
 
-        // If there is no base URI, return the token URI.
-        if (bytes(base).length == 0) {
-            return _tokenURI;
-        }
-        // If both are set, concatenate the baseURI and tokenURI (via abi.encodePacked).
-        if (bytes(_tokenURI).length > 0) {
-            return string(abi.encodePacked(base, _tokenURI));
-        }
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
     }
@@ -366,9 +351,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
 
     function decrementWhitelistMintLimit(address _to, uint8 _numMinted) private {
         uint8 curWhitelistMintLimit = _whitelist[_to];
-
-        // (2-1) - 1 == 0 // | (3-1) - 1 = 1
-        uint8 decremented = (curWhitelistMintLimit - 1) - _numMinted;
+        uint8 decremented = curWhitelistMintLimit - _numMinted;
 
         _whitelist[_to] = decremented;
     }
@@ -378,6 +361,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
      */
     function adminMint(
         uint256[] calldata _tokenIds,
+        uint256 _dropId,
         address _to,
         bool opened
     ) public payable onlyAdmin() {
@@ -390,21 +374,22 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
                 isOpened[_tokenId] = true;
             }
 
-            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
-
             _safeMint(_to, hashedTokenIds[_tokenId]);
-            _setTokenURI(hashedTokenIds[_tokenId], tokenURI_);
+            tokenDropId[_tokenId] = _dropId;
         }
     }
 
     function _handleMint(uint8 _numMint, address _to, bool _erc20, bool _crosschain) private {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
-        
 
-        // If a user is given a whitelist limit of 1 they can mint for free once.
-        require((allowWhitelistMinting && (_whitelist[_to] > 0 || _mintGiveawayWinners[_to])) || 
-                allowPublicMinting, "Minting not enabled or not on whitelist / trying to mint more than allowed by the whitelist");
+        require((allowWhitelistMinting && ((_whitelist[_to] > 0 && _numMint <= _whitelist[_to]) || _mintGiveawayWinners[_to])) || 
+                allowPublicMinting, "Minting not enabled or not on lists / minting over list limits");
+
         require(_numMint != 0, 'Cannot mint 0 nfts.');
+
+        if (_whitelist[_to] > 0) {
+            decrementWhitelistMintLimit(_to, _numMint);
+        }
 
         if (_mintGiveawayWinners[_to]) {
             require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
@@ -423,20 +408,14 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
                 require(_msgSender() == crossChainForwarder, "Only approved forwarder can call crosschain mint");
                 require(0 != msg.value, "Must recieve any amount from crosschain provider.");
             }
-        
-            if (_whitelist[_to] > 0) {
-                decrementWhitelistMintLimit(_to, _numMint);
-            }
         }
 
         for (uint256 i; i < _numMint; i++) {
             numMinted.increment();
             uint256 _tokenId = numMinted.current();
 
-            string memory tokenURI_ = StringsUpgradeable.toString(_tokenId);
-
             _safeMint(_to, _tokenId);
-            _setTokenURI(_tokenId, tokenURI_);
+            tokenDropId[_tokenId] = dropId.current();
         }
     }
 
