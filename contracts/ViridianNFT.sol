@@ -31,6 +31,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+//import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
@@ -54,8 +55,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     bool private allowWhitelistMinting;
     bool private allowPublicMinting;
 
-    mapping(address => uint8) private _whitelist;
-    mapping(address => bool) private _mintGiveawayWinners;
+    mapping(address => uint256) private _whitelist;
 
     // Default number of NFTs that can be minted in the Genesis drop
     uint256 public maxMintAmt;
@@ -89,12 +89,13 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Set the original default opened and unopenend base URI. Also set the forwarder for gaseless and the treasury address.
      */
-     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, string memory _packURI, string memory _openURI, uint256 _coinConvRate) public initializer {
+     function initialize(address _forwarder, address _crossChainForwarder, address payable _treasury, address _ERC20Addr, string memory _packURI, string memory _openURI, uint256 _coinConvRate) public initializer {
         __ERC721_init("Viridian NFT", "VNFT");
         __ERC721Enumerable_init();
         __Ownable_init();
         _setTrustedForwarder(_forwarder);
         crossChainForwarder = _crossChainForwarder;
+        ERC20Addr = _ERC20Addr;
 
         dropId.increment();
         uint256 _dropId = dropId.current();
@@ -174,18 +175,9 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     /**
      * @dev Owner can set the whitelist addresses and how many NFTs each whitelist member can mint.
      */
-    function setWhitelist(address[] calldata addresses, uint8 numAllowedToMint, uint256 startIndex) external onlyOwner {
+    function setWhitelist(address[] calldata addresses, uint256 numAllowedToMint, uint256 startIndex) external onlyOwner {
         for (uint256 i = startIndex; i < addresses.length; i++) {
             _whitelist[addresses[i]] = numAllowedToMint;
-        }
-    }
-
-    /**
-     * @dev Sets the list of accounts that can recieve a single free mint.
-     */
-    function setFreeMintlist(address[] memory freeMinters) external onlyOwner {
-        for (uint256 i = 0; i < freeMinters.length; i++) {
-            _mintGiveawayWinners[freeMinters[i]] = true;
         }
     }
 
@@ -349,9 +341,9 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         mintPrice = _newMintPrice;
     }
 
-    function decrementWhitelistMintLimit(address _to, uint8 _numMinted) private {
-        uint8 curWhitelistMintLimit = _whitelist[_to];
-        uint8 decremented = curWhitelistMintLimit - _numMinted;
+    function decrementWhitelistMintLimit(address _to, uint256 _numMinted) private {
+        uint256 curWhitelistMintLimit = _whitelist[_to];
+        uint256 decremented = curWhitelistMintLimit - _numMinted;
 
         _whitelist[_to] = decremented;
     }
@@ -379,21 +371,16 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
         }
     }
 
-    function _handleMint(uint8 _numMint, address _to, bool _erc20, bool _crosschain) private {
+    function _handleMint(uint256 _numMint, address _to, bool _erc20, bool _crosschain) private {
         require((numMinted.current() + _numMint) <= maxMintAmt, "Mint amount is causing total supply to exceed 2000");
 
-        require((allowWhitelistMinting && ((_whitelist[_to] > 0 && _numMint <= _whitelist[_to]) || _mintGiveawayWinners[_to])) || 
+        require((allowWhitelistMinting && (_whitelist[_to] > 0 && _numMint <= _whitelist[_to])) || 
                 allowPublicMinting, "Minting not enabled or not on lists / minting over list limits");
 
         require(_numMint != 0, 'Cannot mint 0 nfts.');
 
         if (_whitelist[_to] > 0) {
             decrementWhitelistMintLimit(_to, _numMint);
-        }
-
-        if (_mintGiveawayWinners[_to]) {
-            require((_numMint == 1), "Cannot mint more than 1 NFT in the free minting tier");
-            _mintGiveawayWinners[_to] = false;
         }
         else if (allowPublicMinting || _whitelist[_to] > 0) {
             if (_erc20)  {
@@ -420,7 +407,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
     }
 
     function mint(
-        uint8 _numMint,
+        uint256 _numMint,
         address _to
     ) public payable {
         _handleMint(_numMint, _to, false, false);
@@ -430,7 +417,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
      * @dev Users can mint during the drop using the blockchains native currency (ex: Ether on Ethereum).
      */
     function ERC20Mint(
-        uint8 _numMint,
+        uint256 _numMint,
         address _to
     ) public payable {
         _handleMint(_numMint, _to, true, false);
@@ -440,7 +427,7 @@ contract ViridianNFT is Initializable, ERC721EnumerableUpgradeable, OwnableUpgra
      * @dev Users can mint with USD on crossmint during the drop.
      */
     function crossChainMint(
-        uint8 _numMint,
+        uint256 _numMint,
         address _to
     ) public payable {
          _handleMint(_numMint, _to, false, true);

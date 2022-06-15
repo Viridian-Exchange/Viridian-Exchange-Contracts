@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract ViridianNFT is ERC721Enumerable, Ownable, BaseRelayRecipient {
+contract ViridianNFTOld is ERC721Enumerable, Ownable, BaseRelayRecipient {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;

@@ -35,7 +35,9 @@ contract('Testing ERC721 contract', function(accounts) {
         //vnft = await ViridianNFT.new();
         proofOfIntegrity = await POI.new();
 
-        vnft = await deployProxy(ViridianNFT, [accounts[3], accounts[3], accounts[1], "https://api.viridianexchange.com/pack/", "https://api.viridianexchange.com/vnft/", 3000], {});
+        console.log(ViridianNFT);
+
+        vnft = await deployProxy(ViridianNFT, [accounts[3], accounts[3], accounts[1], accounts[1], "https://api.viridianexchange.com/pack/", "https://api.viridianexchange.com/vnft/", 3000], {});
 
         await vnft.setConvRate(2);
     })
@@ -173,19 +175,6 @@ contract('Testing ERC721 contract', function(accounts) {
         expect(await vnft.tokenURI(2)).to.equal("https://api.viridianexchange.com/pack/2");
     })
 
-    it('should be able to mint vnft on whitelist in free tier', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        await vnft.setWhitelist([accounts[1]], 1, 0)
-        await vnft.setFreeMintlist([accounts[1]]);
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        await vnft.mint(1, accounts[1], {from: accounts[1]}); //tokenId
-
-        let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
-
-        expect(Number.parseInt(ownedPacks)).to.equal(1);
-    })
-
     it('should be able to mint one nft when allocated that in whitelist', async () => {
         console.log("OWNER: " + await vnft.owner());
         await vnft.setWhitelistMinting(true, {from: await accounts[0]});
@@ -278,25 +267,6 @@ contract('Testing ERC721 contract', function(accounts) {
             "Minting not enabled or not on lists / minting over list limits"
         );
     })
-
-    it('Should revert if a Third NFT is minted over allocation', async () => {
-        console.log("OWNER: " + await vnft.owner());
-        await vnft.setWhitelistMinting(true, {from: await accounts[0]});
-        //await vnft.setWhitelist([accounts[1]], 1, 0)
-        await vnft.setFreeMintlist([accounts[1]]);
-        await vnft.setHashedTokenIds([123, 124, 125], 1, 3, {from: accounts[0]});
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000 * convRate}); //tokenId
-        // await vnft.mint(1, accounts[1], {from: accounts[1], value: 200000000000000000 * convRate}); //tokenId
-
-        // let ownedPacks = await vnft.balanceOf(accounts[1], {from: accounts[0]});
-
-        // expect(Number.parseInt(ownedPacks)).to.equal(2);
-
-        await truffleAssert.reverts(
-            vnft.mint(2, accounts[1], {from: accounts[1]}),
-            "Cannot mint more than 1 NFT in the free minting tier."
-        );
-    });
 
     it('new drop should change base URI', async () => {
         console.log("OWNER: " + await vnft.owner());

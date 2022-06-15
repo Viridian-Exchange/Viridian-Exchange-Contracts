@@ -6,6 +6,7 @@
   "author": "Blake Hatch <blakewihatch@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@babel/core": "^7.18.5",
     "@babel/polyfill": "^7.12.1",
     "@babel/register": "^7.14.5",
     "@chainlink/contracts": "^0.2.1",
@@ -26,12 +27,13 @@
     "ethereumjs-util": "^7.0.10",
     "ethereumjs-wallet": "^1.0.1",
     "ganache-cli": "^6.12.2",
-    "truffle": "^5.3.12",
+    "global": "^4.4.0",
+    "truffle": "5.4.18",
     "truffle-assertions": "^0.9.2",
     "web3": "^1.6.0"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^4.2.0",
-    "@openzeppelin/truffle-upgrades": "^1.15.0"
+    "@openzeppelin/truffle-upgrades": "^1.14.0"
   }
 }
