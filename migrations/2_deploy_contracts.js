@@ -2,8 +2,8 @@ const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 var ViridianToken = artifacts.require("ERC20TokenGasless");
 var ViridianNFT = artifacts.require("ViridianNFT");
 //var ViridianPack = artifacts.require("ViridianPack");
-var ViridianExchange = artifacts.require("ViridianExchange");
-var ViridianExchangeOffers = artifacts.require("ViridianExchangeOffers");
+// var ViridianExchange = artifacts.require("ViridianExchange");
+// var ViridianExchangeOffers = artifacts.require("ViridianExchangeOffers");
 //var RandomNumber = artifacts.require("RandomNumberConsumer");
 //var ViridianPass = artifacts.require("ViridianPass");
 

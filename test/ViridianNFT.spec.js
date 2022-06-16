@@ -35,7 +35,7 @@ contract('Testing ERC721 contract', function(accounts) {
         //vnft = await ViridianNFT.new();
         proofOfIntegrity = await POI.new();
 
-        console.log(ViridianNFT);
+        //console.log(ViridianNFT);
 
         vnft = await deployProxy(ViridianNFT, [accounts[3], accounts[3], accounts[1], accounts[1], "https://api.viridianexchange.com/pack/", "https://api.viridianexchange.com/vnft/", 3000], {});
 
@@ -137,7 +137,7 @@ contract('Testing ERC721 contract', function(accounts) {
 
         expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await vnft.allowOpening();
+        await vnft.allowOpening(3);
 
         await vnft.open(1);
 
@@ -161,13 +161,17 @@ contract('Testing ERC721 contract', function(accounts) {
 
         expect(Number.parseInt(ownedPacks)).to.equal(2);
 
-        await vnft.allowOpening();
+        await vnft.allowOpening(3);
 
         await vnft.open(1);
 
         ownedPacks = await vnft.balanceOf(accounts[0], {from: accounts[0]});
 
         expect(Number.parseInt(ownedPacks)).to.equal(2);
+
+        ownedPacks = await vnft.getOwnedNFTs({from: accounts[0]});
+
+        expect(JSON.stringify(ownedPacks)).to.equal("[\"2\",\"7b\"]");
 
         console.log(await vnft.tokenURI(123));
 

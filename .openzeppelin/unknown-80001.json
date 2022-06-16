@@ -1,0 +1,325 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x1C1302157831fFd5D348b29ff56A6ffAb4dB6328",
+    "txHash": "0xaba9bca560090e0a80a64204156b1f955ff8ab2587f136eb60e1ab4e3c83f947"
+  },
+  "proxies": [
+    {
+      "address": "0xC4086a44205D3eFE37a017d1656B0cC72dE0Fb52",
+      "txHash": "0x0bd814598de47b77d3037fbaab0f42d009c7f2d99b9cb17f2a1c8d1f48687ae7",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x17b1a250021d425D5c2b155B57D1d32c8870DB7d",
+      "txHash": "0x00bc9634a99b80521d424602c80605eff217bb1da5f79f2706662ac689caba15",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "ae5002e435488ed9fc67e941589ff05080d743a937d6128067511dce0eb32fad": {
+      "address": "0x0e224A246A1272344424393707496db9DFF1D170",
+      "txHash": "0x8035bd5509547755e81cdfa1e61bfa563e624cbed6627f6ca24e0f1ae7124706",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:554"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:559"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:673"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:741"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_name",
+            "type": "t_string_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:999"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_symbol",
+            "type": "t_string_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1002"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_owners",
+            "type": "t_mapping(t_uint256,t_address)",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1005"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1008"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_tokenApprovals",
+            "type": "t_mapping(t_uint256,t_address)",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1011"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_operatorApprovals",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1014"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)44_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1432"
+          },
+          {
+            "contract": "ERC721EnumerableUpgradeable",
+            "label": "_ownedTokens",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1456"
+          },
+          {
+            "contract": "ERC721EnumerableUpgradeable",
+            "label": "_ownedTokensIndex",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1459"
+          },
+          {
+            "contract": "ERC721EnumerableUpgradeable",
+            "label": "_allTokens",
+            "type": "t_array(t_uint256)dyn_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1462"
+          },
+          {
+            "contract": "ERC721EnumerableUpgradeable",
+            "label": "_allTokensIndex",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1465"
+          },
+          {
+            "contract": "ERC721EnumerableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)46_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1609"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1632"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:1697"
+          },
+          {
+            "contract": "BaseRelayRecipient",
+            "label": "_trustedForwarder",
+            "type": "t_address",
+            "src": "../project:/contracts/ViridianNFTMockUpgradable.sol:135"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "numMinted",
+            "type": "t_struct(Counter)4105_storage",
+            "src": "../project:/contracts/ViridianNFT.sol:1749"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "dropId",
+            "type": "t_struct(Counter)4105_storage",
+            "src": "../project:/contracts/ViridianNFT.sol:1750"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "tokenDropId",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "src": "../project:/contracts/ViridianNFT.sol:1752"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "openingUnlocked",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "src": "../project:/contracts/ViridianNFT.sol:1755"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "allowWhitelistMinting",
+            "type": "t_bool",
+            "src": "../project:/contracts/ViridianNFT.sol:1756"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "allowPublicMinting",
+            "type": "t_bool",
+            "src": "../project:/contracts/ViridianNFT.sol:1757"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "_whitelist",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "../project:/contracts/ViridianNFT.sol:1759"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "maxMintAmt",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ViridianNFT.sol:1762"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "mintPrice",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ViridianNFT.sol:1765"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "coinConvRate",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ViridianNFT.sol:1767"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "ERC20Addr",
+            "type": "t_address",
+            "src": "../project:/contracts/ViridianNFT.sol:1770"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "isOpened",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "src": "../project:/contracts/ViridianNFT.sol:1773"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "hashedTokenIds",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "src": "../project:/contracts/ViridianNFT.sol:1776"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "admins",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/ViridianNFT.sol:1779"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "treasury",
+            "type": "t_address_payable",
+            "src": "../project:/contracts/ViridianNFT.sol:1782"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "versionRecipient",
+            "type": "t_string_storage",
+            "src": "../project:/contracts/ViridianNFT.sol:1784"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "crossChainForwarder",
+            "type": "t_address",
+            "src": "../project:/contracts/ViridianNFT.sol:1786"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "_baseURIextended",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "src": "../project:/contracts/ViridianNFT.sol:1828"
+          },
+          {
+            "contract": "ViridianNFT",
+            "label": "_baseURIextendedOpened",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "src": "../project:/contracts/ViridianNFT.sol:1831"
+          }
+        ],
+        "types": {
+          "t_struct(Counter)4105_storage": {
+            "label": "struct CountersUpgradeable.Counter",
+            "members": [
+              {
+                "label": "_value",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address_payable": {
+            "label": "address payable"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_array(t_uint256)46_storage": {
+            "label": "uint256[46]"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_array(t_uint256)44_storage": {
+            "label": "uint256[44]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1531,17 +1531,17 @@
     web3 "^1.2.5"
     web3-utils "^1.2.5"
 
-"@openzeppelin/truffle-upgrades@^1.14.0":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/truffle-upgrades/-/truffle-upgrades-1.14.0.tgz#cada3919961ab9d7723b0923770e5d7c74599e21"
-  integrity sha512-1Sw+gHss5CuaFEqPlyLIohAPmLsuwr3WTPaqqBFvvyT5AfiztBYwj+w2voAMvQ3Sr6r19iZUl5JdCC+ZpFmRaA==
+"@openzeppelin/truffle-upgrades@^1.15.0":
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/truffle-upgrades/-/truffle-upgrades-1.15.0.tgz#eb562ab60f6af291b9b510af52ceb0ecc5c9a25f"
+  integrity sha512-5ihLqw0c9MKWQqj1J7qiBYgERu27ZwEjK1/fSicl2BGwwTyRK3Zs7sStOl7yWnCayCFPJPMtWGVwd6UetcUApQ==
   dependencies:
-    "@openzeppelin/upgrades-core" "^1.13.1"
+    "@openzeppelin/upgrades-core" "^1.14.1"
     "@truffle/contract" "^4.3.26"
     chalk "^4.1.0"
     solidity-ast "^0.4.15"
 
-"@openzeppelin/upgrades-core@^1.13.1":
+"@openzeppelin/upgrades-core@^1.14.1":
   version "1.15.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/upgrades-core/-/upgrades-core-1.15.0.tgz#58e3137915f6dbf025107be6072be02ab443b4ea"
   integrity sha512-dzyRzvr2E8YWGtmU5+MiAxsFfd5cyGYNBn164NHys5bfDkVSUaE0Vt0DYDsM4kNz3kVU6SXdUAcWez2OsoNkIA==
@@ -4013,6 +4013,11 @@ combined-stream@^1.0.6, combined-stream@^1.0.8, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
+command-exists@^1.2.8:
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/command-exists/-/command-exists-1.2.9.tgz#c50725af3808c8ab0260fd60b01fbfa25b954f69"
+  integrity sha512-LTQ/SGc+s0Xc0Fu5WaKnR0YiygZkm9eKFvyS+fRsU7/ZWFF8ykFM6Pc9aCVf1+xasOOZpO3BAVgVrKvsqKHV7w==
+
 commander@^2.15.0, commander@^2.20.0, commander@^2.20.3, commander@^2.8.1:
   version "2.20.3"
   resolved "https://registry.npmjs.org/commander/-/commander-2.20.3.tgz"
@@ -4022,6 +4027,11 @@ commander@^3.0.0:
   version "3.0.2"
   resolved "https://registry.npmjs.org/commander/-/commander-3.0.2.tgz"
   integrity sha512-Gar0ASD4BDyKC4hl4DwHqDrmvjoxWKZigVnAbn5H1owvm4CxCPdb0HQDehwNYMJpla5+M2tPmPARzhtYuwpHow==
+
+commander@^8.1.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-8.3.0.tgz#4837ea1b2da67b9c616a67afbb0fafee567bca66"
+  integrity sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==
 
 commondir@^1.0.1:
   version "1.0.1"
@@ -5612,15 +5622,15 @@ follow-redirects@1.5.10:
   dependencies:
     debug "=3.1.0"
 
+follow-redirects@^1.12.1, follow-redirects@^1.14.8:
+  version "1.15.1"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.1.tgz#0ca6a452306c9b276e4d3127483e29575e207ad5"
+  integrity sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==
+
 follow-redirects@^1.14.0:
   version "1.14.1"
   resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.14.1.tgz"
   integrity sha512-HWqDgT7ZEkqRzBvc2s64vSZ/hfOceEol3ac/7tKwzuvEyWx3/4UegXh5oBOIotkGsObyk3xznnSRVADBgWSQVg==
-
-follow-redirects@^1.14.8:
-  version "1.15.1"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.1.tgz#0ca6a452306c9b276e4d3127483e29575e207ad5"
-  integrity sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==
 
 for-each@^0.3.3:
   version "0.3.3"
@@ -8307,7 +8317,7 @@ os-locale@^3.1.0:
     lcid "^2.0.0"
     mem "^4.0.0"
 
-os-tmpdir@^1.0.0:
+os-tmpdir@^1.0.0, os-tmpdir@~1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
   integrity sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==
@@ -9761,6 +9771,19 @@ solc@^0.4.20:
     semver "^5.3.0"
     yargs "^4.7.1"
 
+solc@^0.8.14-fixed:
+  version "0.8.14-fixed"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.8.14-fixed.tgz#a730a1e8259ac06313f6b7287df046ebe1dddc13"
+  integrity sha512-jFYa2fKbk95olckuDbhs9kbtaUhLRllM7aC++mLinJBUcdHbaHVM8LxHaJpOIDdnHBV9TpIP4XBybVugqMDyhA==
+  dependencies:
+    command-exists "^1.2.8"
+    commander "^8.1.0"
+    follow-redirects "^1.12.1"
+    js-sha3 "0.8.0"
+    memorystream "^0.3.1"
+    semver "^5.5.0"
+    tmp "0.0.33"
+
 solidity-ast@^0.4.15:
   version "0.4.34"
   resolved "https://registry.yarnpkg.com/solidity-ast/-/solidity-ast-0.4.34.tgz#1d782e4bfa0c9601f9e25219d6063b16eff7ef52"
@@ -10241,6 +10264,13 @@ title-case@^2.1.0:
   dependencies:
     no-case "^2.2.0"
     upper-case "^1.0.3"
+
+tmp@0.0.33:
+  version "0.0.33"
+  resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.33.tgz#6d34335889768d21b2bcda0aa277ced3b1bfadf9"
+  integrity sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==
+  dependencies:
+    os-tmpdir "~1.0.2"
 
 tmp@^0.1.0:
   version "0.1.0"

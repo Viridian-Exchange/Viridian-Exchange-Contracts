@@ -923,7 +923,7 @@ abstract contract ERC165 is IERC165 {
 
 // pragma solidity ^0.8.0;
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
